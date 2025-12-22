@@ -1,5 +1,5 @@
 # Production Dockerfile
-FROM public.ecr.aws/docker/library/python:3.9-slim as production
+FROM public.ecr.aws/docker/library/python:3.11-slim AS production
 
 WORKDIR /app
 
