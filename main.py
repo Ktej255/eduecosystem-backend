@@ -8,6 +8,16 @@ from starlette.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 import logging
 import os
+import sys
+
+try:
+    import multipart
+    print("python-multipart is INSTALLED")
+except ImportError:
+    print("python-multipart is MISSING")
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -137,4 +147,26 @@ def api_status():
         "api_version": "v1",
         "status": "operational",
         "environment": os.getenv("ENVIRONMENT", "production")
+    }
+
+
+@app.post("/debug/echo")
+async def debug_echo(request: Request):
+    """Echo endpoint to debug request bodies and headers."""
+    content_type = request.headers.get("content-type")
+    body = await request.body()
+    
+    form_data = None
+    try:
+        form_data = await request.form()
+        form_data = {k: v for k, v in form_data.items()}
+    except Exception as e:
+        form_data = f"Error parsing form data: {str(e)}"
+        
+    return {
+        "content_type": content_type,
+        "raw_body_length": len(body),
+        "raw_body_preview": body[:100].decode(errors='replace'),
+        "form_data": form_data,
+        "is_multipart_installed": "multipart" in sys.modules
     }
