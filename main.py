@@ -66,11 +66,18 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Import and include API router
 try:
+    print("Attempting to import api_router...")
     from app.api.api_v1.api import api_router
+    print(f"api_router imported successfully, routes: {len(api_router.routes)}")
     app.include_router(api_router, prefix=API_V1_STR)
+    print("API router included successfully")
     logger.info("API router included successfully")
 except Exception as e:
+    import traceback
+    print(f"FAILED to include API router: {e}")
+    print(traceback.format_exc())
     logger.error(f"Failed to include API router: {e}")
+
 
 
 # Root endpoint
