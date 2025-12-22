@@ -26,7 +26,13 @@ uploads/
 
 # Ignore test output and logs
 *.log
-*.txt
+*_output.txt
+*_failures.txt
+*_results.txt
+debug_*.txt
+pytest_*.txt
+test_*.txt
+!requirements.txt
 
 # Ignore IDE settings
 .vscode/
