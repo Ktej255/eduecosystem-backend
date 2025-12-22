@@ -1,0 +1,340 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.0.1, pluggy-1.6.0 -- C:\Users\Sarit\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Graphology\Master Software\Eduecosystem\backend
+configfile: pytest.ini
+plugins: anyio-4.11.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/api/test_discussions.py::test_create_discussion_thread ERROR       [100%]
+
+=================================== ERRORS ====================================
+_______________ ERROR at setup of test_create_discussion_thread _______________
+
+fixturedef = <FixtureDef argname='create_test_db' scope='session' baseid='tests'>
+request = <SubRequest 'create_test_db' for <Function test_create_discussion_thread>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def create_test_db():
+        """Create a fresh test database for the entire test session."""
+        # Create tables
+>       Base.metadata.create_all(bind=engine)
+
+tests\conftest.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = MetaData(), bind = Engine(sqlite:///:memory:), tables = None
+checkfirst = True
+
+    def create_all(
+        self,
+        bind: _CreateDropBind,
+        tables: Optional[_typing_Sequence[Table]] = None,
+        checkfirst: bool = True,
+    ) -> None:
+        """Create all tables stored in this metadata.
+    
+        Conditional by default, will not attempt to recreate tables already
+        present in the target database.
+    
+        :param bind:
+          A :class:`.Connection` or :class:`.Engine` used to access the
+          database.
+    
+        :param tables:
+          Optional list of ``Table`` objects, which is a subset of the total
+          tables in the ``MetaData`` (others are ignored).
+    
+        :param checkfirst:
+          Defaults to True, don't issue CREATEs for tables already present
+          in the target database.
+    
+        """
+>       bind._run_ddl_visitor(
+            ddl.SchemaGenerator, self, checkfirst=checkfirst, tables=tables
+        )
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:5928: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Engine(sqlite:///:memory:)
+visitorcallable = <class 'sqlalchemy.sql.ddl.SchemaGenerator'>
+element = MetaData(), kwargs = {'checkfirst': True, 'tables': None}
+conn = <sqlalchemy.engine.base.Connection object at 0x0000015962052F90>
+
+    def _run_ddl_visitor(
+        self,
+        visitorcallable: Type[InvokeDDLBase],
+        element: SchemaVisitable,
+        **kwargs: Any,
+    ) -> None:
+        with self.begin() as conn:
+>           conn._run_ddl_visitor(visitorcallable, element, **kwargs)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:3252: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.engine.base.Connection object at 0x0000015962052F90>
+visitorcallable = <class 'sqlalchemy.sql.ddl.SchemaGenerator'>
+element = MetaData(), kwargs = {'checkfirst': True, 'tables': None}
+
+    def _run_ddl_visitor(
+        self,
+        visitorcallable: Type[InvokeDDLBase],
+        element: SchemaVisitable,
+        **kwargs: Any,
+    ) -> None:
+        """run a DDL visitor.
+    
+        This method is only here so that the MockConnection can change the
+        options given to the visitor so that "checkfirst" is skipped.
+    
+        """
+        visitorcallable(
+            dialect=self.dialect, connection=self, **kwargs
+>       ).traverse_single(element)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:2459: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.sql.ddl.SchemaGenerator object at 0x0000015962251F90>
+obj = MetaData(), kw = {}
+v = <sqlalchemy.sql.ddl.SchemaGenerator object at 0x0000015962251F90>
+meth = <bound method SchemaGenerator.visit_metadata of <sqlalchemy.sql.ddl.SchemaGenerator object at 0x0000015962251F90>>
+
+    def traverse_single(self, obj: Visitable, **kw: Any) -> Any:
+        for v in self.visitor_iterator:
+            meth = getattr(v, "visit_%s" % obj.__visit_name__, None)
+            if meth:
+>               return meth(obj, **kw)
+                       ^^^^^^^^^^^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\visitors.py:661: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.sql.ddl.SchemaGenerator object at 0x0000015962251F90>
+metadata = MetaData()
+
+    def visit_metadata(self, metadata):
+        if self.tables is not None:
+            tables = self.tables
+        else:
+            tables = list(metadata.tables.values())
+    
+>       collection = sort_tables_and_constraints(
+            [t for t in tables if self._can_create_table(t)]
+        )
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\ddl.py:962: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tables = [Table('role_permissions', MetaData(), Column('role_id', Integer(), ForeignKey('roles.id'), table=<role_permissions>, ...asks>), Column('is_completed', Boolean(), table=<tasks>, default=ScalarElementColumnDefault(False)), schema=None), ...]
+filter_fn = None, extra_dependencies = None, _warn_for_cycles = False
+
+    def sort_tables_and_constraints(
+        tables, filter_fn=None, extra_dependencies=None, _warn_for_cycles=False
+    ):
+        """Sort a collection of :class:`_schema.Table`  /
+        :class:`_schema.ForeignKeyConstraint`
+        objects.
+    
+        This is a dependency-ordered sort which will emit tuples of
+        ``(Table, [ForeignKeyConstraint, ...])`` such that each
+        :class:`_schema.Table` follows its dependent :class:`_schema.Table`
+        objects.
+        Remaining :class:`_schema.ForeignKeyConstraint`
+        objects that are separate due to
+        dependency rules not satisfied by the sort are emitted afterwards
+        as ``(None, [ForeignKeyConstraint ...])``.
+    
+        Tables are dependent on another based on the presence of
+        :class:`_schema.ForeignKeyConstraint` objects, explicit dependencies
+        added by :meth:`_schema.Table.add_is_dependent_on`,
+        as well as dependencies
+        stated here using the :paramref:`~.sort_tables_and_constraints.skip_fn`
+        and/or :paramref:`~.sort_tables_and_constraints.extra_dependencies`
+        parameters.
+    
+        :param tables: a sequence of :class:`_schema.Table` objects.
+    
+        :param filter_fn: optional callable which will be passed a
+         :class:`_schema.ForeignKeyConstraint` object,
+         and returns a value based on
+         whether this constraint should definitely be included or excluded as
+         an inline constraint, or neither.   If it returns False, the constraint
+         will definitely be included as a dependency that cannot be subject
+         to ALTER; if True, it will **only** be included as an ALTER result at
+         the end.   Returning None means the constraint is included in the
+         table-based result unless it is detected as part of a dependency cycle.
+    
+        :param extra_dependencies: a sequence of 2-tuples of tables which will
+         also be considered as dependent on each other.
+    
+        .. seealso::
+    
+            :func:`.sort_tables`
+    
+    
+        """
+    
+        fixed_dependencies = set()
+        mutable_dependencies = set()
+    
+        if extra_dependencies is not None:
+            fixed_dependencies.update(extra_dependencies)
+    
+        remaining_fkcs = set()
+        for table in tables:
+            for fkc in table.foreign_key_constraints:
+                if fkc.use_alter is True:
+                    remaining_fkcs.add(fkc)
+                    continue
+    
+                if filter_fn:
+                    filtered = filter_fn(fkc)
+    
+                    if filtered is True:
+                        remaining_fkcs.add(fkc)
+                        continue
+    
+>               dependent_on = fkc.referred_table
+                               ^^^^^^^^^^^^^^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\ddl.py:1394: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x000001596245FF60>, None, ondelete='CASC...ve_projects>, onupdate=ColumnElementColumnDefault(<sqlalchemy.sql.functions.now at 0x15960199630; now>)), schema=None))
+
+    @property
+    def referred_table(self) -> Table:
+        """The :class:`_schema.Table` object to which this
+        :class:`_schema.ForeignKeyConstraint` references.
+    
+        This is a dynamically calculated attribute which may not be available
+        if the constraint and/or parent table is not yet associated with
+        a metadata collection that contains the referred table.
+    
+        """
+>       return self.elements[0].column.table
+               ^^^^^^^^^^^^^^^^^^^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:4799: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.util.langhelpers._memoized_property object at 0x000001591D67BE30>
+obj = ForeignKey('learning_groups.id')
+cls = <class 'sqlalchemy.sql.schema.ForeignKey'>
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+>       obj.__dict__[self.__name__] = result = self.fget(obj)
+                                               ^^^^^^^^^^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py:1226: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ForeignKey('learning_groups.id')
+
+    @util.ro_memoized_property
+    def column(self) -> Column[Any]:
+        """Return the target :class:`_schema.Column` referenced by this
+        :class:`_schema.ForeignKey`.
+    
+        If no target column has been established, an exception
+        is raised.
+    
+        """
+    
+>       return self._resolve_column()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:3199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ForeignKey('learning_groups.id')
+
+    def _resolve_column(
+        self, *, raiseerr: bool = True
+    ) -> Optional[Column[Any]]:
+        _column: Column[Any]
+    
+        if isinstance(self._colspec, str):
+            parenttable, tablekey, colname = self._resolve_col_tokens()
+    
+            if self._unresolvable or tablekey not in parenttable.metadata:
+                if not raiseerr:
+                    return None
+>               raise exc.NoReferencedTableError(
+                    f"Foreign key associated with column "
+                    f"'{self.parent}' could not find "
+                    f"table '{tablekey}' with which to generate a "
+                    f"foreign key to target column '{colname}'",
+                    tablekey,
+E                   sqlalchemy.exc.NoReferencedTableError: Foreign key associated with column 'collaborative_projects.group_id' could not find table 'learning_groups' with which to generate a foreign key to target column 'id'
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:3222: NoReferencedTableError
+============================== warnings summary ===============================
+app\schemas\coupon.py:28
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\coupon.py:28: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('discount_type')
+
+app\schemas\coupon.py:34
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\coupon.py:34: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('discount_value')
+
+app\schemas\coupon.py:54
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\coupon.py:54: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Coupon(CouponBase):
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(net, dtype=torch.qint8, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    convert(model, mapping, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(model, dtype=torch.qint8, inplace=True)
+
+app\api\api_v1\endpoints\earnings.py:45
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\earnings.py:45: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Transaction(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/api/test_discussions.py::test_create_discussion_thread - sqlalche...
+======================== 8 warnings, 1 error in 0.41s =========================

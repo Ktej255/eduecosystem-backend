@@ -1,0 +1,244 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.0.1, pluggy-1.6.0 -- C:\Users\Sarit\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Graphology\Master Software\Eduecosystem\backend
+configfile: pytest.ini
+plugins: anyio-4.11.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/api/test_auth.py::test_signup FAILED                               [ 50%]
+tests/api/test_auth.py::test_login_access_token FAILED                   [100%]
+
+================================== FAILURES ===================================
+_________________________________ test_signup _________________________________
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2522: in get_property
+    return self._props[key]
+           ^^^^^^^^^^^^^^^^
+E   KeyError: 'polls'
+
+The above exception was the direct cause of the following exception:
+tests\api\test_auth.py:8: in test_signup
+    r = client.post(f"{settings.API_V1_STR}/users/", json={
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\testclient.py:546: in post
+    return super().post(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\testclient.py:445: in request
+    return super().request(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\testclient.py:348: in handle_request
+    raise exc
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\testclient.py:345: in handle_request
+    portal.call(self.app, scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\from_thread.py:321: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\from_thread.py:252: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\base.py:191: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\contextlib.py:162: in __exit__
+    self.gen.throw(value)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_utils.py:85: in collapse_excgroups
+    raise exc
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\security.py:12: in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py:125: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py:111: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py:391: in app
+    raw_response = await run_endpoint_function(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py:292: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\to_thread.py:56: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\_backends\_asyncio.py:2485: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\anyio\_backends\_asyncio.py:976: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\api\api_v1\endpoints\users.py:23: in create_user
+    user = crud_user.get_by_email(db, email=user_in.email)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\crud\user.py:8: in get_by_email
+    return db.query(User).filter(User.email == email).first()
+           ^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:2941: in query
+    return self._query_cls(entities, self, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py:276: in __init__
+    self._set_entities(entities)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py:289: in _set_entities
+    coercions.expect(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\coercions.py:388: in expect
+    insp._post_inspect
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py:1338: in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+                                           ^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2724: in _post_inspect
+    self._check_configure()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2401: in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4218: in _configure_registries
+    _do_configure_registries(registries, cascade)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4259: in _do_configure_registries
+    mapper._post_configure_properties()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2418: in _post_configure_properties
+    prop.init()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\interfaces.py:595: in init
+    self.do_init()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:1660: in do_init
+    self._generate_backref()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:2144: in _generate_backref
+    self._add_reverse_property(self.back_populates)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:1591: in _add_reverse_property
+    other = self.mapper.get_property(key, _configure_mappers=False)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2524: in get_property
+    raise sa_exc.InvalidRequestError(
+E   sqlalchemy.exc.InvalidRequestError: Mapper 'Mapper[LiveClass(live_classes)]' has no property 'polls'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+___________________________ test_login_access_token ___________________________
+tests\api\test_auth.py:22: in test_login_access_token
+    crud_user.create(db, obj_in=user_in)
+app\crud\user.py:14: in create
+    db_obj = User(
+<string>:4: in __init__
+    ???
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state.py:566: in _initialize_instance
+    manager.dispatch.init(self, args, kwargs)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\event\attr.py:515: in __call__
+    fn(*args, **kw)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4410: in _event_on_init
+    instrumenting_mapper._check_configure()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2401: in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4218: in _configure_registries
+    _do_configure_registries(registries, cascade)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4255: in _do_configure_registries
+    raise e
+E   sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[LiveClassPoll(live_class_polls)]'. Original exception was: Mapper 'Mapper[LiveClass(live_classes)]' has no property 'polls'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+============================== warnings summary ===============================
+app\db\session.py:7
+  D:\Graphology\Master Software\Eduecosystem\backend\app\db\session.py:7: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(net, dtype=torch.qint8, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    convert(model, mapping, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(model, dtype=torch.qint8, inplace=True)
+
+app\schemas\chat.py:47
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\chat.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ChatMessageResponse(ChatMessageBase):
+
+app\schemas\chat.py:93
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\chat.py:93: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserPresenceResponse(BaseModel):
+
+app\schemas\live_class_interactive.py:20
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\live_class_interactive.py:20: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PollResponse(BaseModel):
+
+app\schemas\live_class_interactive.py:40
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\live_class_interactive.py:40: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QuestionResponse(BaseModel):
+
+app\schemas\live_class_interactive.py:57
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\live_class_interactive.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ChatMessageResponse(BaseModel):
+
+tests/api/test_auth.py::test_login_access_token
+  D:\Graphology\Master Software\Eduecosystem\backend\tests\conftest.py:41: SAWarning: Can't sort tables for DROP; an unresolvable foreign key dependency exists between tables: lessons, modules, quizzes; and backend does not support ALTER.  To restore at least a partial sort, apply use_alter=True to ForeignKey and ForeignKeyConstraint objects involved in the cycle to mark these as known cycles that will be ignored.
+    Base.metadata.drop_all(bind=engine)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/api/test_auth.py::test_signup - sqlalchemy.exc.InvalidRequestErr...
+FAILED tests/api/test_auth.py::test_login_access_token - sqlalchemy.exc.Inval...
+======================= 2 failed, 11 warnings in 52.93s =======================

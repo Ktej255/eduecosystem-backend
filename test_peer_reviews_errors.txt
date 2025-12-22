@@ -1,0 +1,110 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.0.1, pluggy-1.6.0 -- C:\Users\Sarit\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Graphology\Master Software\Eduecosystem\backend
+configfile: pytest.ini
+plugins: anyio-4.11.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment ERROR [ 50%]
+tests/api/test_peer_reviews.py::test_peer_review_flow ERROR              [100%]
+
+=================================== ERRORS ====================================
+____________ ERROR at setup of test_create_peer_review_assignment _____________
+tests\api\test_peer_reviews.py:111: in test_assignment
+    mod_id = mod_resp.json()["id"]
+             ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'id'
+___________________ ERROR at setup of test_peer_review_flow ___________________
+tests\api\test_peer_reviews.py:111: in test_assignment
+    mod_id = mod_resp.json()["id"]
+             ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'id'
+============================== warnings summary ===============================
+app\core\config.py:34
+  D:\Graphology\Master Software\Eduecosystem\backend\app\core\config.py:34: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator("SECRET_KEY")
+
+app\db\session.py:7
+  D:\Graphology\Master Software\Eduecosystem\backend\app\db\session.py:7: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(net, dtype=torch.qint8, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    convert(model, mapping, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(model, dtype=torch.qint8, inplace=True)
+
+app\schemas\chat.py:47
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\chat.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ChatMessageResponse(ChatMessageBase):
+
+app\schemas\chat.py:93
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\chat.py:93: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserPresenceResponse(BaseModel):
+
+app\schemas\live_class_interactive.py:20
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\live_class_interactive.py:20: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PollResponse(BaseModel):
+
+app\schemas\live_class_interactive.py:40
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\live_class_interactive.py:40: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QuestionResponse(BaseModel):
+
+app\schemas\live_class_interactive.py:57
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\live_class_interactive.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ChatMessageResponse(BaseModel):
+
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment
+tests/api/test_peer_reviews.py::test_peer_review_flow
+tests/api/test_peer_reviews.py::test_peer_review_flow
+tests/api/test_peer_reviews.py::test_peer_review_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\core\security.py:16: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + expires_delta
+
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment
+tests/api/test_peer_reviews.py::test_peer_review_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\crud\course.py:86: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    obj_in_data = obj_in.dict(exclude={"tag_ids", "password"})
+
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment
+tests/api/test_peer_reviews.py::test_create_peer_review_assignment
+tests/api/test_peer_reviews.py::test_peer_review_flow
+tests/api/test_peer_reviews.py::test_peer_review_flow
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/api/test_peer_reviews.py::test_peer_review_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\tests\conftest.py:37: SAWarning: Can't sort tables for DROP; an unresolvable foreign key dependency exists between tables: lessons, modules, quizzes; and backend does not support ALTER.  To restore at least a partial sort, apply use_alter=True to ForeignKey and ForeignKeyConstraint objects involved in the cycle to mark these as known cycles that will be ignored.
+    Base.metadata.drop_all(bind=engine)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/api/test_peer_reviews.py::test_create_peer_review_assignment - Ke...
+ERROR tests/api/test_peer_reviews.py::test_peer_review_flow - KeyError: 'id'
+======================= 24 warnings, 2 errors in 3.98s ========================

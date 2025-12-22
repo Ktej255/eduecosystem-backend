@@ -1,0 +1,29 @@
+﻿python : Using CPU. Note: This module is much faster with a GPU.
+At line:1 char:32
++ ... OENCODING='utf-8'; python -m pytest tests/ -v --tb=short 
+2>&1 | Out-F ...
++                        
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Using CPU. Note... 
+   ter with a GPU.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Server initialized for asgi.
+ImportError while loading conftest 'D:\Graphology\Master 
+Software\Eduecosystem\backend\tests\conftest.py'.
+tests\conftest.py:17: in <module>
+    from main import app
+main.py:4: in <module>
+    from app.api.api_v1.api import api_router
+app\api\api_v1\api.py:2: in <module>
+    from app.api.api_v1.endpoints import (
+app\api\api_v1\endpoints\live_class_interactive.py:13: in 
+<module>
+    from app.services.realtime_service import realtime_service
+app\services\realtime_service.py:11: in <module>
+    from app.crud import notification as crud_notification
+E   ImportError: cannot import name 'notification' from 
+'app.crud' (unknown location)
+ΓÜá∩╕Å  GEMINI_API_KEY not found in environment variables
+ΓÜá∩╕Å Redis connection failed: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.
+ΓÜá∩╕Å Caching will be disabled

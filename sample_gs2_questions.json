@@ -1,0 +1,147 @@
+{
+  "questions": [
+    {
+      "gs_paper": "GS2",
+      "topic": "Indian Polity & Constitution",
+      "sub_topic": "Preamble",
+      "question_text": "Discuss the significance of the Preamble to the Indian Constitution. How does it reflect the philosophy and objectives of the Constitution?",
+      "key_points": [
+        "Explain the key features of the Preamble",
+        "Discuss its role in constitutional interpretation",
+        "Analyze landmark judgments related to the Preamble",
+        "Evaluate its relevance in contemporary India"
+      ],
+      "difficulty": "medium",
+      "content": {
+        "title": "Understanding the Preamble to the Indian Constitution",
+        "sections": [
+          {
+            "heading": "Introduction",
+            "text": "The Preamble to the Indian Constitution is a brief introductory statement that sets out the guiding purpose, principles, and philosophy of the Constitution. It was adopted on 26th November 1949 and reflects the vision of the founding fathers."
+          },
+          {
+            "heading": "Key Features",
+            "text": "The Preamble declares India to be a SOVEREIGN, SOCIALIST, SECULAR, DEMOCRATIC REPUBLIC. It promises JUSTICE (social, economic, political), LIBERTY (of thought, expression, belief, faith, worship), EQUALITY (of status and opportunity), and FRATERNITY (assuring dignity of the individual and unity of the nation)."
+          },
+          {
+            "heading": "Constitutional Interpretation",
+            "text": "The Supreme Court has held that the Preamble is an integral part of the Constitution (Kesavananda Bharati case, 1973). It serves as a key to understanding the Constitution's intent and can be used to interpret ambiguous provisions."
+          },
+          {
+            "heading": "Landmark Judgments",
+            "text": "In Berubari Union case (1960), the SC held that the Preamble is not a part of the Constitution. However, this was overruled in Kesavananda Bharati case. The 42nd Amendment (1976) added 'Socialist', 'Secular', and 'Integrity' to the Preamble."
+          }
+        ],
+        "estimated_reading_time": 60
+      },
+      "model_answer": {
+        "title": "Model Answer: Significance of the Preamble",
+        "answer_text": "The Preamble to the Indian Constitution is often described as the 'soul' of the Constitution. It embodies the fundamental values and philosophy upon which the Constitution is based.\n\nThe Preamble declares India to be a Sovereign, Socialist, Secular, Democratic Republic, thereby establishing the basic structure of governance. The term 'Sovereign' signifies that India is independent and not subject to any external authority. 'Socialist' and 'Secular', added by the 42nd Amendment, reflect the commitment to social justice and equal treatment of all religions.\n\nThe objectives outlined - Justice, Liberty, Equality, and Fraternity - serve as guiding principles for all constitutional provisions. These are not mere ideals but enforceable through fundamental rights and directive principles.\n\nThe Supreme Court in Kesavananda Bharati v. State of Kerala (1973) held that the Preamble is an integral part of the Constitution and can be used to interpret its provisions. This established the Preamble's legal significance beyond being a mere introduction.\n\nIn contemporary India, the Preamble remains highly relevant as it provides a framework for evaluating laws and policies. It serves as a reminder of the constitutional vision and helps in maintaining the balance between individual rights and collective welfare.",
+        "key_points": [
+          "Preamble as the soul of the Constitution",
+          "Key features: Sovereign, Socialist, Secular, Democratic, Republic",
+          "Objectives: Justice, Liberty, Equality, Fraternity",
+          "Legal significance established in Kesavananda Bharati case",
+          "Role in constitutional interpretation",
+          "Contemporary relevance in policy evaluation"
+        ]
+      }
+    },
+    {
+      "gs_paper": "GS2",
+      "topic": "Indian Polity & Constitution",
+      "sub_topic": "Federalism",
+      "question_text": "Analyze the federal structure of India. How does it differ from other federal systems, and what are its unique features?",
+      "key_points": [
+        "Define federalism and its essential features",
+        "Explain federal features of Indian Constitution",
+        "Discuss unitary features",
+        "Compare with USA, Canada, Australia",
+        "Evaluate the balance between federal and unitary elements"
+      ],
+      "difficulty": "hard",
+      "content": {
+        "title": "Understanding Federalism in India",
+        "sections": [
+          {
+            "heading": "Concept of Federalism",
+            "text": "Federalism is a system of government where power is divided between a central authority and constituent political units (states). Essential features include: written constitution, division of powers, supremacy of constitution, independent judiciary, and bicameralism."
+          },
+          {
+            "heading": "Federal Features in India",
+            "text": "India exhibits several federal characteristics: written Constitution, division of powers through three lists (Union, State, Concurrent), independent judiciary, bicameral legislature, and rigid amendment procedure for federal provisions."
+          },
+          {
+            "heading": "Unitary Features",
+            "text": "Despite federal structure, India has strong unitary features: single Constitution, single citizenship, strong Centre with more powers, appointment of Governors by Centre, All India Services, emergency provisions that can convert the system into unitary, and integrated judiciary."
+          },
+          {
+            "heading": "Comparison with Other Federations",
+            "text": "Unlike USA (coming together federation), India is a 'holding together' federation. The Centre is stronger than in USA or Switzerland. Unlike Canada, India has a single Constitution. The residuary powers are with Centre (unlike USA where they're with states)."
+          }
+        ],
+        "estimated_reading_time": 60
+      },
+      "model_answer": {
+        "title": "Model Answer: Federal Structure of India",
+        "answer_text": "India's federal structure is unique, often described as 'quasi-federal' or a 'Union of States' rather than a pure federation. This reflects a careful balance between federal and unitary principles.\n\nThe federal features include: a written Constitution, division of powers through Union, State, and Concurrent Lists, an independent judiciary to interpret the Constitution, bicameral legislature with Rajya Sabha representing states, and a relatively rigid amendment procedure for federal provisions.\n\nHowever, India also exhibits strong unitary features. There is a single Constitution (unlike USA), single citizenship, and the Centre has significantly more powers than states. The appointment of Governors by the Centre, existence of All India Services, emergency provisions that can centralize power, and an integrated judiciary all point toward unitary characteristics.\n\nThis differs from classical federations like USA, which is a 'coming together' federation where states voluntarily joined. India is a 'holding together' federation where the Centre created states. Unlike USA where residuary powers are with states, in India they're with the Centre. Compared to Canada, India has a single Constitution rather than separate federal and provincial constitutions.\n\nThe unique features of Indian federalism include: asymmetric federalism (special provisions for certain states like J&K under Article 370, now abrogated), linguistic reorganization of states, and the ability to create new states or alter boundaries.\n\nThis quasi-federal structure has served India well, providing flexibility to maintain unity in diversity while allowing for regional autonomy. The balance has evolved through constitutional amendments, judicial interpretations, and political practices.",
+        "key_points": [
+          "Quasi-federal or 'Union of States' structure",
+          "Federal features: written Constitution, division of powers, independent judiciary",
+          "Unitary features: single Constitution, strong Centre, emergency provisions",
+          "Comparison with USA (coming together vs holding together)",
+          "Unique features: asymmetric federalism, linguistic states",
+          "Evolution through amendments and judicial interpretation"
+        ]
+      }
+    },
+    {
+      "gs_paper": "GS2",
+      "topic": "Indian Polity & Constitution",
+      "sub_topic": "Judicial Review",
+      "question_text": "Examine the role of the Supreme Court as the guardian of the Constitution. Discuss the concept of judicial review and its significance in Indian democracy.",
+      "key_points": [
+        "Define judicial review",
+        "Explain constitutional provisions for judicial review",
+        "Discuss landmark cases establishing judicial review",
+        "Analyze the doctrine of basic structure",
+        "Evaluate judicial activism vs judicial overreach"
+      ],
+      "difficulty": "medium",
+      "content": {
+        "title": "Understanding Judicial Review in India",
+        "sections": [
+          {
+            "heading": "Concept of Judicial Review",
+            "text": "Judicial review is the power of courts to examine the constitutionality of legislative enactments and executive orders. It ensures that all laws and actions conform to the Constitution, which is the supreme law of the land."
+          },
+          {
+            "heading": "Constitutional Provisions",
+            "text": "Though not explicitly mentioned, judicial review is implicit in Articles 13, 32, 131-136, 143, 226, and 227. Article 13 declares laws inconsistent with fundamental rights as void. Articles 32 and 226 provide for writs to enforce fundamental rights."
+          },
+          {
+            "heading": "Landmark Cases",
+            "text": "In Kesavananda Bharati v. State of Kerala (1973), the Supreme Court established the 'basic structure doctrine', holding that Parliament cannot amend the basic structure of the Constitution. This was a watershed moment in Indian constitutional law."
+          },
+          {
+            "heading": "Judicial Activism",
+            "text": "Indian judiciary has been proactive in protecting rights through Public Interest Litigation (PIL), expanding the scope of Article 21 (right to life), and issuing guidelines where legislature has failed to act (Vishaka guidelines on sexual harassment)."
+          }
+        ],
+        "estimated_reading_time": 60
+      },
+      "model_answer": {
+        "title": "Model Answer: Supreme Court as Guardian of Constitution",
+        "answer_text": "The Supreme Court of India plays a crucial role as the guardian of the Constitution through its power of judicial review. This power, though not explicitly mentioned in the Constitution, is derived from various provisions and has been firmly established through judicial pronouncements.\n\nJudicial review refers to the power of courts to examine the constitutionality of legislative and executive actions. In India, this power flows from Articles 13 (which declares laws inconsistent with fundamental rights as void), 32 and 226 (which provide for enforcement of fundamental rights through writs), and the general jurisdiction of the Supreme Court under Articles 131-136.\n\nThe landmark case of Kesavananda Bharati v. State of Kerala (1973) was a turning point in Indian constitutional jurisprudence. The Supreme Court propounded the 'basic structure doctrine', holding that while Parliament has wide powers to amend the Constitution, it cannot alter its basic structure. This includes features like supremacy of the Constitution, republican and democratic form of government, secular character, separation of powers, and federal character.\n\nThe significance of judicial review in Indian democracy is manifold. It acts as a check on legislative and executive excesses, protects fundamental rights of citizens, maintains the supremacy of the Constitution, and ensures that all organs of government function within constitutional limits.\n\nThe Indian judiciary has also been proactive through judicial activism. The introduction of Public Interest Litigation (PIL) has made justice accessible to marginalized sections. The Court has expanded the scope of Article 21 (right to life) to include various rights like right to education, clean environment, and speedy trial. In cases where legislature has failed to act, courts have issued guidelines (like Vishaka guidelines on sexual harassment).\n\nHowever, there are concerns about judicial overreach when courts venture into policy-making, which is the domain of the executive and legislature. The challenge is to maintain the delicate balance between judicial activism and judicial restraint, ensuring that the Court remains the guardian of the Constitution without undermining democratic principles.",
+        "key_points": [
+          "Judicial review as power to examine constitutionality",
+          "Constitutional basis in Articles 13, 32, 226",
+          "Basic structure doctrine from Kesavananda Bharati case",
+          "Significance: check on excesses, protection of rights",
+          "Judicial activism through PIL and expanded Article 21",
+          "Balance between activism and overreach"
+        ]
+      }
+    }
+  ]
+}

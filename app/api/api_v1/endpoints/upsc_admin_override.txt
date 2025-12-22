@@ -1,0 +1,111 @@
+# Admin Override Endpoints - append to upsc.py
+
+# --- Admin: Progress Override ---
+@router.post("/admin/progress/override", response_model=PlanStatusResponse)
+def override_student_progress(
+    *,
+    db: Session = Depends(deps.get_db),
+    student_id: int,
+    plan_id: UUID,
+    is_locked: bool,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Admin override: Manually lock or unlock a plan for a specific student.
+    """
+    progress = db.query(UPSCStudentProgress).filter(
+        UPSCStudentProgress.student_id == student_id,
+        UPSCStudentProgress.plan_id == plan_id
+    ).first()
+    
+    if not progress:
+        raise HTTPException(
+            status_code=404,
+            detail="Student progress record not found"
+        )
+    
+    progress.is_locked = is_locked
+    if not is_locked and not progress.unlocked_at:
+        progress.unlocked_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(progress)
+    
+    return PlanStatusResponse(
+        plan_id=str(progress.plan_id),
+        is_locked=progress.is_locked,
+        completion_percentage=float(progress.completion_percentage),
+        unlocked_at=progress.unlocked_at,
+        completed_at=progress.completed_at
+    )
+
+
+# --- Admin: Get Students by Batch ---
+@router.get("/admin/batches/{batch_id}/students")
+def get_batch_students(
+    *,
+    db: Session = Depends(deps.get_db),
+    batch_id: UUID,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Get all students enrolled in a batch with their progress.
+    """
+    from app.models.upsc import UPSCStudentProfile
+    from app.models.user import User
+    
+    profiles = db.query(UPSCStudentProfile).filter(
+        UPSCStudentProfile.batch_id == batch_id
+    ).all()
+    
+    students = []
+    for profile in profiles:
+        user = db.query(User).filter(User.id == profile.user_id).first()
+        if user:
+            # Get progress summary
+            progress_count = db.query(UPSCStudentProgress).filter(
+                UPSCStudentProgress.student_id == user.id
+            ).count()
+            
+            students.append({
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "enrollment_date": profile.enrollment_date,
+                "target_year": profile.target_year,
+                "progress_records": progress_count
+            })
+    
+    return students
+
+
+# --- Admin: Get Student Progress Detail ---
+@router.get("/admin/students/{student_id}/progress")
+def get_student_progress(
+    *,
+    db: Session = Depends(deps.get_db),
+    student_id: int,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Get detailed progress for a specific student across all plans.
+    """
+    progress_records = db.query(UPSCStudentProgress).filter(
+        UPSCStudentProgress.student_id == student_id
+    ).all()
+    
+    result = []
+    for prog in progress_records:
+        plan = db.query(UPSCPlan).filter(UPSCPlan.id == prog.plan_id).first()
+        if plan:
+            result.append({
+                "plan_id": str(plan.id),
+                "plan_title": plan.title,
+                "plan_type": plan.plan_type,
+                "is_locked": prog.is_locked,
+                "completion_percentage": float(prog.completion_percentage),
+                "unlocked_at": prog.unlocked_at,
+                "completed_at": prog.completed_at
+            })
+    
+    return result

@@ -1,0 +1,15 @@
+version: 1.0
+runtime: python311
+build:
+  commands:
+    build:
+      - pip install -r requirements.txt
+run:
+  command: uvicorn main:app --host 0.0.0.0 --port 8000
+  network:
+    port: 8000
+  env:
+    - name: SECRET_KEY
+      value: "eduecosystem-super-secret-key-2025"
+    - name: DATABASE_URL
+      value: "postgresql://postgres:Edueco123!@eduecosystem-prod.cjmue2c06ves.us-east-1.rds.amazonaws.com:5432/eduecosystem"

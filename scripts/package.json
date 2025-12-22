@@ -1,0 +1,10 @@
+{
+    "name": "payment-gateway-setup",
+    "version": "1.0.0",
+    "description": "Quick setup scripts for Indian payment gateways",
+    "scripts": {
+        "setup:payments": "node scripts/setup-payments.js",
+        "test:razorpay": "node scripts/test-razorpay.js",
+        "test:payment-flow": "node scripts/test-payment-flow.js"
+    }
+}

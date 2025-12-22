@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Debugging environment...
+      - pwd
+      - ls -la
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+      - echo Logging in to Public ECR...
+      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+      - REPOSITORY_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/eduecosystem-backend
+  build:
+    commands:
+      - echo Build started on `date`
+      - pwd
+      - ls -la
+      - echo Building the Docker image...
+      - docker build --progress=plain -t $REPOSITORY_URI:latest -f Dockerfile.production .
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - pwd
+      - ls -la
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:latest
+      - echo Writing image definitions file...
+      - printf '[{"name":"eduecosystem-backend","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
+
+artifacts:
+    files: imagedefinitions.json

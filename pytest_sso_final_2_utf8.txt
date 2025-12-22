@@ -1,0 +1,32 @@
+﻿python : ImportError while 
+loading conftest 
+'D:\Graphology\Master Software\E
+duecosystem\backend\conftest.py'
+.
+At line:1 char:13
++ cd backend; python -m pytest 
+-v tests/api/api_v1/test_sso_int
+egration ...
++             ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo          : N 
+   otSpecified: (ImportError w  
+  hi...d\conftest.py'.:String   
+ ) [], RemoteException
+    + FullyQualifiedErrorId : N 
+   ativeCommandError
+ 
+C:\Users\Sarit\AppData\Local\Pro
+grams\Python\Python313\Lib\ast.p
+y:54: in parse
+    return compile(source, 
+filename, mode, flags,
+E     File 
+"D:\Graphology\Master Software\E
+duecosystem\backend\conftest.py"
+, line 41
+E       
+sys.modules[module_name] = mock
+E   IndentationError: 
+unexpected indent

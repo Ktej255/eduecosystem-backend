@@ -1,0 +1,34 @@
+﻿python : Using CPU. Note: This module is much faster with a GPU.
+At line:1 char:32
++ ... OENCODING='utf-8'; python -m pytest tests/ -v --tb=short 
+2>&1 | Out-F ...
++                        
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Using CPU. Note... 
+   ter with a GPU.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Server initialized for asgi.
+ImportError while loading conftest 'D:\Graphology\Master 
+Software\Eduecosystem\backend\tests\conftest.py'.
+tests\conftest.py:17: in <module>
+    from main import app
+main.py:4: in <module>
+    from app.api.api_v1.api import api_router
+app\api\api_v1\api.py:2: in <module>
+    from app.api.api_v1.endpoints import (
+app\api\api_v1\endpoints\live_class_interactive.py:5: in 
+<module>
+    from app.crud.live_class_interactive import 
+live_class_interactive
+app\crud\live_class_interactive.py:7: in <module>
+    from app.schemas.live_class_interactive import (
+app\schemas\live_class_interactive.py:40: in <module>
+    class QuestionResponse(BaseModel):
+app\schemas\live_class_interactive.py:45: in QuestionResponse
+    is_answered: boolean
+                 ^^^^^^^
+E   NameError: name 'boolean' is not defined
+ΓÜá∩╕Å  GEMINI_API_KEY not found in environment variables
+ΓÜá∩╕Å Redis connection failed: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.
+ΓÜá∩╕Å Caching will be disabled

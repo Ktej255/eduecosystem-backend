@@ -1,0 +1,61 @@
+﻿python : pyclamd not installed. 
+Virus scanning disabled.
+At line:1 char:13
++ cd backend; python -m pytest 
+-v tests/api/api_v1/test_sso_int
+egration ...
++             ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo          : N 
+   otSpecified: (pyclamd not i  
+  ns...nning disabled.:String   
+ ) [], RemoteException
+    + FullyQualifiedErrorId : N 
+   ativeCommandError
+ 
+boto3 not installed. S3 storage 
+unavailable.
+ImportError while loading 
+conftest 'D:\Graphology\Master S
+oftware\Eduecosystem\backend\con
+ftest.py'.
+conftest.py:53: in <module>
+    from main import app
+main.py:4: in <module>
+    from app.api.api_v1.api 
+import api_router
+app\api\api_v1\api.py:2: in 
+<module>
+    from 
+app.api.api_v1.endpoints import 
+(
+app\api\api_v1\endpoints\live_cl
+ass_interactive.py:19: in 
+<module>
+    from 
+app.services.realtime_service 
+import realtime_service
+app\services\realtime_service.py
+:8: in <module>
+    from app.core.websocket 
+import manager
+app\core\websocket.py:10: in 
+<module>
+    from app.core.cache import 
+cache
+app\core\cache.py:10: in 
+<module>
+    from app.core.redis_cache 
+import get_cache
+app\core\redis_cache.py:12: in 
+<module>
+    from redis.exceptions 
+import RedisError
+E   ModuleNotFoundError: No 
+module named 
+'redis.exceptions'; 'redis' is 
+not a package
+DEBUG: Importing models in base.py
+DEBUG: Models imported in base.py
+WARNING: GEMINI_API_KEY not found in environment variables

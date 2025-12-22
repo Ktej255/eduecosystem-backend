@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Holistic Learning Ecosystem</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
+        .button { display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome, {{ name }}! 🌟</h1>
+        </div>
+        <div class="content">
+            <p>We're thrilled to have you join the <strong>Holistic Learning Ecosystem</strong>!</p>
+            <p>You've taken the first step towards a smarter, more balanced learning journey. Here's what you can do next:</p>
+            <ul>
+                <li>📝 <strong>Analyze your handwriting</strong> to discover your personality traits.</li>
+                <li>🧘 <strong>Try a meditation session</strong> to boost your focus.</li>
+                <li>🎯 <strong>Set your daily goals</strong> and start your streak.</li>
+            </ul>
+            <p>Ready to get started?</p>
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url }}" class="button">Go to Dashboard</a>
+            </div>
+            <p>Happy Learning,<br>The Holistic Learning Team</p>
+        </div>
+    </div>
+</body>
+</html>

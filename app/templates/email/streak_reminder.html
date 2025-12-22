@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Don't Lose Your Streak! 🔥</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #EF4444;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #EF4444;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .streak-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #EF4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Keep the Fire Burning! 🔥</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{ name }},</p>
+            <p>You're on a roll! You currently have a <span class="streak-count">{{ streak_days }} day streak</span>.
+            </p>
+            <p>Don't let it break now! Log in today and complete a quick task to keep your momentum going.</p>
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url }}" class="button">Extend My Streak</a>
+            </div>
+            <p>You got this,<br>The Holistic Learning Team</p>
+        </div>
+    </div>
+</body>
+
+</html>

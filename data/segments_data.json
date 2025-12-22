@@ -1,0 +1,30 @@
+{
+  "1_1_1_1": {
+    "title": "Segment 1",
+    "key_points": "",
+    "video_url": "/uploads/batch1/c1_d1_p1_s1_5ff363ca.mp4",
+    "duration": "25:00",
+    "updated_at": "2025-12-15T14:28:01.025326"
+  },
+  "1_1_1_2": {
+    "title": "Segment 2",
+    "key_points": "",
+    "video_url": "/uploads/batch1/c1_d1_p1_s2_a7a7a448.mp4",
+    "duration": "25:00",
+    "updated_at": "2025-12-15T14:28:02.586804"
+  },
+  "1_1_1_3": {
+    "title": "Segment 3",
+    "key_points": "",
+    "video_url": "/uploads/batch1/c1_d1_p1_s3_6902e56c.mp4",
+    "duration": "25:00",
+    "updated_at": "2025-12-15T14:28:04.246264"
+  },
+  "1_1_1_4": {
+    "title": "Segment 4",
+    "key_points": "",
+    "video_url": "/uploads/batch1/c1_d1_p1_s4_7477d9bd.mp4",
+    "duration": "25:00",
+    "updated_at": "2025-12-15T14:28:05.599652"
+  }
+}

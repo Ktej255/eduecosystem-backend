@@ -1,0 +1,25 @@
+# Phase 3 Infrastructure Requirements
+
+# Core dependencies
+redis==5.0.1
+aioredis==2.0.1
+
+# WebSocket
+websockets==12.0
+python-socketio==5.10.0
+
+# AI Integration
+openai==1.3.0
+anthropic==0.7.0
+
+# Performance
+fastapi-cache2==0.2.1
+aiocache==0.12.2
+
+# Monitoring
+prometheus-client==0.19.0
+prometheus-fastapi-instrumentator==6.1.0
+
+# Additional utilities
+python-multipart==0.0.6
+httpx==0.25.2

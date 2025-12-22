@@ -1,0 +1,1686 @@
+﻿
+backend_test_results_final_fix.txt:11:tests/api/api_v1/tes
+t_sso_integration.py::test_sso_saml_flow FAILED      [  
+0%]
+backend_test_results_final_fix.txt:26:tests/api/test_analy
+tics.py::test_dashboard_analytics_basic FAILED       [  
+7%]
+backend_test_results_final_fix.txt:27:tests/api/test_analy
+tics.py::test_analytics_with_shadow_sessions FAILED  [  
+7%]
+backend_test_results_final_fix.txt:28:tests/api/test_analy
+tics.py::test_analytics_handwriting_count FAILED     [  
+8%]
+backend_test_results_final_fix.txt:29:tests/api/test_analy
+tics.py::test_analytics_insights_generation FAILED   [  
+8%]
+backend_test_results_final_fix.txt:30:tests/api/test_analy
+tics.py::test_analytics_attention_tracking FAILED    [  
+9%]
+backend_test_results_final_fix.txt:31:tests/api/test_analy
+tics.py::test_detailed_analytics FAILED              [  
+9%]
+backend_test_results_final_fix.txt:32:tests/api/test_analy
+tics.py::test_analytics_with_activity_heatmap FAILED [  
+9%]
+backend_test_results_final_fix.txt:33:tests/api/test_analy
+tics.py::test_analytics_empty_state FAILED           [ 
+10%]
+backend_test_results_final_fix.txt:34:tests/api/test_analy
+tics.py::test_unauthorized_analytics_access FAILED   [ 
+10%]
+backend_test_results_final_fix.txt:35:tests/api/test_annou
+ncements.py::test_create_announcement FAILED         [ 
+11%]
+backend_test_results_final_fix.txt:36:tests/api/test_annou
+ncements.py::test_get_course_announcements FAILED    [ 
+11%]
+backend_test_results_final_fix.txt:37:tests/api/test_annou
+ncements.py::test_mark_announcement_as_read FAILED   [ 
+12%]
+backend_test_results_final_fix.txt:38:tests/api/test_annou
+ncements.py::test_get_unread_announcements_count FAILED [ 
+12%]
+backend_test_results_final_fix.txt:39:tests/api/test_annou
+ncements.py::test_pin_announcement FAILED            [ 
+12%]
+backend_test_results_final_fix.txt:40:tests/api/test_annou
+ncements.py::test_delete_announcement FAILED         [ 
+13%]
+backend_test_results_final_fix.txt:52:tests/api/test_certi
+ficate_templates.py::test_create_certificate_template 
+FAILED [ 18%]
+backend_test_results_final_fix.txt:53:tests/api/test_certi
+ficate_templates.py::test_get_all_templates FAILED   [ 
+19%]
+backend_test_results_final_fix.txt:54:tests/api/test_certi
+ficate_templates.py::test_get_my_templates FAILED    [ 
+19%]
+backend_test_results_final_fix.txt:55:tests/api/test_certi
+ficate_templates.py::test_update_template FAILED     [ 
+19%]
+backend_test_results_final_fix.txt:56:tests/api/test_certi
+ficate_templates.py::test_set_default_template FAILED [ 
+20%]
+backend_test_results_final_fix.txt:57:tests/api/test_certi
+ficate_templates.py::test_get_default_template FAILED [ 
+20%]
+backend_test_results_final_fix.txt:58:tests/api/test_certi
+ficate_templates.py::test_delete_template FAILED     [ 
+21%]
+backend_test_results_final_fix.txt:59:tests/api/test_certi
+ficate_templates.py::test_cannot_delete_default_template 
+FAILED [ 21%]
+backend_test_results_final_fix.txt:60:tests/api/test_certi
+ficates.py::test_get_my_certificates FAILED          [ 
+22%]
+backend_test_results_final_fix.txt:61:tests/api/test_certi
+ficates.py::test_download_certificate FAILED         [ 
+22%]
+backend_test_results_final_fix.txt:64:tests/api/test_colla
+borative_projects.py::test_create_team_and_join FAILED [ 
+23%]
+backend_test_results_final_fix.txt:66:tests/api/test_discu
+ssions.py::test_create_discussion_category FAILED    [ 
+24%]
+backend_test_results_final_fix.txt:67:tests/api/test_discu
+ssions.py::test_create_discussion_thread FAILED      [ 
+25%]
+backend_test_results_final_fix.txt:68:tests/api/test_discu
+ssions.py::test_reply_to_thread FAILED               [ 
+25%]
+backend_test_results_final_fix.txt:69:tests/api/test_discu
+ssions.py::test_vote_on_post FAILED                  [ 
+25%]
+backend_test_results_final_fix.txt:70:tests/api/test_discu
+ssions.py::test_mark_answer FAILED                   [ 
+26%]
+backend_test_results_final_fix.txt:71:tests/api/test_discu
+ssions.py::test_search_threads FAILED                [ 
+26%]
+backend_test_results_final_fix.txt:72:tests/api/test_discu
+ssions.py::test_get_thread_with_posts FAILED         [ 
+27%]
+backend_test_results_final_fix.txt:73:tests/api/test_discu
+ssions.py::test_filter_unanswered_threads FAILED     [ 
+27%]
+backend_test_results_final_fix.txt:80:tests/api/test_group
+s.py::test_group_stats_calculation FAILED            [ 
+30%]
+backend_test_results_final_fix.txt:93:tests/api/test_live_
+classes.py::test_create_live_class FAILED            [ 
+36%]
+backend_test_results_final_fix.txt:94:tests/api/test_live_
+classes.py::test_get_course_live_classes FAILED      [ 
+36%]
+backend_test_results_final_fix.txt:95:tests/api/test_live_
+classes.py::test_start_live_class FAILED             [ 
+37%]
+backend_test_results_final_fix.txt:96:tests/api/test_live_
+classes.py::test_join_live_class FAILED              [ 
+37%]
+backend_test_results_final_fix.txt:97:tests/api/test_live_
+classes.py::test_complete_live_class_with_recording 
+FAILED [ 38%]
+backend_test_results_final_fix.txt:98:tests/api/test_live_
+classes.py::test_get_live_class_attendance FAILED    [ 
+38%]
+backend_test_results_final_fix.txt:99:tests/api/test_live_
+classes.py::test_filter_upcoming_live_classes FAILED [ 
+38%]
+backend_test_results_final_fix.txt:118:tests/api/test_lms.
+py::test_update_lesson_progress FAILED                [ 
+47%]
+backend_test_results_final_fix.txt:122:tests/api/test_lms.
+py::test_get_certificate_not_completed FAILED         [ 
+48%]
+backend_test_results_final_fix.txt:123:tests/api/test_lms.
+py::test_get_my_certificates_empty FAILED             [ 
+49%]
+backend_test_results_final_fix.txt:125:tests/api/test_lms.
+py::test_certificate_requires_authentication FAILED   [ 
+50%]
+backend_test_results_final_fix.txt:134:tests/api/test_note
+s.py::test_create_lesson_note FAILED                  [ 
+54%]
+backend_test_results_final_fix.txt:135:tests/api/test_note
+s.py::test_get_lesson_notes FAILED                    [ 
+54%]
+backend_test_results_final_fix.txt:136:tests/api/test_note
+s.py::test_search_notes FAILED                        [ 
+54%]
+backend_test_results_final_fix.txt:137:tests/api/test_note
+s.py::test_bookmark_lesson FAILED                     [ 
+55%]
+backend_test_results_final_fix.txt:138:tests/api/test_note
+s.py::test_unbookmark_lesson FAILED                   [ 
+55%]
+backend_test_results_final_fix.txt:139:tests/api/test_note
+s.py::test_bookmark_course FAILED                     [ 
+56%]
+backend_test_results_final_fix.txt:140:tests/api/test_note
+s.py::test_get_my_bookmarks FAILED                    [ 
+56%]
+backend_test_results_final_fix.txt:141:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_create_order_from_cart 
+ERROR [ 57%]
+backend_test_results_final_fix.txt:142:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_create_order_with_empty_ca
+rt ERROR [ 57%]
+backend_test_results_final_fix.txt:143:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_get_order_history ERROR [ 
+58%]
+backend_test_results_final_fix.txt:144:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_get_order_details ERROR [ 
+58%]
+backend_test_results_final_fix.txt:145:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_get_order_by_number ERROR 
+[ 58%]
+backend_test_results_final_fix.txt:146:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_cancel_pending_order 
+ERROR [ 59%]
+backend_test_results_final_fix.txt:147:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_cannot_cancel_completed_or
+der ERROR [ 59%]
+backend_test_results_final_fix.txt:148:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_process_order_creates_enro
+llments ERROR [ 60%]
+backend_test_results_final_fix.txt:149:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_order_unauthorized_access 
+ERROR [ 60%]
+backend_test_results_final_fix.txt:150:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_guest_order_lookup ERROR 
+[ 61%]
+backend_test_results_final_fix.txt:152:tests/api/test_orde
+rs.py::TestOrderEndpoints::test_order_number_uniqueness 
+ERROR [ 61%]
+backend_test_results_final_fix.txt:153:tests/api/test_peer
+_reviews.py::test_create_peer_review_assignment ERROR [ 
+62%]
+backend_test_results_final_fix.txt:154:tests/api/test_peer
+_reviews.py::test_peer_review_flow ERROR              [ 
+62%]
+backend_test_results_final_fix.txt:155:tests/api/test_ques
+tion_banks.py::test_create_question_bank FAILED       [ 
+63%]
+backend_test_results_final_fix.txt:156:tests/api/test_ques
+tion_banks.py::test_list_question_banks FAILED        [ 
+63%]
+backend_test_results_final_fix.txt:157:tests/api/test_ques
+tion_banks.py::test_update_question_bank FAILED       [ 
+64%]
+backend_test_results_final_fix.txt:158:tests/api/test_ques
+tion_banks.py::test_delete_question_bank FAILED       [ 
+64%]
+backend_test_results_final_fix.txt:159:tests/api/test_ques
+tion_banks.py::test_create_bank_question FAILED       [ 
+64%]
+backend_test_results_final_fix.txt:160:tests/api/test_ques
+tion_banks.py::test_generate_quiz_from_banks FAILED   [ 
+65%]
+backend_test_results_final_fix.txt:177:tests/integration/t
+est_2fa_login_flow.py::test_2fa_login_flow_integration 
+FAILED [ 72%]
+backend_test_results_final_fix.txt:186:tests/integration/t
+est_subscription_lifecycle.py::test_subscription_lifecycle
+_integration FAILED [ 76%]
+backend_test_results_final_fix.txt:188:tests/integration/t
+est_websocket.py::TestDiscussionWebSocket::test_websocket_
+connection_authorized FAILED [ 77%]
+backend_test_results_final_fix.txt:189:tests/integration/t
+est_websocket.py::TestDiscussionWebSocket::test_typing_ind
+icator FAILED [ 77%]
+backend_test_results_final_fix.txt:190:tests/integration/t
+est_websocket.py::TestDiscussionWebSocket::test_multiple_u
+sers_discussion FAILED [ 78%]
+backend_test_results_final_fix.txt:191:tests/integration/t
+est_websocket.py::TestLiveClassWebSocket::test_live_class_
+connection ERROR [ 78%]
+backend_test_results_final_fix.txt:192:tests/integration/t
+est_websocket.py::TestLiveClassWebSocket::test_chat_messag
+e_broadcast ERROR [ 79%]
+backend_test_results_final_fix.txt:193:tests/integration/t
+est_websocket.py::TestLiveClassWebSocket::test_reaction_br
+oadcast ERROR [ 79%]
+backend_test_results_final_fix.txt:194:tests/integration/t
+est_websocket.py::TestLiveClassWebSocket::test_participant
+_tracking ERROR [ 80%]
+backend_test_results_final_fix.txt:195:tests/integration/t
+est_websocket.py::TestNotificationsWebSocket::test_notific
+ations_connection FAILED [ 80%]
+backend_test_results_final_fix.txt:196:tests/integration/t
+est_websocket.py::TestQuizWebSocket::test_quiz_connection 
+FAILED [ 80%]
+backend_test_results_final_fix.txt:197:tests/integration/t
+est_websocket.py::TestQuizWebSocket::test_answer_submissio
+n_broadcast FAILED [ 81%]
+backend_test_results_final_fix.txt:198:tests/integration/t
+est_websocket.py::TestWebSocketConnectionManager::test_hea
+rtbeat_mechanism FAILED [ 81%]
+backend_test_results_final_fix.txt:199:tests/integration/t
+est_websocket.py::TestWebSocketConnectionManager::test_con
+nection_cleanup_on_disconnect FAILED [ 82%]
+backend_test_results_final_fix.txt:211:tests/test_reviews.
+py::test_course_reviews_workflow FAILED               [ 
+87%]
+backend_test_results_final_fix.txt:214:tests/test_sso_oaut
+h.py::test_oauth_login_flow ERROR                     [ 
+88%]
+backend_test_results_final_fix.txt:217:tests/test_subscrip
+tions_flow.py::test_subscribe_user ERROR              [ 
+90%]
+backend_test_results_final_fix.txt:218:tests/test_subscrip
+tions_flow.py::test_subscribe_with_trial ERROR        [ 
+90%]
+backend_test_results_final_fix.txt:219:tests/test_subscrip
+tions_flow.py::test_subscribe_yearly ERROR            [ 
+90%]
+backend_test_results_final_fix.txt:220:tests/test_subscrip
+tions_flow.py::test_duplicate_subscription ERROR      [ 
+91%]
+backend_test_results_final_fix.txt:221:tests/test_subscrip
+tions_flow.py::test_cancel_subscription_at_period_end 
+ERROR [ 91%]
+backend_test_results_final_fix.txt:222:tests/test_subscrip
+tions_flow.py::test_cancel_subscription_immediately ERROR 
+[ 92%]
+backend_test_results_final_fix.txt:223:tests/test_subscrip
+tions_flow.py::test_check_access ERROR                [ 
+92%]
+backend_test_results_final_fix.txt:225:tests/test_subscrip
+tions_flow.py::test_get_user_subscription ERROR       [ 
+93%]
+backend_test_results_final_fix.txt:227:tests/test_tax_serv
+ice.py::test_calculate_tax_no_exemption ERROR         [ 
+94%]
+backend_test_results_final_fix.txt:228:tests/test_tax_serv
+ice.py::test_calculate_tax_inclusive ERROR            [ 
+94%]
+backend_test_results_final_fix.txt:233:tests/test_tax_serv
+ice.py::test_no_tax_for_region ERROR                  [ 
+96%]
+backend_test_results_final_fix.txt:234:tests/test_two_fact
+or_flow.py::test_2fa_setup_flow ERROR                 [ 
+97%]
+backend_test_results_final_fix.txt:235:tests/test_two_fact
+or_flow.py::test_2fa_verify_setup_invalid_code ERROR  [ 
+97%]
+backend_test_results_final_fix.txt:236:tests/test_two_fact
+or_flow.py::test_2fa_login_verification ERROR         [ 
+98%]
+backend_test_results_final_fix.txt:237:tests/test_two_fact
+or_flow.py::test_2fa_backup_code_usage ERROR          [ 
+98%]
+backend_test_results_final_fix.txt:238:tests/test_two_fact
+or_flow.py::test_2fa_disable_flow ERROR               [ 
+99%]
+backend_test_results_final_fix.txt:239:tests/test_two_fact
+or_flow.py::test_2fa_status_endpoint ERROR            [ 
+99%]
+backend_test_results_final_fix.txt:240:tests/test_two_fact
+or_flow.py::test_2fa_already_enabled_setup ERROR      
+[100%]
+backend_test_results_final_fix.txt:241:tests/test_two_fact
+or_flow.py::test_2fa_already_enabled_setup ERROR      
+[100%]
+backend_test_results_final_fix.txt:243:===================
+================ ERRORS 
+====================================
+backend_test_results_final_fix.txt:244:______ ERROR at 
+setup of TestOrderEndpoints.test_create_order_from_cart 
+_______
+backend_test_results_final_fix.txt:253:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:256:___ ERROR at setup 
+of TestOrderEndpoints.test_create_order_with_empty_cart 
+____
+backend_test_results_final_fix.txt:265:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:268:_________ ERROR at 
+setup of TestOrderEndpoints.test_get_order_history 
+_________
+backend_test_results_final_fix.txt:277:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:280:_________ ERROR at 
+setup of TestOrderEndpoints.test_get_order_details 
+_________
+backend_test_results_final_fix.txt:289:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:292:________ ERROR at 
+setup of TestOrderEndpoints.test_get_order_by_number 
+________
+backend_test_results_final_fix.txt:301:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:304:_______ ERROR at 
+setup of TestOrderEndpoints.test_cancel_pending_order 
+________
+backend_test_results_final_fix.txt:313:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:316:___ ERROR at setup 
+of TestOrderEndpoints.test_cannot_cancel_completed_order 
+___
+backend_test_results_final_fix.txt:325:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:328:_ ERROR at setup 
+of 
+TestOrderEndpoints.test_process_order_creates_enrollments 
+_
+backend_test_results_final_fix.txt:337:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:340:_____ ERROR at 
+setup of 
+TestOrderEndpoints.test_order_unauthorized_access _____
+backend_test_results_final_fix.txt:349:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:352:________ ERROR at 
+setup of TestOrderEndpoints.test_guest_order_lookup 
+_________
+backend_test_results_final_fix.txt:361:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:364:______ ERROR at 
+setup of TestOrderEndpoints.test_order_number_uniqueness 
+______
+backend_test_results_final_fix.txt:373:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:376:____________ ERROR 
+at setup of test_create_peer_review_assignment 
+_____________
+backend_test_results_final_fix.txt:377:E   
+AssertionError: Assignment creation failed: 404 - 
+{"detail":"Not Found"}
+backend_test_results_final_fix.txt:381:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:384:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:385:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:386:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:387:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:388:___________________
+ ERROR at setup of test_peer_review_flow 
+___________________
+backend_test_results_final_fix.txt:389:E   
+AssertionError: Assignment creation failed: 404 - 
+{"detail":"Not Found"}
+backend_test_results_final_fix.txt:393:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:396:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:397:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:398:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:399:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:400:_____ ERROR at 
+setup of 
+TestLiveClassWebSocket.test_live_class_connection _____
+backend_test_results_final_fix.txt:401:E   KeyError: 
+'in_progress'
+backend_test_results_final_fix.txt:404:E   LookupError: 
+'in_progress' is not among the defined enum values. Enum 
+name: liveclassstatus. Possible values: SCHEDULED, LIVE, 
+COMPLETED, CANCELLED
+backend_test_results_final_fix.txt:405:____ ERROR at 
+setup of 
+TestLiveClassWebSocket.test_chat_message_broadcast _____
+backend_test_results_final_fix.txt:406:E   KeyError: 
+'in_progress'
+backend_test_results_final_fix.txt:409:E   LookupError: 
+'in_progress' is not among the defined enum values. Enum 
+name: liveclassstatus. Possible values: SCHEDULED, LIVE, 
+COMPLETED, CANCELLED
+backend_test_results_final_fix.txt:410:______ ERROR at 
+setup of TestLiveClassWebSocket.test_reaction_broadcast 
+_______
+backend_test_results_final_fix.txt:411:E   KeyError: 
+'in_progress'
+backend_test_results_final_fix.txt:414:E   LookupError: 
+'in_progress' is not among the defined enum values. Enum 
+name: liveclassstatus. Possible values: SCHEDULED, LIVE, 
+COMPLETED, CANCELLED
+backend_test_results_final_fix.txt:415:_____ ERROR at 
+setup of TestLiveClassWebSocket.test_participant_tracking 
+______
+backend_test_results_final_fix.txt:416:E   KeyError: 
+'in_progress'
+backend_test_results_final_fix.txt:419:E   LookupError: 
+'in_progress' is not among the defined enum values. Enum 
+name: liveclassstatus. Possible values: SCHEDULED, LIVE, 
+COMPLETED, CANCELLED
+backend_test_results_final_fix.txt:420:___________________
+ ERROR at setup of test_oauth_login_flow 
+___________________
+backend_test_results_final_fix.txt:431:___________________
+_ ERROR at setup of test_subscribe_user 
+____________________
+backend_test_results_final_fix.txt:463:_________________ 
+ERROR at setup of test_subscribe_with_trial 
+_________________
+backend_test_results_final_fix.txt:492:___________________
+ ERROR at setup of test_subscribe_yearly 
+___________________
+backend_test_results_final_fix.txt:518:________________ 
+ERROR at setup of test_duplicate_subscription 
+________________
+backend_test_results_final_fix.txt:537:      with 
+pytest.raises(ValueError, match="already has an active 
+subscription"):
+backend_test_results_final_fix.txt:548:__________ ERROR 
+at setup of test_cancel_subscription_at_period_end 
+___________
+backend_test_results_final_fix.txt:556:___________ ERROR 
+at setup of test_cancel_subscription_immediately 
+____________
+backend_test_results_final_fix.txt:564:___________________
+__ ERROR at setup of test_check_access 
+_____________________
+backend_test_results_final_fix.txt:572:________________ 
+ERROR at setup of test_get_user_subscription 
+_________________
+backend_test_results_final_fix.txt:580:______________ 
+ERROR at setup of test_calculate_tax_no_exemption 
+______________
+backend_test_results_final_fix.txt:588:_______________ 
+ERROR at setup of test_calculate_tax_inclusive 
+________________
+backend_test_results_final_fix.txt:596:__________________ 
+ERROR at setup of test_no_tax_for_region 
+___________________
+backend_test_results_final_fix.txt:604:___________________
+_ ERROR at setup of test_2fa_setup_flow 
+____________________
+backend_test_results_final_fix.txt:612:____________ ERROR 
+at setup of test_2fa_verify_setup_invalid_code 
+_____________
+backend_test_results_final_fix.txt:620:________________ 
+ERROR at setup of test_2fa_login_verification 
+________________
+backend_test_results_final_fix.txt:628:________________ 
+ERROR at setup of test_2fa_backup_code_usage 
+_________________
+backend_test_results_final_fix.txt:636:___________________
+ ERROR at setup of test_2fa_disable_flow 
+___________________
+backend_test_results_final_fix.txt:644:_________________ 
+ERROR at setup of test_2fa_status_endpoint 
+__________________
+backend_test_results_final_fix.txt:652:______________ 
+ERROR at setup of test_2fa_already_enabled_setup 
+_______________
+backend_test_results_final_fix.txt:660:_____________ 
+ERROR at teardown of test_2fa_already_enabled_setup 
+_____________
+backend_test_results_final_fix.txt:679:            except 
+PermissionError:
+backend_test_results_final_fix.txt:683:E   
+AttributeError: module 'app.services' has no attribute 
+'saml_service'. Did you mean: 'ai_service'?
+backend_test_results_final_fix.txt:685:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:692:C:\Users\Sarit\AppD
+ata\Local\Programs\Python\Python313\Lib\pkgutil.py:528: 
+AttributeError: module 'app.services' has no attribute 
+'saml_service'. Did you mean: 'ai_service'?
+backend_test_results_final_fix.txt:696:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:700:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:705:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:709:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:714:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:718:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:723:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:727:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:732:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:736:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:741:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:745:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:750:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:754:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:759:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:763:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:768:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:772:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:777:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:781:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:786:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:790:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:795:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:799:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:804:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:808:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:813:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:817:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:822:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:826:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:831:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:835:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:840:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:844:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:849:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:853:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:858:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:862:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:867:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:871:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:876:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:880:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:885:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:889:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:894:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:898:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:900:E   
+sqlite3.IntegrityError: NOT NULL constraint failed: 
+courses.slug
+backend_test_results_final_fix.txt:903:E   
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) 
+NOT NULL constraint failed: courses.slug
+backend_test_results_final_fix.txt:906:    (Background on 
+this error at: https://sqlalche.me/e/20/gkpj)
+backend_test_results_final_fix.txt:908:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:911:C:\Users\Sarit\AppD
+ata\Local\Programs\Python\Python313\Lib\site-packages\sqla
+lchemy\engine\default.py:951: 
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) 
+NOT NULL constraint failed: courses.slug
+backend_test_results_final_fix.txt:912:E   
+sqlite3.IntegrityError: NOT NULL constraint failed: 
+courses.slug
+backend_test_results_final_fix.txt:915:E   
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) 
+NOT NULL constraint failed: courses.slug
+backend_test_results_final_fix.txt:918:    (Background on 
+this error at: https://sqlalche.me/e/20/gkpj)
+backend_test_results_final_fix.txt:920:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:923:C:\Users\Sarit\AppD
+ata\Local\Programs\Python\Python313\Lib\site-packages\sqla
+lchemy\engine\default.py:951: 
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) 
+NOT NULL constraint failed: courses.slug
+backend_test_results_final_fix.txt:924:E   KeyError: 
+'access_token'
+backend_test_results_final_fix.txt:926:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:930:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:931:D:\Graphology\Maste
+r 
+Software\Eduecosystem\backend\app\tests\utils\user.py:20: 
+KeyError: 'access_token'
+backend_test_results_final_fix.txt:935:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:939:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:944:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:948:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:953:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:957:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:962:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:966:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:971:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:975:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:980:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:984:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:989:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:993:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:998:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1002:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1006:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1016:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1020:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1028:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1032:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1040:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1044:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1052:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1056:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1064:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1068:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1076:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1080:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1088:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1092:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1097:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1101:Error emitting 
+notification: no running event loop
+backend_test_results_final_fix.txt:1102:Failed to send 
+enrollment email: Email template 'course_enrollment' not 
+found
+backend_test_results_final_fix.txt:1104:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1109:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1113:Error emitting 
+notification: no running event loop
+backend_test_results_final_fix.txt:1114:Failed to send 
+enrollment email: Email template 'course_enrollment' not 
+found
+backend_test_results_final_fix.txt:1116:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1121:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1125:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1130:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1134:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1139:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1143:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1148:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1152:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1157:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1161:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1166:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1170:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1175:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1179:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1184:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1188:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1193:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1197:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1202:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1206:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1211:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1215:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1220:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1224:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1229:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1233:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1238:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1242:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1244:E   KeyError: 'id'
+backend_test_results_final_fix.txt:1246:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1250:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1251:D:\Graphology\Mast
+er Software\Eduecosystem\backend\tests\api\test_question_b
+anks.py:250: KeyError: 'id'
+backend_test_results_final_fix.txt:1255:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1259:WARNING  
+app.middleware.request_logging:request_logging.py:89 
+Client error response
+backend_test_results_final_fix.txt:1261:E   
+AttributeError: module 
+'app.services.subscription_service' has no attribute 
+'stripe'
+backend_test_results_final_fix.txt:1263:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1266:C:\Users\Sarit\App
+Data\Local\Programs\Python\Python313\Lib\pkgutil.py:528: 
+AttributeError: module 
+'app.services.subscription_service' has no attribute 
+'stripe'
+backend_test_results_final_fix.txt:1275:E   TypeError: 
+'time_limit' is an invalid keyword argument for Quiz
+backend_test_results_final_fix.txt:1276:C:\Users\Sarit\App
+Data\Local\Programs\Python\Python313\Lib\site-packages\sql
+alchemy\orm\decl_base.py:2179: TypeError: 'time_limit' is 
+an invalid keyword argument for Quiz
+backend_test_results_final_fix.txt:1277:E   TypeError: 
+'time_limit' is an invalid keyword argument for Quiz
+backend_test_results_final_fix.txt:1278:C:\Users\Sarit\App
+Data\Local\Programs\Python\Python313\Lib\site-packages\sql
+alchemy\orm\decl_base.py:2179: TypeError: 'time_limit' is 
+an invalid keyword argument for Quiz
+backend_test_results_final_fix.txt:1283:E   
+sqlite3.IntegrityError: NOT NULL constraint failed: 
+courses.slug
+backend_test_results_final_fix.txt:1286:E   
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) 
+NOT NULL constraint failed: courses.slug
+backend_test_results_final_fix.txt:1289:    (Background 
+on this error at: https://sqlalche.me/e/20/gkpj)
+backend_test_results_final_fix.txt:1291:WARNING  
+app.core.redis_cache:redis_cache.py:37 Redis connection 
+failed: Error 10061 connecting to localhost:6379. No 
+connection could be made because the target machine 
+actively refused it.. Caching disabled.
+backend_test_results_final_fix.txt:1294:C:\Users\Sarit\App
+Data\Local\Programs\Python\Python313\Lib\site-packages\sql
+alchemy\engine\default.py:951: 
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) 
+NOT NULL constraint failed: courses.slug
+backend_test_results_final_fix.txt:1297:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\schemas\coupon.py:28: 
+PydanticDeprecatedSince20: Pydantic V1 style `@validator` 
+validators are deprecated. You should migrate to Pydantic 
+V2 style `@field_validator` validators, see the migration 
+guide for more details. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1301:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\schemas\coupon.py:34: 
+PydanticDeprecatedSince20: Pydantic V1 style `@validator` 
+validators are deprecated. You should migrate to Pydantic 
+V2 style `@field_validator` validators, see the migration 
+guide for more details. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1305:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\schemas\coupon.py:54: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1337:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\analytics.py:27: PydanticDeprecatedSince20: Support 
+for class-based `config` is deprecated, use ConfigDict 
+instead. Deprecated in Pydantic V2.0 to be removed in 
+V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1341:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\analytics.py:95: PydanticDeprecatedSince20: Support 
+for class-based `config` is deprecated, use ConfigDict 
+instead. Deprecated in Pydantic V2.0 to be removed in 
+V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1345:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\analytics.py:157: PydanticDeprecatedSince20: Support 
+for class-based `config` is deprecated, use ConfigDict 
+instead. Deprecated in Pydantic V2.0 to be removed in 
+V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1349:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\analytics.py:239: PydanticDeprecatedSince20: Support 
+for class-based `config` is deprecated, use ConfigDict 
+instead. Deprecated in Pydantic V2.0 to be removed in 
+V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1353:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\marketplace.py:42: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1364:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\marketplace.py:78: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1368:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\marketplace.py:105: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1372:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\marketplace.py:119: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1376:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\translation.py:36: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1380:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\translation.py:65: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1384:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\translation.py:110: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1388:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\translation.py:162: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1392:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\ai_tools.py:29: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1396:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\ai_tools.py:61: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1400:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\ai_tools.py:78: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1404:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\sso.py:45: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1408:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\sso.py:78: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1412:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\sso.py:98: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1416:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\sso.py:109: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1424:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\sch
+emas\payment_method.py:33: PydanticDeprecatedSince20: 
+Support for class-based `config` is deprecated, use 
+ConfigDict instead. Deprecated in Pydantic V2.0 to be 
+removed in V3.0. See Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1428:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\schemas\tax.py:55: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1432:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\schemas\tax.py:89: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1436:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\schemas\tax.py:136: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1456:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\learning_groups.py:34: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1460:  
+D:\Graphology\Master Software\Eduecosystem\backend\app\api
+\api_v1\endpoints\learning_groups.py:53: 
+PydanticDeprecatedSince20: Support for class-based 
+`config` is deprecated, use ConfigDict instead. 
+Deprecated in Pydantic V2.0 to be removed in V3.0. See 
+Pydantic V2 Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1639:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\crud\course.py:99: 
+PydanticDeprecatedSince20: The `dict` method is 
+deprecated; use `model_dump` instead. Deprecated in 
+Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
+Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1643:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\crud\course.py:134: 
+PydanticDeprecatedSince20: The `dict` method is 
+deprecated; use `model_dump` instead. Deprecated in 
+Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
+Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1660:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\crud\course.py:212: 
+PydanticDeprecatedSince20: The `dict` method is 
+deprecated; use `model_dump` instead. Deprecated in 
+Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
+Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1664:  
+D:\Graphology\Master 
+Software\Eduecosystem\backend\app\crud\base.py:51: 
+PydanticDeprecatedSince20: The `dict` method is 
+deprecated; use `model_dump` instead. Deprecated in 
+Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
+Migration Guide at 
+https://errors.pydantic.dev/2.12/migration/
+backend_test_results_final_fix.txt:1676:    print(f"Error 
+emitting notification: {e}")
+backend_test_results_final_fix.txt:1728:FAILED tests/api/a
+pi_v1/test_sso_integration.py::test_sso_saml_flow - 
+Attribu...
+backend_test_results_final_fix.txt:1729:FAILED tests/api/t
+est_analytics.py::test_dashboard_analytics_basic - assert 
+4...
+backend_test_results_final_fix.txt:1730:FAILED tests/api/t
+est_analytics.py::test_analytics_with_shadow_sessions - 
+ass...
+backend_test_results_final_fix.txt:1731:FAILED tests/api/t
+est_analytics.py::test_analytics_handwriting_count - 
+assert...
+backend_test_results_final_fix.txt:1732:FAILED tests/api/t
+est_analytics.py::test_analytics_insights_generation - 
+asse...
+backend_test_results_final_fix.txt:1733:FAILED tests/api/t
+est_analytics.py::test_analytics_attention_tracking - 
+asser...
+backend_test_results_final_fix.txt:1734:FAILED 
+tests/api/test_analytics.py::test_detailed_analytics - 
+assert 404 == 200
+backend_test_results_final_fix.txt:1735:FAILED tests/api/t
+est_analytics.py::test_analytics_with_activity_heatmap - 
+as...
+backend_test_results_final_fix.txt:1736:FAILED 
+tests/api/test_analytics.py::test_analytics_empty_state - 
+assert 404 =...
+backend_test_results_final_fix.txt:1737:FAILED tests/api/t
+est_analytics.py::test_unauthorized_analytics_access - 
+asse...
+backend_test_results_final_fix.txt:1738:FAILED 
+tests/api/test_announcements.py::test_create_announcement 
+- assert 404...
+backend_test_results_final_fix.txt:1739:FAILED tests/api/t
+est_announcements.py::test_get_course_announcements - 
+asser...
+backend_test_results_final_fix.txt:1740:FAILED tests/api/t
+est_announcements.py::test_mark_announcement_as_read - 
+asse...
+backend_test_results_final_fix.txt:1741:FAILED tests/api/t
+est_announcements.py::test_get_unread_announcements_count
+backend_test_results_final_fix.txt:1742:FAILED 
+tests/api/test_announcements.py::test_pin_announcement - 
+assert 404 ==...
+backend_test_results_final_fix.txt:1743:FAILED 
+tests/api/test_announcements.py::test_delete_announcement 
+- assert 404...
+backend_test_results_final_fix.txt:1744:FAILED tests/api/t
+est_certificate_templates.py::test_create_certificate_temp
+late
+backend_test_results_final_fix.txt:1745:FAILED tests/api/t
+est_certificate_templates.py::test_get_all_templates - 
+asse...
+backend_test_results_final_fix.txt:1746:FAILED tests/api/t
+est_certificate_templates.py::test_get_my_templates - 
+asser...
+backend_test_results_final_fix.txt:1747:FAILED tests/api/t
+est_certificate_templates.py::test_update_template - 
+assert...
+backend_test_results_final_fix.txt:1748:FAILED tests/api/t
+est_certificate_templates.py::test_set_default_template - 
+a...
+backend_test_results_final_fix.txt:1749:FAILED tests/api/t
+est_certificate_templates.py::test_get_default_template - 
+a...
+backend_test_results_final_fix.txt:1750:FAILED tests/api/t
+est_certificate_templates.py::test_delete_template - 
+assert...
+backend_test_results_final_fix.txt:1751:FAILED tests/api/t
+est_certificate_templates.py::test_cannot_delete_default_t
+emplate
+backend_test_results_final_fix.txt:1752:FAILED 
+tests/api/test_certificates.py::test_get_my_certificates 
+- sqlalchemy....
+backend_test_results_final_fix.txt:1753:FAILED 
+tests/api/test_certificates.py::test_download_certificate 
+- sqlalchemy...
+backend_test_results_final_fix.txt:1754:FAILED tests/api/t
+est_collaborative_projects.py::test_create_team_and_join 
+- ...
+backend_test_results_final_fix.txt:1755:FAILED tests/api/t
+est_discussions.py::test_create_discussion_category - 
+asser...
+backend_test_results_final_fix.txt:1756:FAILED tests/api/t
+est_discussions.py::test_create_discussion_thread - 
+assert ...
+backend_test_results_final_fix.txt:1757:FAILED 
+tests/api/test_discussions.py::test_reply_to_thread - 
+assert 404 in [2...
+backend_test_results_final_fix.txt:1758:FAILED 
+tests/api/test_discussions.py::test_vote_on_post - assert 
+404 == 200
+backend_test_results_final_fix.txt:1759:FAILED 
+tests/api/test_discussions.py::test_mark_answer - assert 
+404 == 200
+backend_test_results_final_fix.txt:1760:FAILED 
+tests/api/test_discussions.py::test_search_threads - 
+assert 404 == 200
+backend_test_results_final_fix.txt:1761:FAILED 
+tests/api/test_discussions.py::test_get_thread_with_posts 
+- assert 404...
+backend_test_results_final_fix.txt:1762:FAILED tests/api/t
+est_discussions.py::test_filter_unanswered_threads - 
+assert...
+backend_test_results_final_fix.txt:1763:FAILED 
+tests/api/test_groups.py::test_group_stats_calculation - 
+assert 615 ==...
+backend_test_results_final_fix.txt:1764:FAILED 
+tests/api/test_live_classes.py::test_create_live_class - 
+assert 404 ==...
+backend_test_results_final_fix.txt:1765:FAILED tests/api/t
+est_live_classes.py::test_get_course_live_classes - 
+assert ...
+backend_test_results_final_fix.txt:1766:FAILED 
+tests/api/test_live_classes.py::test_start_live_class - 
+assert 404 == 200
+backend_test_results_final_fix.txt:1767:FAILED 
+tests/api/test_live_classes.py::test_join_live_class - 
+assert 404 == 200
+backend_test_results_final_fix.txt:1768:FAILED tests/api/t
+est_live_classes.py::test_complete_live_class_with_recordi
+ng
+backend_test_results_final_fix.txt:1769:FAILED tests/api/t
+est_live_classes.py::test_get_live_class_attendance - 
+asser...
+backend_test_results_final_fix.txt:1770:FAILED tests/api/t
+est_live_classes.py::test_filter_upcoming_live_classes - 
+as...
+backend_test_results_final_fix.txt:1771:FAILED 
+tests/api/test_lms.py::test_update_lesson_progress - 
+assert 404 in [20...
+backend_test_results_final_fix.txt:1772:FAILED 
+tests/api/test_lms.py::test_get_certificate_not_completed 
+- assert 404...
+backend_test_results_final_fix.txt:1773:FAILED 
+tests/api/test_lms.py::test_get_my_certificates_empty - 
+assert 404 == 200
+backend_test_results_final_fix.txt:1774:FAILED tests/api/t
+est_lms.py::test_certificate_requires_authentication - 
+asse...
+backend_test_results_final_fix.txt:1775:FAILED 
+tests/api/test_notes.py::test_create_lesson_note - assert 
+404 in [200,...
+backend_test_results_final_fix.txt:1776:FAILED 
+tests/api/test_notes.py::test_get_lesson_notes - assert 
+404 == 200
+backend_test_results_final_fix.txt:1777:FAILED 
+tests/api/test_notes.py::test_search_notes - assert 404 
+== 200
+backend_test_results_final_fix.txt:1778:FAILED 
+tests/api/test_notes.py::test_bookmark_lesson - assert 
+404 in [200, 201]
+backend_test_results_final_fix.txt:1779:FAILED 
+tests/api/test_notes.py::test_unbookmark_lesson - assert 
+404 == 204
+backend_test_results_final_fix.txt:1780:FAILED 
+tests/api/test_notes.py::test_bookmark_course - assert 
+404 in [200, 201]
+backend_test_results_final_fix.txt:1781:FAILED 
+tests/api/test_notes.py::test_get_my_bookmarks - assert 
+404 == 200
+backend_test_results_final_fix.txt:1782:FAILED tests/api/t
+est_question_banks.py::test_create_question_bank - assert 
+4...
+backend_test_results_final_fix.txt:1783:FAILED tests/api/t
+est_question_banks.py::test_list_question_banks - assert 
+40...
+backend_test_results_final_fix.txt:1784:FAILED tests/api/t
+est_question_banks.py::test_update_question_bank - assert 
+4...
+backend_test_results_final_fix.txt:1785:FAILED tests/api/t
+est_question_banks.py::test_delete_question_bank - assert 
+4...
+backend_test_results_final_fix.txt:1786:FAILED tests/api/t
+est_question_banks.py::test_create_bank_question - assert 
+4...
+backend_test_results_final_fix.txt:1787:FAILED tests/api/t
+est_question_banks.py::test_generate_quiz_from_banks - 
+KeyE...
+backend_test_results_final_fix.txt:1788:FAILED tests/integ
+ration/test_2fa_login_flow.py::test_2fa_login_flow_integra
+tion
+backend_test_results_final_fix.txt:1789:FAILED tests/integ
+ration/test_subscription_lifecycle.py::test_subscription_l
+ifecycle_integration
+backend_test_results_final_fix.txt:1790:FAILED tests/integ
+ration/test_websocket.py::TestDiscussionWebSocket::test_we
+bsocket_connection_authorized
+backend_test_results_final_fix.txt:1791:FAILED tests/integ
+ration/test_websocket.py::TestDiscussionWebSocket::test_ty
+ping_indicator
+backend_test_results_final_fix.txt:1792:FAILED tests/integ
+ration/test_websocket.py::TestDiscussionWebSocket::test_mu
+ltiple_users_discussion
+backend_test_results_final_fix.txt:1793:FAILED tests/integ
+ration/test_websocket.py::TestNotificationsWebSocket::test
+_notifications_connection
+backend_test_results_final_fix.txt:1794:FAILED tests/integ
+ration/test_websocket.py::TestQuizWebSocket::test_quiz_con
+nection
+backend_test_results_final_fix.txt:1795:FAILED tests/integ
+ration/test_websocket.py::TestQuizWebSocket::test_answer_s
+ubmission_broadcast
+backend_test_results_final_fix.txt:1796:FAILED tests/integ
+ration/test_websocket.py::TestWebSocketConnectionManager::
+test_heartbeat_mechanism
+backend_test_results_final_fix.txt:1797:FAILED tests/integ
+ration/test_websocket.py::TestWebSocketConnectionManager::
+test_connection_cleanup_on_disconnect
+backend_test_results_final_fix.txt:1798:FAILED 
+tests/test_reviews.py::test_course_reviews_workflow - 
+sqlalchemy.exc.I...
+backend_test_results_final_fix.txt:1799:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_create_order_from_c
+art
+backend_test_results_final_fix.txt:1800:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_create_order_with_e
+mpty_cart
+backend_test_results_final_fix.txt:1801:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_get_order_history
+backend_test_results_final_fix.txt:1802:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_get_order_details
+backend_test_results_final_fix.txt:1803:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_get_order_by_number
+backend_test_results_final_fix.txt:1804:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_cancel_pending_orde
+r
+backend_test_results_final_fix.txt:1805:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_cannot_cancel_compl
+eted_order
+backend_test_results_final_fix.txt:1806:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_process_order_creat
+es_enrollments
+backend_test_results_final_fix.txt:1807:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_order_unauthorized_
+access
+backend_test_results_final_fix.txt:1808:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_guest_order_lookup
+backend_test_results_final_fix.txt:1809:ERROR tests/api/te
+st_orders.py::TestOrderEndpoints::test_order_number_unique
+ness
+backend_test_results_final_fix.txt:1810:ERROR tests/api/te
+st_peer_reviews.py::test_create_peer_review_assignment - 
+As...
+backend_test_results_final_fix.txt:1811:ERROR 
+tests/api/test_peer_reviews.py::test_peer_review_flow - 
+AssertionError:...
+backend_test_results_final_fix.txt:1812:ERROR tests/integr
+ation/test_websocket.py::TestLiveClassWebSocket::test_live
+_class_connection
+backend_test_results_final_fix.txt:1813:ERROR tests/integr
+ation/test_websocket.py::TestLiveClassWebSocket::test_chat
+_message_broadcast
+backend_test_results_final_fix.txt:1814:ERROR tests/integr
+ation/test_websocket.py::TestLiveClassWebSocket::test_reac
+tion_broadcast
+backend_test_results_final_fix.txt:1815:ERROR tests/integr
+ation/test_websocket.py::TestLiveClassWebSocket::test_part
+icipant_tracking
+backend_test_results_final_fix.txt:1816:ERROR 
+tests/test_sso_oauth.py::test_oauth_login_flow
+backend_test_results_final_fix.txt:1817:ERROR 
+tests/test_subscriptions_flow.py::test_subscribe_user
+backend_test_results_final_fix.txt:1818:ERROR tests/test_s
+ubscriptions_flow.py::test_subscribe_with_trial
+backend_test_results_final_fix.txt:1819:ERROR 
+tests/test_subscriptions_flow.py::test_subscribe_yearly
+backend_test_results_final_fix.txt:1820:ERROR tests/test_s
+ubscriptions_flow.py::test_duplicate_subscription
+backend_test_results_final_fix.txt:1821:ERROR tests/test_s
+ubscriptions_flow.py::test_cancel_subscription_at_period_e
+nd
+backend_test_results_final_fix.txt:1822:ERROR tests/test_s
+ubscriptions_flow.py::test_cancel_subscription_immediately
+backend_test_results_final_fix.txt:1823:ERROR 
+tests/test_subscriptions_flow.py::test_check_access
+backend_test_results_final_fix.txt:1824:ERROR tests/test_s
+ubscriptions_flow.py::test_get_user_subscription
+backend_test_results_final_fix.txt:1825:ERROR 
+tests/test_tax_service.py::test_calculate_tax_no_exemption
+backend_test_results_final_fix.txt:1826:ERROR 
+tests/test_tax_service.py::test_calculate_tax_inclusive
+backend_test_results_final_fix.txt:1827:ERROR 
+tests/test_tax_service.py::test_no_tax_for_region
+backend_test_results_final_fix.txt:1828:ERROR 
+tests/test_two_factor_flow.py::test_2fa_setup_flow
+backend_test_results_final_fix.txt:1829:ERROR tests/test_t
+wo_factor_flow.py::test_2fa_verify_setup_invalid_code
+backend_test_results_final_fix.txt:1830:ERROR 
+tests/test_two_factor_flow.py::test_2fa_login_verification
+backend_test_results_final_fix.txt:1831:ERROR 
+tests/test_two_factor_flow.py::test_2fa_backup_code_usage
+backend_test_results_final_fix.txt:1832:ERROR 
+tests/test_two_factor_flow.py::test_2fa_disable_flow
+backend_test_results_final_fix.txt:1833:ERROR 
+tests/test_two_factor_flow.py::test_2fa_status_endpoint
+backend_test_results_final_fix.txt:1834:ERROR tests/test_t
+wo_factor_flow.py::test_2fa_already_enabled_setup
+backend_test_results_final_fix.txt:1835:ERROR tests/test_t
+wo_factor_flow.py::test_2fa_already_enabled_setup - 
+Failed:...
+backend_test_results_final_fix.txt:1836:= 71 failed, 118 
+passed, 6 skipped, 977 warnings, 37 errors in 883.68s 
+(0:14:43) =
+
+

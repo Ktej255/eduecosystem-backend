@@ -1,0 +1,69 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.0.1, pluggy-1.6.0 -- C:\Users\Sarit\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Graphology\Master Software\Eduecosystem\backend
+configfile: pytest.ini
+plugins: anyio-4.11.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_reviews.py::test_course_reviews_workflow FAILED               [100%]
+
+================================== FAILURES ===================================
+________________________ test_course_reviews_workflow _________________________
+tests\test_reviews.py:39: in test_course_reviews_workflow
+    assert created_review["author_name"] is not None
+E   assert None is not None
+----------------------------- Captured log setup ------------------------------
+WARNING  app.core.redis_cache:redis_cache.py:37 Redis connection failed: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.. Caching disabled.
+WARNING  main:main.py:38 Redis cache not available - running without cache
+============================== warnings summary ===============================
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(net, dtype=torch.qint8, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    convert(model, mapping, inplace=True)
+
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(model, dtype=torch.qint8, inplace=True)
+
+tests/test_reviews.py::test_course_reviews_workflow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\core\security.py:16: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + expires_delta
+
+tests/test_reviews.py::test_course_reviews_workflow
+tests/test_reviews.py::test_course_reviews_workflow
+tests/test_reviews.py::test_course_reviews_workflow
+tests/test_reviews.py::test_course_reviews_workflow
+tests/test_reviews.py::test_course_reviews_workflow
+tests/test_reviews.py::test_course_reviews_workflow
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/test_reviews.py::test_course_reviews_workflow
+  D:\Graphology\Master Software\Eduecosystem\backend\tests\conftest.py:45: SAWarning: Can't sort tables for DROP; an unresolvable foreign key dependency exists between tables: lessons, modules, quizzes; and backend does not support ALTER.  To restore at least a partial sort, apply use_alter=True to ForeignKey and ForeignKeyConstraint objects involved in the cycle to mark these as known cycles that will be ignored.
+    Base.metadata.drop_all(bind=engine)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_reviews.py::test_course_reviews_workflow - assert None is not None
+======================= 1 failed, 12 warnings in 6.85s ========================

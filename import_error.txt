@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "D:\Graphology\Master Software\Eduecosystem\backend\debug_import_main.py", line 5, in <module>
+    from main import app
+  File "D:\Graphology\Master Software\Eduecosystem\backend\main.py", line 4, in <module>
+    from app.api.api_v1.api import api_router
+  File "D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\api.py", line 140, in <module>
+    course_payment.router, prefix="/course-payments", tags=["course-payments"]
+    ^^^^^^^^^^^^^^
+NameError: name 'course_payment' is not defined

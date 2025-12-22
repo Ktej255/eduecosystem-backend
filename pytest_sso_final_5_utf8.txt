@@ -1,0 +1,70 @@
+﻿python : pyclamd not installed. 
+Virus scanning disabled.
+At line:1 char:13
++ cd backend; python -m pytest 
+-v tests/api/api_v1/test_sso_int
+egration ...
++             ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo          : N 
+   otSpecified: (pyclamd not i  
+  ns...nning disabled.:String   
+ ) [], RemoteException
+    + FullyQualifiedErrorId : N 
+   ativeCommandError
+ 
+boto3 not installed. S3 storage 
+unavailable.
+ImportError while loading 
+conftest 'D:\Graphology\Master S
+oftware\Eduecosystem\backend\con
+ftest.py'.
+conftest.py:54: in <module>
+    from main import app
+main.py:136: in <module>
+    from 
+app.middleware.rate_limit 
+import limiter
+app\middleware\rate_limit.py:11:
+ in <module>
+    limiter = Limiter(
+C:\Users\Sarit\AppData\Local\Pro
+grams\Python\Python313\Lib\site-
+packages\slowapi\extension.py:24
+2: in __init__
+    self._storage = 
+storage_from_string(
+C:\Users\Sarit\AppData\Local\Pro
+grams\Python\Python313\Lib\site-
+packages\limits\storage\__init__
+.py:65: in storage_from_string
+    return cast(StorageTypes, 
+SCHEMES[scheme](storage_string, 
+**options))
+                              ^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+C:\Users\Sarit\AppData\Local\Pro
+grams\Python\Python313\Lib\site-
+packages\limits\storage\redis.py
+:96: in __init__
+    self.dependency = self.depen
+dencies[self.target_server].modu
+le
+                      ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Pro
+grams\Python\Python313\Lib\site-
+packages\limits\util.py:86: in 
+__getitem__
+    raise ConfigurationError(
+E   limits.errors.ConfigurationE
+rror: The minimum version of 
+3.0 for 'redis' could not be 
+found. Found version: 0.0.0
+DEBUG: Importing models in base.py
+DEBUG: Models imported in base.py
+WARNING: GEMINI_API_KEY not found in environment variables
+WARNING: TWO_FACTOR_ENCRYPTION_KEY not set. Using temporary key.
+Server initialized for testing (lifespan disabled).

@@ -1,0 +1,247 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.0.1, pluggy-1.6.0 -- C:\Users\Sarit\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Graphology\Master Software\Eduecosystem\backend
+configfile: pytest.ini
+plugins: anyio-4.11.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow FAILED      [100%]
+
+================================== FAILURES ===================================
+_____________________________ test_sso_full_flow ______________________________
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:2434: in _determine_joins
+    self.primaryjoin = join_condition(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\util.py:121: in join_condition
+    return Join._join_condition(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\selectable.py:1447: in _join_condition
+    raise exc.NoForeignKeysError(
+E   sqlalchemy.exc.NoForeignKeysError: Can't find any foreign key relationships between 'two_factor_auth' and 'two_factor_backup_codes'.
+
+The above exception was the direct cause of the following exception:
+tests\api\api_v1\test_sso_integration.py:43: in test_sso_full_flow
+    superuser_headers = get_superuser_headers(client, db)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\api\api_v1\test_sso_integration.py:18: in get_superuser_headers
+    user = crud_user.get_by_email(db, email=email)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\crud\user.py:8: in get_by_email
+    return db.query(User).filter(User.email == email).first()
+           ^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:2941: in query
+    return self._query_cls(entities, self, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py:276: in __init__
+    self._set_entities(entities)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py:289: in _set_entities
+    coercions.expect(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\coercions.py:388: in expect
+    insp._post_inspect
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py:1338: in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+                                           ^^^^^^^^^^^^^^
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2724: in _post_inspect
+    self._check_configure()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2401: in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4218: in _configure_registries
+    _do_configure_registries(registries, cascade)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:4259: in _do_configure_registries
+    mapper._post_configure_properties()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\mapper.py:2418: in _post_configure_properties
+    prop.init()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\interfaces.py:595: in init
+    self.do_init()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:1657: in do_init
+    self._setup_join_conditions()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:1895: in _setup_join_conditions
+    self._join_condition = jc = JoinCondition(
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:2321: in __init__
+    self._determine_joins()
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\relationships.py:2455: in _determine_joins
+    raise sa_exc.NoForeignKeysError(
+E   sqlalchemy.exc.NoForeignKeysError: Could not determine join condition between parent/child tables on relationship TwoFactorAuth.backup_codes - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+---------------------------- Captured stdout setup ----------------------------
+WARNING: GEMINI_API_KEY not found in environment variables
+WARNING: TWO_FACTOR_ENCRYPTION_KEY not set. Using temporary key.
+---------------------------- Captured stderr setup ----------------------------
+Server initialized for asgi.
+----------------------------- Captured log setup ------------------------------
+WARNING  app.core.storage:storage.py:24 boto3 not installed. S3 storage unavailable.
+WARNING  app.core.virus_scanner:virus_scanner.py:17 pyclamd not installed. Virus scanning disabled.
+WARNING  easyocr.easyocr:easyocr.py:71 Using CPU. Note: This module is much faster with a GPU.
+INFO     engineio.server:base_server.py:112 Server initialized for asgi.
+WARNING  main:main.py:38 Redis cache not available - running without cache
+WARNING  main:main.py:82 Redis Pub/Sub not available - WebSocket scaling disabled
+---------------------------- Captured stdout call -----------------------------
+Starting test_sso_full_flow
+Getting superuser headers...
+============================== warnings summary ===============================
+app\schemas\coupon.py:28
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\coupon.py:28: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('discount_type')
+
+app\schemas\coupon.py:34
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\coupon.py:34: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('discount_value')
+
+app\schemas\coupon.py:54
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\coupon.py:54: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Coupon(CouponBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\detection.py:81: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(net, dtype=torch.qint8, inplace=True)
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\ao\quantization\quantize.py:566: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    convert(model, mapping, inplace=True)
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\easyocr\recognition.py:177: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+  For migrations of users: 
+  1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+  2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+  3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+  see https://github.com/pytorch/ao/issues/2259 for more details
+    torch.quantization.quantize_dynamic(model, dtype=torch.qint8, inplace=True)
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\analytics.py:27: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class InstructorAnalyticsResponse(InstructorAnalyticsBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\analytics.py:95: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StudentAnalyticsResponse(StudentAnalyticsBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\analytics.py:157: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PlatformAnalyticsResponse(PlatformAnalyticsBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\analytics.py:239: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EventResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\marketplace.py:42: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PayoutResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'orm_mode' has been renamed to 'from_attributes'
+    warnings.warn(message, UserWarning)
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\marketplace.py:78: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BundleResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\marketplace.py:105: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PlanResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\marketplace.py:119: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SubscriptionResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\translation.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Language(LanguageBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\translation.py:65: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Translation(TranslationBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\translation.py:110: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ContentTranslation(ContentTranslationBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\translation.py:162: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserLanguagePreference(UserLanguagePreferenceBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\ai_tools.py:29: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EssayGradeResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\ai_tools.py:61: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DifficultyAnalysisResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\ai_tools.py:78: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PlagiarismCheckResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\sso.py:45: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OrganizationResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\sso.py:78: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SSOConfigResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\sso.py:98: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SSOSessionResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\sso.py:109: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SSOEventResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\revenue_analytics.py:56: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    comparison_type: str = Query("mom", regex="^(mom|yoy|custom)$"),
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\payment_method.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PaymentMethodResponse(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\tax.py:55: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TaxRateResponse(TaxRateBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\tax.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TaxCalculationDetail(BaseModel):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\schemas\tax.py:136: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TaxExemptionResponse(TaxExemptionBase):
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\exports.py:25: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    format: str = Query("csv", regex="^(csv|pdf|json)$"),
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\exports.py:75: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    format: str = Query("json", regex="^(json|pdf)$")
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\exports.py:122: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    format: str = Query("json", regex="^(json|pdf)$")
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\app\api\api_v1\endpoints\exports.py:166: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    format: str = Query("csv", regex="^(csv|pdf)$")
+
+tests/api/api_v1/test_sso_integration.py::test_sso_full_flow
+  D:\Graphology\Master Software\Eduecosystem\backend\tests\conftest.py:59: SAWarning: Can't sort tables for DROP; an unresolvable foreign key dependency exists between tables: lessons, modules, quizzes; and backend does not support ALTER.  To restore at least a partial sort, apply use_alter=True to ForeignKey and ForeignKeyConstraint objects involved in the cycle to mark these as known cycles that will be ignored.
+    Base.metadata.drop_all(bind=engine)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/api/api_v1/test_sso_integration.py::test_sso_full_flow - sqlalch...
+======================= 1 failed, 39 warnings in 15.70s =======================

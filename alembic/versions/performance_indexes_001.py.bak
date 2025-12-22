@@ -1,0 +1,118 @@
+"""add_performance_indexes
+
+Revision ID: performance_indexes_001
+Revises: 
+Create Date: 2025-11-24 10:00:00.000000
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision = 'performance_indexes_001'
+down_revision = '3a771034232d'  # Linked to previous head
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # Users table indexes
+    op.create_index('idx_users_email', 'users', ['email'], unique=False, if_not_exists=True)
+    op.create_index('idx_users_active', 'users', ['is_active'], unique=False, if_not_exists=True)
+    op.create_index('idx_users_created_at', 'users', ['created_at'], unique=False, if_not_exists=True)
+
+    # Courses table indexes
+    op.create_index('idx_courses_instructor', 'courses', ['instructor_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_courses_category', 'courses', ['category_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_courses_published', 'courses', ['is_published'], unique=False, if_not_exists=True)
+    op.create_index('idx_courses_created_at', 'courses', ['created_at'], unique=False, if_not_exists=True)
+
+    # Enrollments table indexes
+    op.create_index('idx_enrollments_user', 'enrollments', ['user_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_enrollments_course', 'enrollments', ['course_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_enrollments_user_course', 'enrollments', ['user_id', 'course_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_enrollments_status', 'enrollments', ['status'], unique=False, if_not_exists=True)
+
+    # Modules table indexes
+    op.create_index('idx_modules_course', 'modules', ['course_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_modules_course_order', 'modules', ['course_id', 'order_index'], unique=False, if_not_exists=True)
+
+    # Lessons table indexes
+    op.create_index('idx_lessons_module', 'lessons', ['module_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_lessons_module_order', 'lessons', ['module_id', 'order_index'], unique=False, if_not_exists=True)
+
+    # Progress tracking indexes
+    op.create_index('idx_lesson_progress_user', 'lesson_progress', ['user_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_lesson_progress_lesson', 'lesson_progress', ['lesson_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_lesson_progress_user_lesson', 'lesson_progress', ['user_id', 'lesson_id'], unique=False, if_not_exists=True)
+
+    # Assignments indexes
+    op.create_index('idx_assignments_course', 'assignments', ['course_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_assignment_submissions_user', 'assignment_submissions', ['student_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_assignment_submissions_assignment', 'assignment_submissions', ['assignment_id'], unique=False, if_not_exists=True)
+
+    # Live classes indexes
+    op.create_index('idx_live_classes_course', 'live_classes', ['course_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_live_classes_instructor', 'live_classes', ['instructor_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_live_classes_status', 'live_classes', ['status'], unique=False, if_not_exists=True)
+    op.create_index('idx_live_classes_scheduled', 'live_classes', ['scheduled_at'], unique=False, if_not_exists=True)
+
+    # Discussion forums indexes
+    op.create_index('idx_forum_threads_course', 'forum_threads', ['course_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_forum_posts_thread', 'forum_posts', ['thread_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_forum_posts_author', 'forum_posts', ['author_id'], unique=False, if_not_exists=True)
+
+    # Notifications indexes
+    op.create_index('idx_notifications_user', 'notifications', ['user_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_notifications_read', 'notifications', ['is_read'], unique=False, if_not_exists=True)
+    op.create_index('idx_notifications_created', 'notifications', ['created_at'], unique=False, if_not_exists=True)
+
+    # Tasks indexes
+    op.create_index('idx_tasks_user', 'tasks', ['user_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_tasks_status', 'tasks', ['status'], unique=False, if_not_exists=True)
+    op.create_index('idx_tasks_due_date', 'tasks', ['due_date'], unique=False, if_not_exists=True)
+
+    # Gamification indexes
+    op.create_index('idx_user_badges_user', 'user_badges', ['user_id'], unique=False, if_not_exists=True)
+    op.create_index('idx_user_achievements_user', 'user_achievements', ['user_id'], unique=False, if_not_exists=True)
+
+
+def downgrade():
+    # Drop all indexes in reverse order
+    op.drop_index('idx_user_achievements_user', table_name='user_achievements')
+    op.drop_index('idx_user_badges_user', table_name='user_badges')
+    op.drop_index('idx_tasks_due_date', table_name='tasks')
+    op.drop_index('idx_tasks_status', table_name='tasks')
+    op.drop_index('idx_tasks_user', table_name='tasks')
+    op.drop_index('idx_notifications_created', table_name='notifications')
+    op.drop_index('idx_notifications_read', table_name='notifications')
+    op.drop_index('idx_notifications_user', table_name='notifications')
+    op.drop_index('idx_forum_posts_author', table_name='forum_posts')
+    op.drop_index('idx_forum_posts_thread', table_name='forum_posts')
+    op.drop_index('idx_forum_threads_course', table_name='forum_threads')
+    op.drop_index('idx_live_classes_scheduled', table_name='live_classes')
+    op.drop_index('idx_live_classes_status', table_name='live_classes')
+    op.drop_index('idx_live_classes_instructor', table_name='live_classes')
+    op.drop_index('idx_live_classes_course', table_name='live_classes')
+    op.drop_index('idx_assignment_submissions_assignment', table_name='assignment_submissions')
+    op.drop_index('idx_assignment_submissions_user', table_name='assignment_submissions')
+    op.drop_index('idx_assignments_course', table_name='assignments')
+    op.drop_index('idx_lesson_progress_user_lesson', table_name='lesson_progress')
+    op.drop_index('idx_lesson_progress_lesson', table_name='lesson_progress')
+    op.drop_index('idx_lesson_progress_user', table_name='lesson_progress')
+    op.drop_index('idx_lessons_module_order', table_name='lessons')
+    op.drop_index('idx_lessons_module', table_name='lessons')
+    op.drop_index('idx_modules_course_order', table_name='modules')
+    op.drop_index('idx_modules_course', table_name='modules')
+    op.drop_index('idx_enrollments_status', table_name='enrollments')
+    op.drop_index('idx_enrollments_user_course', table_name='enrollments')
+    op.drop_index('idx_enrollments_course', table_name='enrollments')
+    op.drop_index('idx_enrollments_user', table_name='enrollments')
+    op.drop_index('idx_courses_created_at', table_name='courses')
+    op.drop_index('idx_courses_published', table_name='courses')
+    op.drop_index('idx_courses_category', table_name='courses')
+    op.drop_index('idx_courses_instructor', table_name='courses')
+    op.drop_index('idx_users_created_at', table_name='users')
+    op.drop_index('idx_users_active', table_name='users')
+    op.drop_index('idx_users_email', table_name='users')

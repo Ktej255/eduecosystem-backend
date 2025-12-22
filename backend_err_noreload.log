@@ -1,0 +1,26 @@
+Using CPU. Note: This module is much faster with a GPU.
+Server initialized for asgi.
+pyclamd not installed. Virus scanning disabled.
+boto3 not installed. S3 storage unavailable.
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:383: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:383: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+C:\Users\Sarit\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:383: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [13604]
+INFO:     Waiting for application startup.
+Redis connection failed: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.. Caching disabled.
+Redis cache not available - running without cache
+Failed to initialize Redis Pub/Sub: Error 22 connecting to localhost:6379. The remote computer refused the network connection.
+Redis Pub/Sub not available - WebSocket scaling disabled
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+forrtl: error (200): program aborting due to window-CLOSE event
+Image              PC                Routine            Line        Source             
+KERNELBASE.dll     00007FF9087BC24D  Unknown               Unknown  Unknown
+KERNEL32.DLL       00007FF908FDE8D7  Unknown               Unknown  Unknown
+ntdll.dll          00007FF90B18C53C  Unknown               Unknown  Unknown
