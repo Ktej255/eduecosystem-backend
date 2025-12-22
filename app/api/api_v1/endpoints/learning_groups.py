@@ -2,7 +2,7 @@
 Social Learning Groups API Endpoints
 """
 
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
@@ -32,7 +32,7 @@ class GroupCreate(BaseModel):
     description: str
     group_type: GroupType
     privacy: GroupPrivacy = GroupPrivacy.PUBLIC
-    course_id: int | None = None
+    course_id: Optional[int] = None
     max_members: int = 50
 
 
@@ -42,7 +42,7 @@ class GroupResponse(BaseModel):
     description: str
     group_type: str
     privacy: str
-    course_id: int | None
+    course_id: Optional[int]
     member_count: int
     created_by: int
     created_at: datetime
@@ -103,8 +103,8 @@ def create_group(
 
 @router.get("/groups", response_model=List[GroupResponse])
 def list_groups(
-    group_type: GroupType | None = None,
-    course_id: int | None = None,
+    group_type: Optional[GroupType] = None,
+    course_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 20,
     db: Session = Depends(deps.get_db),

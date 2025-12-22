@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, or_
 
 from app import models
 from app.api import deps
@@ -52,8 +52,10 @@ def get_managed_users(
     if search:
         search_filter = f"%{search}%"
         query = query.filter(
-            (User.email.ilike(search_filter)) | 
-            (User.full_name.ilike(search_filter))
+            or_(
+                User.email.ilike(search_filter),
+                User.full_name.ilike(search_filter)
+            )
         )
     
     users = query.offset(skip).limit(limit).all()

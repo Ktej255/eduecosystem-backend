@@ -7,7 +7,7 @@ Service for exporting data in various formats (CSV, PDF, JSON).
 import csv
 import io
 import json
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 from sqlalchemy.orm import Session
 from reportlab.lib.pagesizes import letter
@@ -129,7 +129,7 @@ class ExportService:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         format: str = "csv",
-    ) -> str | bytes:
+    ) -> Union[str, bytes]:
         """
         Export user analytics data.
 
@@ -183,7 +183,7 @@ class ExportService:
     @staticmethod
     def export_course_content(
         db: Session, course_id: int, format: str = "json"
-    ) -> str | bytes:
+    ) -> Union[str, bytes]:
         """
         Export course content for backup.
 
@@ -256,7 +256,7 @@ class ExportService:
     @staticmethod
     def export_user_data(
         db: Session, user_id: int, format: str = "json"
-    ) -> str | bytes:
+    ) -> Union[str, bytes]:
         """
         Export user data for GDPR compliance.
 

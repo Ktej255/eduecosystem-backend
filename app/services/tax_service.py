@@ -8,6 +8,7 @@ from typing import Optional, List, Dict
 from decimal import Decimal
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.models.tax import TaxRate, TaxCalculation, TaxExemption
 
@@ -55,8 +56,8 @@ class TaxService:
         # Check effective dates
         now = datetime.utcnow()
         query = query.filter(
-            (TaxRate.effective_from == None) | (TaxRate.effective_from <= now),
-            (TaxRate.effective_until == None) | (TaxRate.effective_until >= now),
+            or_(TaxRate.effective_from == None, TaxRate.effective_from <= now),
+            or_(TaxRate.effective_until == None, TaxRate.effective_until >= now),
         )
 
         # Order by specificity (state-level before country-level)
@@ -204,21 +205,21 @@ class TaxService:
         # Check validity dates
         now = datetime.utcnow()
         query = query.filter(
-            (TaxExemption.valid_from == None) | (TaxExemption.valid_from <= now),
-            (TaxExemption.valid_until == None) | (TaxExemption.valid_until >= now),
+            or_(TaxExemption.valid_from == None, TaxExemption.valid_from <= now),
+            or_(TaxExemption.valid_until == None, TaxExemption.valid_until >= now),
         )
 
         # Check location match or global exemption
         if country_code:
             query = query.filter(
-                (TaxExemption.applies_to_all == True)
-                | (TaxExemption.country_code == country_code)
+                or_(TaxExemption.applies_to_all == True,
+                    TaxExemption.country_code == country_code)
             )
 
         if state_code:
             query = query.filter(
-                (TaxExemption.state_code == None)
-                | (TaxExemption.state_code == state_code)
+                or_(TaxExemption.state_code == None,
+                    TaxExemption.state_code == state_code)
             )
 
         return query.first()

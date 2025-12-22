@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -13,7 +13,7 @@ class StudyRoomOut(BaseModel):
     name: str
     topic: str
     participants_count: int
-    thumbnail_url: str | None = None
+    thumbnail_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

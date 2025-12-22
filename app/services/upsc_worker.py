@@ -7,6 +7,7 @@ from typing import List, Dict, Any
 from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.core.email import send_email
+from sqlalchemy import or_
 from app.db.session import SessionLocal
 from app.models.upsc import UPSCPlan, UPSCQuestion, UPSCBatch, UPSCAttempt, UPSCReport, UPSCContent, UPSCStudentProgress, UPSCStudentProfile
 from app.models.notification import NotificationType, NotificationPriority
@@ -461,7 +462,7 @@ def initialize_student_progress_task(plan_id: str):
         # But we might want to lock/unlock Weeks too.
         
         all_plans_in_hierarchy = db.query(UPSCPlan).filter(
-            (UPSCPlan.id == plan.id) | (UPSCPlan.parent_plan_id == plan.id)
+            or_(UPSCPlan.id == plan.id, UPSCPlan.parent_plan_id == plan.id)
         ).all()
         
         # This only gets 1 level down. We need recursive or just fetch all for batch?

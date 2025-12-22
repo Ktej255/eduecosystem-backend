@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -11,7 +11,7 @@ router = APIRouter()
 
 class ChatRequest(BaseModel):
     message: str
-    context: str | None = None  # Optional context about user's learning journey
+    context: Optional[str] = None  # Optional context about user's learning journey
 
 
 @router.post("/chat")

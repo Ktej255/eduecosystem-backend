@@ -2,7 +2,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_
 from app.api import deps
 from app.models.user import User
 from app.models.submission import HandwritingSubmission
@@ -78,7 +78,10 @@ def list_all_users(
 
     if search:
         query = query.filter(
-            (User.email.ilike(f"%{search}%")) | (User.full_name.ilike(f"%{search}%"))
+            or_(
+                User.email.ilike(f"%{search}%"),
+                User.full_name.ilike(f"%{search}%")
+            )
         )
 
     if role:
