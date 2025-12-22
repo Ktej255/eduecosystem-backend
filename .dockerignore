@@ -1,0 +1,39 @@
+# Ignore virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Ignore uploads directory (large media files)
+uploads/
+
+# Ignore database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Ignore test output and logs
+*.log
+*.txt
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore alembic versions (keep only the main structure)
+alembic/versions/
+
+# Ignore data directory
+data/
