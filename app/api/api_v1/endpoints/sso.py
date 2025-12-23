@@ -364,7 +364,7 @@ async def handle_saml_callback(
     from app.core.security import create_access_token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        subject=user.id, expires_delta=access_token_expires
+        subject=user.id, expires_delta=access_token_expires, token_version=user.token_version
     )
     
     # Log success
@@ -451,7 +451,7 @@ async def handle_oauth_callback(
         from app.core.security import create_access_token
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            subject=user.id, expires_delta=access_token_expires
+            subject=user.id, expires_delta=access_token_expires, token_version=user.token_version
         )
         
         # Log success
