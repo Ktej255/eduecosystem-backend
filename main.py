@@ -209,3 +209,49 @@ async def debug_echo(request: Request):
         "form_data": form_data,
         "is_multipart_installed": "multipart" in sys.modules
     }
+
+
+@app.post("/debug/login-test")
+async def debug_login_test(request: Request):
+    """Debug login endpoint to trace password verification."""
+    try:
+        form_data = await request.form()
+        username = form_data.get("username", "")
+        password = form_data.get("password", "")
+        
+        result = {
+            "username": username,
+            "username_length": len(str(username)),
+            "password_preview": password[:3] + "***" if password else None,
+            "password_length": len(str(password)),
+            "password_bytes": len(str(password).encode('utf-8')),
+        }
+        
+        # Try to look up user
+        from app.db.session import SessionLocal
+        from app.crud import user as crud_user
+        from app.core.security import verify_password, pwd_context
+        
+        db = SessionLocal()
+        try:
+            user = crud_user.get_by_email(db, email=str(username))
+            if user:
+                result["user_found"] = True
+                result["user_id"] = user.id
+                result["hashed_password_length"] = len(user.hashed_password) if user.hashed_password else 0
+                result["hashed_password_preview"] = user.hashed_password[:20] + "..." if user.hashed_password else None
+                
+                # Try verification
+                try:
+                    is_valid = verify_password(str(password), user.hashed_password)
+                    result["password_verified"] = is_valid
+                except Exception as verify_err:
+                    result["verify_error"] = str(verify_err)
+            else:
+                result["user_found"] = False
+        finally:
+            db.close()
+        
+        return result
+    except Exception as e:
+        return {"error": str(e), "type": type(e).__name__}
