@@ -219,18 +219,25 @@ async def debug_login_test(request: Request):
         username = form_data.get("username", "")
         password = form_data.get("password", "")
         
+        # Get the raw password as string
+        password_str = str(password) if password else ""
+        
         result = {
-            "username": username,
+            "username": str(username),
             "username_length": len(str(username)),
-            "password_preview": password[:3] + "***" if password else None,
-            "password_length": len(str(password)),
-            "password_bytes": len(str(password).encode('utf-8')),
+            "password_type": type(password).__name__,
+            "password_repr": repr(password_str),
+            "password_preview": password_str[:3] + "***" if password_str else None,
+            "password_length": len(password_str),
+            "password_bytes": len(password_str.encode('utf-8')),
         }
         
         # Try to look up user
         from app.db.session import SessionLocal
         from app.crud import user as crud_user
-        from app.core.security import verify_password, pwd_context
+        from passlib.context import CryptContext
+        
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         
         db = SessionLocal()
         try:
@@ -240,13 +247,15 @@ async def debug_login_test(request: Request):
                 result["user_id"] = user.id
                 result["hashed_password_length"] = len(user.hashed_password) if user.hashed_password else 0
                 result["hashed_password_preview"] = user.hashed_password[:20] + "..." if user.hashed_password else None
+                result["hashed_password_type"] = type(user.hashed_password).__name__
                 
-                # Try verification
+                # Try verification directly with passlib
                 try:
-                    is_valid = verify_password(str(password), user.hashed_password)
+                    is_valid = pwd_context.verify(password_str, user.hashed_password)
                     result["password_verified"] = is_valid
                 except Exception as verify_err:
                     result["verify_error"] = str(verify_err)
+                    result["verify_error_type"] = type(verify_err).__name__
             else:
                 result["user_found"] = False
         finally:
