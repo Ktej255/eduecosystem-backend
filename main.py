@@ -14,7 +14,15 @@ try:
     import multipart
     print("python-multipart is INSTALLED")
 except ImportError:
-    print("python-multipart is MISSING")
+    print("python-multipart is NOT installed")
+
+try:
+    import bcrypt
+    print(f"bcrypt version: {bcrypt.__version__}")
+except ImportError:
+    print("bcrypt is NOT installed")
+except Exception as e:
+    print(f"bcrypt check error: {e}")
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -209,6 +217,38 @@ async def debug_echo(request: Request):
         "form_data": form_data,
         "is_multipart_installed": "multipart" in sys.modules
     }
+
+
+@app.get("/debug/bcrypt-info")
+async def debug_bcrypt_info():
+    """Get bcrypt library info and test verification."""
+    result = {}
+    
+    try:
+        import bcrypt
+        result["bcrypt_version"] = bcrypt.__version__
+    except Exception as e:
+        result["bcrypt_error"] = str(e)
+    
+    try:
+        from passlib.context import CryptContext
+        import passlib
+        result["passlib_version"] = passlib.__version__
+        
+        pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        test_password = "TestPass123"
+        test_hash = pwd.hash(test_password)
+        result["test_hash"] = test_hash
+        result["test_verify"] = pwd.verify(test_password, test_hash)
+        
+        # Test with the known good hash format
+        known_hash = "$2b$12$aV6BbaHDjSzAE.Ik9.XOjusyr1/TR24ovvdok0LSuFNSJWRmtY.Ne"
+        result["known_hash_verify"] = pwd.verify("Tej@1106", known_hash)
+    except Exception as e:
+        result["passlib_error"] = str(e)
+        result["passlib_error_type"] = type(e).__name__
+    
+    return result
 
 
 @app.post("/debug/login-test")
