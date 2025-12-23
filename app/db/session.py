@@ -9,6 +9,9 @@ Base = declarative_base()
 engine_kwargs = {
     "pool_pre_ping": True,  # Verify connections before using
     "pool_recycle": 3600,  # Recycle connections after 1 hour
+    "connect_args": {
+        "connect_timeout": 5  # Timeout in seconds for initial connection
+    }
 }
 
 # Production optimization: configure connection pool size

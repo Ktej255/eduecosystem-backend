@@ -62,13 +62,23 @@ else:
     )
 
 # Set all CORS enabled origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if BACKEND_CORS_ORIGINS:
+    # If using credentials, we cannot use "*" for allow_origins.
+    # We must either list specific origins or handle it dynamically.
+    # For now, if "*" is provided, we set allow_credentials to False.
+    use_credentials = True
+    origins = [str(origin) for origin in BACKEND_CORS_ORIGINS]
+    
+    if "*" in origins:
+        use_credentials = False
+        
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=use_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Compression Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -115,14 +125,43 @@ def detailed_health_check():
     """Detailed health check with database connectivity test."""
     health_status = {
         "status": "healthy",
-        "checks": {}
+        "checks": {},
+        "env": {
+            "ENVIRONMENT": os.getenv("ENVIRONMENT", "unknown"),
+            "DATABASE_URL_HOST": settings.DATABASE_URL.split("@")[1].split("/")[0] if "@" in settings.DATABASE_URL else "local",
+            "DATABASE_NAME": settings.DATABASE_URL.split("/")[-1] if "/" in settings.DATABASE_URL else "unknown"
+        }
     }
     
+    # Network connectivity check (socket)
+    try:
+        import socket
+        host = settings.DATABASE_URL.split("@")[1].split(":")[0] if "@" in settings.DATABASE_URL else None
+        port = int(settings.DATABASE_URL.split("@")[1].split(":")[1].split("/")[0]) if "@" in settings.DATABASE_URL else None
+        if host and port:
+            s = socket.create_connection((host, port), timeout=3)
+            s.close()
+            health_status["checks"]["network"] = {
+                "status": "healthy",
+                "message": f"Successfully reached {host}:{port}"
+            }
+        else:
+            health_status["checks"]["network"] = {
+                "status": "skipped",
+                "message": "Local database or invalid URL"
+            }
+    except Exception as e:
+        health_status["checks"]["network"] = {
+            "status": "unhealthy",
+            "message": f"Cannot reach database host: {str(e)}"
+        }
+
     # Database connectivity check
     try:
         from sqlalchemy import text
         from app.db.session import SessionLocal
         db = SessionLocal()
+        # Use a short timeout for the check
         db.execute(text("SELECT 1"))
         db.close()
         health_status["checks"]["database"] = {

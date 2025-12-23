@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         "DATABASE_URL",
         "sqlite:///./eduecosystem_v2.db"
         if os.getenv("ENVIRONMENT", "development") != "production"
-        else "postgresql://user:password@localhost/eduecosystem",
+        else "postgresql://postgres:Edueco123!@eduecosystem-prod.cw5ei40o4bwd.us-east-1.rds.amazonaws.com:5432/eduecosystem_prod",
     )
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     def BACKEND_CORS_ORIGINS(self) -> list[str]:
         """Parse CORS origins from environment variable (comma-separated)"""
         origins_str = os.getenv(
-            "BACKEND_CORS_ORIGINS", "https://d2azz9jngd0rmq.amplifyapp.com,https://a7z4kjysmp.us-east-1.awsapprunner.com,http://localhost:3000,http://localhost:3001,http://localhost:8000"
+            "BACKEND_CORS_ORIGINS", "*"
         )
         return [origin.strip() for origin in origins_str.split(",") if origin.strip()]
 
