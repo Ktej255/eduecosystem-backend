@@ -180,3 +180,127 @@ def delete_process_video(
     
     db.commit()
     return {"success": True, "message": "Video deleted"}
+
+
+# ============ AUDIO UPLOAD ENDPOINTS ============
+
+AUDIO_UPLOAD_DIR = "uploads/meditation/audio"
+os.makedirs(AUDIO_UPLOAD_DIR, exist_ok=True)
+
+
+@router.post("/processes/{process_id}/audio/announcement", response_model=MeditationProcessResponse)
+async def upload_announcement_audio(
+    process_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Upload announcement voiceover for a meditation process"""
+    process = db.query(MeditationProcess).filter(MeditationProcess.id == process_id).first()
+    if not process:
+        raise HTTPException(status_code=404, detail="Process not found")
+    
+    # Validate file type
+    allowed_types = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Allowed: MP3, WAV, OGG, WebM"
+        )
+    
+    # Generate unique filename
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".mp3"
+    unique_filename = f"announcement_{process_id}_{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join(AUDIO_UPLOAD_DIR, unique_filename)
+    
+    # Save file
+    contents = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    # Update process
+    process.announcement_audio_url = f"/uploads/meditation/audio/{unique_filename}"
+    
+    db.commit()
+    db.refresh(process)
+    
+    return process
+
+
+@router.post("/processes/{process_id}/audio/background", response_model=MeditationProcessResponse)
+async def upload_background_music(
+    process_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Upload background music for a meditation process"""
+    process = db.query(MeditationProcess).filter(MeditationProcess.id == process_id).first()
+    if not process:
+        raise HTTPException(status_code=404, detail="Process not found")
+    
+    # Validate file type
+    allowed_types = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Allowed: MP3, WAV, OGG, WebM"
+        )
+    
+    # Generate unique filename
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".mp3"
+    unique_filename = f"background_{process_id}_{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join(AUDIO_UPLOAD_DIR, unique_filename)
+    
+    # Save file
+    contents = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    # Update process
+    process.background_music_url = f"/uploads/meditation/audio/{unique_filename}"
+    
+    db.commit()
+    db.refresh(process)
+    
+    return process
+
+
+@router.post("/processes/{process_id}/audio/bell", response_model=MeditationProcessResponse)
+async def upload_bell_sound(
+    process_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Upload bell/chime transition sound for a meditation process"""
+    process = db.query(MeditationProcess).filter(MeditationProcess.id == process_id).first()
+    if not process:
+        raise HTTPException(status_code=404, detail="Process not found")
+    
+    # Validate file type
+    allowed_types = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Allowed: MP3, WAV, OGG, WebM"
+        )
+    
+    # Generate unique filename
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".mp3"
+    unique_filename = f"bell_{process_id}_{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join(AUDIO_UPLOAD_DIR, unique_filename)
+    
+    # Save file
+    contents = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    # Update process
+    process.bell_sound_url = f"/uploads/meditation/audio/{unique_filename}"
+    
+    db.commit()
+    db.refresh(process)
+    
+    return process
+

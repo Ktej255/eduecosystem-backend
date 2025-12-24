@@ -25,6 +25,10 @@ class MeditationProcessUpdate(BaseModel):
     duration_minutes: Optional[int] = None
     video_url: Optional[str] = None
     is_active: Optional[bool] = None
+    # Audio assets for immersive player
+    announcement_audio_url: Optional[str] = None
+    background_music_url: Optional[str] = None
+    bell_sound_url: Optional[str] = None
 
 
 class MeditationProcessResponse(MeditationProcessBase):
@@ -33,6 +37,10 @@ class MeditationProcessResponse(MeditationProcessBase):
     video_filename: Optional[str] = None
     is_active: bool = True
     created_at: datetime
+    # Audio assets for immersive player
+    announcement_audio_url: Optional[str] = None
+    background_music_url: Optional[str] = None
+    bell_sound_url: Optional[str] = None
 
     class Config:
         from_attributes = True

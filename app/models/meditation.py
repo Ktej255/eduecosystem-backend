@@ -23,7 +23,7 @@ PROCESSES_PER_UNLOCK = 3     # Number of new processes added each unlock
 
 
 class MeditationProcess(Base):
-    """Store meditation processes with videos"""
+    """Store meditation processes with videos and audio"""
     __tablename__ = "meditation_processes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -35,6 +35,12 @@ class MeditationProcess(Base):
     duration_minutes = Column(Integer, default=5)  # Estimated duration
     level = Column(Integer, default=1)  # Which level this process belongs to
     is_active = Column(Boolean, default=True)
+    
+    # Audio assets for immersive player
+    announcement_audio_url = Column(String(500), nullable=True)  # Process name voiceover
+    background_music_url = Column(String(500), nullable=True)    # Ambient meditation music
+    bell_sound_url = Column(String(500), nullable=True)          # Transition bell/chime
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
