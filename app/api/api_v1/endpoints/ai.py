@@ -49,7 +49,10 @@ Keep responses concise (2-3 sentences) and actionable.
     try:
         # Get AI response from Gemini
         response = gemini_service.chat(
-            messages=messages, system_prompt=system_prompt, temperature=0.7
+            messages=messages, 
+            user=current_user,
+            system_prompt=system_prompt, 
+            temperature=0.7
         )
 
         return {"response": response}

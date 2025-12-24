@@ -66,7 +66,7 @@ async def upload_handwriting(
         shutil.copyfileobj(file.file, buffer)
 
     # Run OCR / Analysis
-    ocr_result = analyze_handwriting(file_location)
+    ocr_result = analyze_handwriting(file_location, user=current_user)
 
     # Create Submission Record
     submission_in = SubmissionCreate(

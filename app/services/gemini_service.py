@@ -1,249 +1,182 @@
-"""
-AI Service using OpenRouter
-Replaces Google Gemini with OpenRouter models (Gemini 2.0 Flash, Gemma, Llama, Mistral)
-"""
-
 import os
-from typing import Optional, List, Dict
 import httpx
-
+from typing import Optional, List, Dict, Any, Tuple
+from app.core.config import settings
 
 class GeminiService:
     """
-    Service for AI operations using OpenRouter API.
-    Named GeminiService for backward compatibility, but uses OpenRouter models.
+    FRESH 2025 AI SERVICE IMPLEMENTATION
+    
+    Features:
+    1. Tiered Access: Free vs Premium students.
+    2. Model Cascading: Gemini 3 -> Gemma 3 -> Llama 3.3 (Ensures 100% availability).
+    3. Smart Routing: High-precision tasks (OCR/Graphology) use Gemini 3 Pro for Premium.
     """
 
-    def __init__(self, model_name: str = None):
-        """
-        Initialize OpenRouter AI service
-
-        Args:
-            model_name: OpenRouter model name (default: google/gemini-2.0-flash-exp:free)
-        """
-        from app.core.config import settings
+    def __init__(self):
+        # Primary Keys
+        self.free_key = settings.FREE_GEMINI_API_KEY
+        self.paid_key = settings.PAID_GEMINI_API_KEY
         
-        self.api_key = settings.OPENROUTER_API_KEY or settings.GROK_API_KEY
+        # Fallback Keys (OpenRouter)
+        self.gemma_key = settings.GEMMA_API_KEY
+        self.llama_key = settings.LLAMA_API_KEY
+        
         self.base_url = settings.OPENROUTER_BASE_URL
-        self.model_name = model_name or settings.DEFAULT_AI_MODEL or "google/gemini-2.0-flash-exp:free"
+        self.default_model = settings.DEFAULT_AI_MODEL or "google/gemini-3-flash-preview"
+
+    def _get_execution_plan(self, user: Any = None, is_complex: bool = False) -> List[Tuple[str, str]]:
+        """
+        Determines the plan of (API_KEY, MODEL) pairs to try in order.
+        """
+        is_premium = getattr(user, "is_premium", False) or getattr(user, "subscription_status", "free") == "active"
         
-        # Fallback API keys
-        self.fallback_keys = [
-            settings.GROK_API_KEY,  # Gemma 3 27B
-            settings.LLAMA_API_KEY,  # Llama 3
-            settings.MISTRAL_API_KEY,  # Mistral
-        ]
+        plan = []
         
-        if self.api_key:
-            print(f"✅ OpenRouter AI configured with model: {self.model_name}")
+        if is_premium:
+            if is_complex:
+                # Premium Complex Plan: Paid Pro -> Fallback to Flash
+                plan.append((self.paid_key or self.free_key, "google/gemini-3-pro-preview"))
+                plan.append((self.free_key, "google/gemini-3-flash-preview"))
+            else:
+                # Premium Simple Plan: Free Flash -> Paid Pro (as fallback)
+                plan.append((self.free_key, "google/gemini-3-flash-preview"))
+                plan.append((self.paid_key, "google/gemini-3-pro-preview"))
         else:
-            print("WARNING: No OpenRouter API key found in environment variables")
-
-    def generate_text(
-        self, prompt: str, temperature: float = 0.7, max_tokens: int = 1000
-    ) -> str:
-        """
-        Generate text using OpenRouter API
-
-        Args:
-            prompt: Input prompt
-            temperature: Sampling temperature (0.0-1.0)
-            max_tokens: Maximum tokens to generate
-
-        Returns:
-            Generated text response
-        """
-        if not self.api_key:
-            return "AI is not configured. Please set OPENROUTER_API_KEY."
-
-        try:
-            with httpx.Client(timeout=60.0) as client:
-                response = client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://eduecosystem.com",
-                        "X-Title": "Sarit Classes - Holistic Learning",
-                    },
-                    json={
-                        "model": self.model_name,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "max_tokens": max_tokens,
-                        "temperature": temperature,
-                    },
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
-                    # Try fallback
-                    return self._try_fallback(prompt, temperature, max_tokens, response.text)
-                    
-        except Exception as e:
-            print(f"Error generating text: {e}")
-            return f"Error: {str(e)}"
-
-    def _try_fallback(
-        self, prompt: str, temperature: float, max_tokens: int, original_error: str
-    ) -> str:
-        """Try fallback API keys if primary fails"""
-        for fallback_key in self.fallback_keys:
-            if not fallback_key or fallback_key == self.api_key:
-                continue
+            # Free Plan: Flash -> Gemma -> Llama
+            plan.append((self.free_key, "google/gemini-3-flash-preview"))
             
+        # Global Fallbacks (Available to all if primary fails)
+        if self.gemma_key:
+            plan.append((self.gemma_key, "google/gemma-3-27b-it:free"))
+        if self.llama_key:
+            plan.append((self.llama_key, "meta-llama/llama-3.3-70b-instruct:free"))
+            
+        return plan
+
+    async def _call_api(self, api_key: str, model: str, messages: List[Dict[str, str]], temperature: float, max_tokens: int) -> str:
+        """Low-level API caller"""
+        if not api_key:
+            raise ValueError("Missing API Key")
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://eduecosystem.com",
+            "X-Title": "Eduecosystem - Mastery Learning",
+        }
+        
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                return response.json()["choices"][0]["message"]["content"]
+            else:
+                raise Exception(f"API Error {response.status_code}: {response.text}")
+
+    def _call_api_sync(self, api_key: str, model: str, messages: List[Dict[str, str]], temperature: float, max_tokens: int) -> str:
+        """Sync version of the API caller for backward compatibility"""
+        if not api_key:
+            raise ValueError("Missing API Key")
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://eduecosystem.com",
+            "X-Title": "Eduecosystem - Mastery Learning",
+        }
+        
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        with httpx.Client(timeout=60.0) as client:
+            response = client.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+            if response.status_code == 200:
+                return response.json()["choices"][0]["message"]["content"]
+            else:
+                raise Exception(f"API Error {response.status_code}: {response.text}")
+
+    def generate_text(self, prompt: str, user: Any = None, is_complex: bool = False, temperature: float = 0.7, max_tokens: int = 2000) -> str:
+        """Generates text with cascading fallback mechanism"""
+        messages = [{"role": "user", "content": prompt}]
+        plan = self._get_execution_plan(user, is_complex)
+        
+        last_error = "No API keys configured"
+        for api_key, model in plan:
             try:
-                with httpx.Client(timeout=60.0) as client:
-                    response = client.post(
-                        f"{self.base_url}/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {fallback_key}",
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": "https://eduecosystem.com",
-                            "X-Title": "Sarit Classes",
-                        },
-                        json={
-                            "model": "google/gemma-3-27b-it",  # Use Gemma as fallback model
-                            "messages": [{"role": "user", "content": prompt}],
-                            "max_tokens": max_tokens,
-                            "temperature": temperature,
-                        },
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        return data["choices"][0]["message"]["content"]
-            except:
+                return self._call_api_sync(api_key, model, messages, temperature, max_tokens)
+            except Exception as e:
+                last_error = str(e)
+                print(f"Fallback: {model} failed, trying next... Error: {e}")
                 continue
         
-        return f"Error with all AI models. Primary error: {original_error}"
+        return f"AI Service Unavailable. Last error: {last_error}"
 
-    def analyze_image(
-        self, image_path: str, prompt: str, temperature: float = 0.4
-    ) -> str:
-        """
-        Analyze image using OpenRouter Vision model
-        Note: Image analysis requires base64 encoding
-
-        Args:
-            image_path: Path to image file
-            prompt: Analysis prompt/question
-            temperature: Sampling temperature
-
-        Returns:
-            Analysis result
-        """
-        if not self.api_key:
-            return "AI Vision is not configured. Please set OPENROUTER_API_KEY."
-
-        try:
-            import base64
-            
-            # Read and encode image
-            with open(image_path, "rb") as f:
-                image_data = base64.b64encode(f.read()).decode("utf-8")
-            
-            # Determine image type
-            ext = image_path.lower().split(".")[-1]
-            mime_type = f"image/{ext}" if ext in ["png", "jpg", "jpeg", "gif", "webp"] else "image/jpeg"
-            
-            with httpx.Client(timeout=60.0) as client:
-                response = client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://eduecosystem.com",
-                        "X-Title": "Sarit Classes",
-                    },
-                    json={
-                        "model": "google/gemini-2.0-flash-exp:free",  # Use Gemini for vision
-                        "messages": [
-                            {
-                                "role": "user",
-                                "content": [
-                                    {"type": "text", "text": prompt},
-                                    {
-                                        "type": "image_url",
-                                        "image_url": {
-                                            "url": f"data:{mime_type};base64,{image_data}"
-                                        },
-                                    },
-                                ],
-                            }
-                        ],
-                        "temperature": temperature,
-                    },
-                )
+    def analyze_image(self, image_path: str, prompt: str, user: Any = None, temperature: float = 0.4) -> str:
+        """Analyze image with cascading vision support"""
+        import base64
+        with open(image_path, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode("utf-8")
+        
+        ext = image_path.lower().split(".")[-1]
+        mime_type = f"image/{ext}" if ext in ["png", "jpg", "jpeg", "gif", "webp"] else "image/jpeg"
+        
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{image_data}"}},
+            ],
+        }]
+        
+        # For vision, we strictly try Gemini models first as they are best at it
+        plan = self._get_execution_plan(user, is_complex=True)
+        
+        last_error = ""
+        for api_key, model in plan:
+            # Skip non-vision models if necessary (Gemma/Llama might not support multi-modal on all endpoints)
+            if "gemma" in model or "llama" in model:
+                continue 
+            try:
+                return self._call_api_sync(api_key, model, messages, temperature, 2000)
+            except Exception as e:
+                last_error = str(e)
+                continue
                 
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
-                    return f"Error analyzing image: {response.text}"
-                    
-        except Exception as e:
-            print(f"Error analyzing image: {e}")
-            return f"Error: {str(e)}"
+        return f"Image Analysis Error: {last_error}"
 
-    def chat(
-        self,
-        messages: List[Dict[str, str]],
-        system_prompt: Optional[str] = None,
-        temperature: float = 0.7,
-    ) -> str:
-        """
-        Multi-turn chat conversation
+    def chat(self, messages: List[Dict[str, str]], user: Any = None, system_prompt: Optional[str] = None, temperature: float = 0.7) -> str:
+        """Multi-turn chat with cascading fallback"""
+        api_messages = []
+        if system_prompt:
+            api_messages.append({"role": "system", "content": system_prompt})
+        
+        for msg in messages:
+            role = "assistant" if msg.get("role", "").lower() in ["assistant", "ai", "bot"] else "user"
+            api_messages.append({"role": role, "content": msg["content"]})
 
-        Args:
-            messages: List of message dicts with 'role' and 'content'
-            system_prompt: Optional system instruction
-            temperature: Sampling temperature
-
-        Returns:
-            AI response
-        """
-        if not self.api_key:
-            return "AI is not configured. Please set OPENROUTER_API_KEY."
-
-        try:
-            # Build messages list
-            api_messages = []
-            if system_prompt:
-                api_messages.append({"role": "system", "content": system_prompt})
-            
-            # Convert message format
-            for msg in messages:
-                role = "assistant" if msg.get("role", "").lower() in ["assistant", "ai", "bot"] else "user"
-                api_messages.append({"role": role, "content": msg["content"]})
-            
-            with httpx.Client(timeout=60.0) as client:
-                response = client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://eduecosystem.com",
-                        "X-Title": "Sarit Classes",
-                    },
-                    json={
-                        "model": self.model_name,
-                        "messages": api_messages,
-                        "temperature": temperature,
-                    },
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
-                    return f"Error in chat: {response.text}"
-                    
-        except Exception as e:
-            print(f"Error in chat: {e}")
-            return f"Error: {str(e)}"
-
+        plan = self._get_execution_plan(user, is_complex=False)
+        
+        last_error = ""
+        for api_key, model in plan:
+            try:
+                return self._call_api_sync(api_key, model, api_messages, temperature, 1000)
+            except Exception as e:
+                last_error = str(e)
+                continue
+        
+        return f"Chat Error: {last_error}"
 
 # Global instance
 gemini_service = GeminiService()

@@ -144,7 +144,11 @@ For lesson types, use: "text", "video", "quiz", or "assignment"
 Return ONLY the JSON, no markdown, no explanations."""
 
         # Get AI response
-        response_text = gemini.generate_text(prompt)
+        response_text = gemini.generate_text(
+            prompt, 
+            user=current_user, 
+            is_complex=True
+        )
 
         # Parse JSON
         response_text = response_text.strip()

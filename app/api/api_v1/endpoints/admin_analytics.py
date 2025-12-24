@@ -220,7 +220,7 @@ async def generate_curriculum_insights(
 ):
     """Generate AI-powered curriculum insights using Grok"""
     return await admin_analytics_service.generate_curriculum_insights(
-        db, gs_paper, days
+        db, gs_paper, days, admin_user=current_user
     )
 
 

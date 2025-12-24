@@ -151,15 +151,12 @@ TRANSCRIPT:
 Create the structured JSON document now:"""
 
     try:
-        # Import TaskType for the router
-        from app.services.ai_router import TaskType
-        
         result = await ai_router.route(
             prompt=prompt,
             system_message=system_message,
             max_tokens=2000,
             temperature=0.3,
-            task_type_override=TaskType.ANALYSIS
+            is_complex=True  # Analysis tasks are complex
         )
         
         content = result.get("content", "{}")

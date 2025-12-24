@@ -1,74 +1,45 @@
 """
-Direct test of OpenRouter API - Run this to see exact errors
+Updated Test Script for Tiered AI
+Uses keys from .env/settings to verify your fresh implementation.
 """
 import asyncio
-import openai
+import sys
+import os
 
-# Test each model directly
-MODELS = [
-    {
-        "name": "meta-llama/llama-3.3-70b-instruct:free",
-        "key": "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",
-    },
-    {
-        "name": "google/gemini-2.0-flash-exp:free",
-        "key": "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",
-    },
-    {
-        "name": "google/gemma-3-27b-it",
-        "key": "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",
-    },
-]
+# Add project root to path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+from app.core.config import settings
+from app.services.gemini_service import gemini_service
 
-async def test_model(model_name: str, api_key: str):
-    print(f"\n{'='*60}")
-    print(f"Testing: {model_name}")
-    print(f"{'='*60}")
-    
-    client = openai.AsyncOpenAI(
-        api_key=api_key,
-        base_url="https://openrouter.ai/api/v1",
-    )
-    
-    try:
-        response = await client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "user", "content": "Say hello in one word."}
-            ],
-            max_tokens=10,
-            temperature=0.3,
-            extra_headers={
-                "HTTP-Referer": "https://eduecosystem.com",
-                "X-Title": "Test",
-            }
-        )
-        print(f"✅ SUCCESS: {response.choices[0].message.content}")
-        return True
-    except Exception as e:
-        print(f"❌ FAILED: {type(e).__name__}")
-        print(f"   Error: {str(e)}")
-        return False
-
-
-async def main():
+async def test_fresh_setup():
     print("\n" + "="*60)
-    print("OPENROUTER API TEST")
+    print("FRESH AI SYSTEM VERIFICATION (2025)")
     print("="*60)
     
-    results = []
-    for model in MODELS:
-        success = await test_model(model["name"], model["key"])
-        results.append((model["name"], success))
+    # 1. Test Free Gemini
+    print("\n[1] Testing Free Gemini (3.0 Flash)...")
+    res = gemini_service.generate_text("Say 'Free System Online'", is_complex=False)
+    print(f"Result: {res}")
     
-    print("\n" + "="*60)
-    print("SUMMARY")
-    print("="*60)
-    for name, success in results:
-        status = "✅ Working" if success else "❌ Failed"
-        print(f"  {status}: {name}")
-
+    # 2. Test Fallback (If you want to force test it, you'd mock the primary failure)
+    print("\nNote: Fallback logic (Gemma/Llama) is active and will triggers if Gemini hits rate limits.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Note: gemini_service currently uses sync calls, so we don't need full async for basic test
+    import time
+    start = time.time()
+    
+    try:
+        from app.models.user import User
+        # Mock user
+        mock_user = type('obj', (object,), {'is_premium': False, 'subscription_status': 'free'})
+        
+        print(f"Testing with Free User context...")
+        res = gemini_service.generate_text("Hello from the tiered system!", user=mock_user)
+        print(f"AI Response: {res}")
+        
+    except Exception as e:
+        print(f"Test Error: {e}")
+    
+    print(f"\nTime taken: {time.time() - start:.2f}s")

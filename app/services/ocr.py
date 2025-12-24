@@ -1,5 +1,6 @@
 import random
 import os
+from typing import Any
 from app.services.gemini_service import gemini_service
 
 # Initialize reader lazily
@@ -14,7 +15,7 @@ def get_reader():
     return reader
 
 
-def analyze_handwriting(image_path: str) -> dict:
+def analyze_handwriting(image_path: str, user: Any = None) -> dict:
     """
     Analyze handwriting using EasyOCR for text extraction
     and Gemini AI for personality analysis.
@@ -64,9 +65,9 @@ Analysis: [detailed paragraph about personality based on handwriting]
 """
 
     try:
-        # Use Gemini Vision to analyze the handwriting
+        # Use Gemini Vision to analyze the handwriting with tiered logic
         gemini_analysis = gemini_service.analyze_image(
-            image_path, analysis_prompt, temperature=0.4
+            image_path, analysis_prompt, user=user, temperature=0.4
         )
 
         # Parse Gemini response

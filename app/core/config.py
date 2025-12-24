@@ -1,7 +1,7 @@
 import os
 import secrets
-from pydantic_settings import BaseSettings
 from pydantic import ConfigDict, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -141,35 +141,28 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")  # Leave empty to disable Sentry
     APP_VERSION: str = os.getenv("APP_VERSION", "2.0.0")
 
-    # AI Configuration (OpenRouter) - Multiple models for redundancy
-    # Primary: Gemini 2.0 Flash (free, fast)
-    OPENROUTER_API_KEY: str = os.getenv(
-        "OPENROUTER_API_KEY",
-        "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"  # Gemini 2.0 Flash
-    )
+    # AI Configuration
+    # Free Tier Gemini Key (15 RPM)
+    FREE_GEMINI_API_KEY: str = os.getenv("FREE_GEMINI_API_KEY", "")
     
-    # Legacy GROK_API_KEY for backward compatibility (uses Gemma 3 27B)
-    GROK_API_KEY: str = os.getenv(
-        "GROK_API_KEY",
-        "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"  # Gemma 3 27B
-    )
+    # Paid/Premium Gemini Key (Higher limits)
+    PAID_GEMINI_API_KEY: str = os.getenv("PAID_GEMINI_API_KEY", "")
     
-    # Alternative models (fallback options)
-    LLAMA_API_KEY: str = os.getenv(
-        "LLAMA_API_KEY",
-        "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"  # Llama 3
-    )
-    MISTRAL_API_KEY: str = os.getenv(
-        "MISTRAL_API_KEY",
-        "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"  # Mistral
-    )
+    # Fallback Keys (OpenRouter)
+    GEMMA_API_KEY: str = os.getenv("GEMMA_API_KEY", "")
+    LLAMA_API_KEY: str = os.getenv("LLAMA_API_KEY", "")
     
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     
     # Default AI model to use
-    DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-2.0-flash-exp:free")
+    DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-3-flash-preview")
 
-    model_config = ConfigDict(case_sensitive=True)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 
 settings = Settings()

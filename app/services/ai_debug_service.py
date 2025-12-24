@@ -294,22 +294,20 @@ class AIDebugService:
             return str(data)
 
     def _estimate_cost(self, model: str, tokens: int) -> float:
-        """Estimate cost based on model and tokens"""
+        """Estimate cost based on model and tokens (Fresh 2025)"""
         # Rough cost estimates per 1K tokens
         costs = {
-            "grok": 0.002,
-            "llama-3.1-8b": 0.0001,
-            "llama-3.2-90b": 0.001,
-            "gemini": 0.0005,
-            "gpt-4": 0.03,
-            "gpt-3.5-turbo": 0.002
+            "gemini-3.0-flash": 0.0001,
+            "gemini-3.0-pro": 0.00125,
+            "gemma-3-27b": 0.0, # Free tier on OpenRouter
+            "llama-3.3-70b": 0.0, # Free tier on OpenRouter
         }
         
         for model_key, cost in costs.items():
             if model_key.lower() in model.lower():
                 return (tokens / 1000) * cost
         
-        return (tokens / 1000) * 0.001  # Default estimate
+        return (tokens / 1000) * 0.0005  # Standard estimate
 
 
 # Global instance

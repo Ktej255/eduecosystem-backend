@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 from app.db.session import get_db
-from app.services.ai_router import ai_router, TaskType
+from app.services.ai_router import ai_router
 from app.api.deps import get_current_user
 from app.models.user import User
 
@@ -329,7 +329,7 @@ async def analyze_recall(
             system_message=SYSTEM_MESSAGE,
             max_tokens=600,
             temperature=0.3,
-            task_type_override=TaskType.RECALL
+            is_complex=True  # Recall analysis is complex
         )
         
         response_text = result["content"]
@@ -391,7 +391,7 @@ async def analyze_recall_demo(
             system_message=SYSTEM_MESSAGE,
             max_tokens=1500,  # Increased for comprehensive unique analysis
             temperature=0.5,  # Increased for more varied responses
-            task_type_override=TaskType.RECALL
+            is_complex=True  # Recall analysis is complex
         )
         
         print(f"[Prelims Recall] AI Router returned successfully!")

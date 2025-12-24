@@ -48,7 +48,11 @@ Format as JSON array:
 Make questions educational, clear, and appropriately challenging."""
 
         gemini_response = gemini_service.generate_text(
-            prompt=quiz_prompt, temperature=0.7, max_tokens=1500
+            prompt=quiz_prompt, 
+            user=current_user,
+            is_complex=True,
+            temperature=0.7, 
+            max_tokens=1500
         )
 
         # Try to parse JSON from response

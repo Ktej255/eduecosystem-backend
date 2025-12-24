@@ -4,7 +4,6 @@ Difficulty Analyzer Service
 Analyze content difficulty using readability metrics and AI.
 """
 
-import openai
 import os
 import logging
 import re
@@ -15,7 +14,8 @@ from app.models.ai_features import ContentDifficultyAnalysis
 
 logger = logging.getLogger(__name__)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# AI analysis integration is handled via gemini_service if needed.
+# openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 class DifficultyAnalyzerService:

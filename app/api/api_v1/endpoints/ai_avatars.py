@@ -155,9 +155,9 @@ async def chat_with_avatar(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Chat with an AI avatar using Grok
+    Chat with an AI avatar using Gemini
     """
-    from app.services.ai_service import ai_service
+    from app.services.gemini_service import gemini_service
     
     avatar = crud_ai_avatar.get(db=db, id=avatar_id)
     if not avatar:
@@ -178,10 +178,10 @@ Response Style: {avatar.response_style}
 Always be helpful and aligned with the purpose defined above."""
 
     try:
-        response = await ai_service.generate_text(
+        response = gemini_service.generate_text(
             prompt=message,
-            system_message=system_message,
-            provider="grok",  # Use Grok by default
+            system_prompt=system_message,
+            user=current_user,
             temperature=0.7,
             max_tokens=500
         )

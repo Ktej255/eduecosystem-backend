@@ -169,7 +169,8 @@ async def generate_question_report(
             model_answer=request.model_answer,
             before_answer_text=request.before_answer_text,
             after_answer_text=request.after_answer_text,
-            content_summary=request.content_summary
+            content_summary=request.content_summary,
+            user=current_user
         )
         
         # Find or create session
@@ -242,7 +243,8 @@ async def generate_daily_summary(
         summary = await drill_report_service.generate_daily_summary(
             question_reports=request.question_reports,
             date=request.date,
-            yesterday_summary=yesterday_summary_data
+            yesterday_summary=yesterday_summary_data,
+            user=current_user
         )
         
         # Store summary in database

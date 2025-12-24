@@ -118,7 +118,7 @@ def register(
             
             Please login to the admin panel to approve or reject this request.
             
-            Admin Panel: https://d2azz9jngd0rmq.amplifyapp.com/admin/users
+            Admin Panel: https://eduecosystem-frontend.vercel.app/admin/users
             """
             
             # Log the approval request (email sending may fail if SMTP not configured)
