@@ -1,0 +1,43 @@
+# Backend-specific ignores
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Database files (use PostgreSQL in production)
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Uploads (use S3 in production)
+uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# Test artifacts
+.coverage
+htmlcov/
+test_*.db
+
+# Debug/temp files
+*.txt
+!requirements*.txt
+!CHANGELOG.txt

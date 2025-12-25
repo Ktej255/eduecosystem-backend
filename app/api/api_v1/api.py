@@ -77,3 +77,15 @@ api_router.include_router(user_management.router, prefix="/admin/user-management
 # Marketing Automation
 from app.api.api_v1.endpoints import marketing_automation
 api_router.include_router(marketing_automation.router, prefix="/marketing-automation", tags=["marketing-automation"])
+
+# Retention System (FSRS-based knowledge decay tracking)
+from app.api.api_v1.endpoints import retention
+api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
+
+# Streak & Engagement System
+from app.api.api_v1.endpoints import streak
+api_router.include_router(streak.router, prefix="/streak", tags=["streak"])
+
+# Engagement Features (Connect The Dots, Daily Wisdom)
+from app.api.api_v1.endpoints import engagement
+api_router.include_router(engagement.router, prefix="/engagement", tags=["engagement"])

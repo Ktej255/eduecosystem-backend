@@ -181,3 +181,6 @@ class User(Base):
     call_logs = relationship("CallLog", back_populates="user", cascade="all, delete-orphan")
     voice_notes = relationship("VoiceNote", back_populates="user", cascade="all, delete-orphan")
 
+    # Retention System (FSRS-based knowledge decay tracking)
+    topic_logs = relationship("UserTopicLog", back_populates="user", cascade="all, delete-orphan")
+

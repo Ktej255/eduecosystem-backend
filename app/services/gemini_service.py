@@ -178,5 +178,84 @@ class GeminiService:
         
         return f"Chat Error: {last_error}"
 
+    def analyze_comprehension(
+        self, 
+        student_summary: str, 
+        key_concepts: List[str], 
+        user: Any = None
+    ) -> Dict[str, Any]:
+        """
+        Analyze student's Feynman explanation for comprehension scoring.
+        Used by the Retention System for FSRS calculations.
+        
+        Returns:
+            {
+                "score": float (0.0-1.0),
+                "grade": int (1-4 FSRS grade),
+                "missing_concepts": List[str],
+                "feedback": str
+            }
+        """
+        prompt = f"""You are an educational assessment AI. Analyze how well the student explained these concepts.
+
+KEY CONCEPTS TO CHECK:
+{chr(10).join([f"- {c}" for c in key_concepts])}
+
+STUDENT'S EXPLANATION:
+{student_summary}
+
+SCORING:
+- 0.0-0.4 = Failed to cover most concepts
+- 0.5-0.6 = Partial understanding, key gaps
+- 0.7-0.8 = Good understanding, minor gaps
+- 0.9-1.0 = Excellent, comprehensive understanding
+
+RESPOND IN THIS EXACT JSON FORMAT:
+{{
+    "score": 0.XX,
+    "grade": X,
+    "missing_concepts": ["concept1", "concept2"],
+    "feedback": "Brief feedback message"
+}}
+
+Only respond with the JSON, no other text."""
+
+        try:
+            response = self.generate_text(prompt, user=user, is_complex=False, temperature=0.3, max_tokens=500)
+            
+            # Parse JSON response
+            import json
+            # Clean response in case of markdown
+            if "```" in response:
+                response = response.split("```")[1]
+                if response.startswith("json"):
+                    response = response[4:]
+            
+            result = json.loads(response.strip())
+            
+            # Ensure valid values
+            score = max(0.0, min(1.0, float(result.get("score", 0.5))))
+            grade = max(1, min(4, int(result.get("grade", 2))))
+            
+            return {
+                "score": score,
+                "grade": grade,
+                "missing_concepts": result.get("missing_concepts", []),
+                "feedback": result.get("feedback", "Review complete.")
+            }
+            
+        except Exception as e:
+            print(f"Comprehension analysis error: {e}")
+            # Fallback: simple word-based scoring
+            words = len(student_summary.split())
+            basic_score = min(1.0, words / 100)
+            return {
+                "score": basic_score,
+                "grade": 2 if basic_score < 0.5 else 3,
+                "missing_concepts": [],
+                "feedback": "Unable to perform AI analysis, using basic scoring."
+            }
+
+
 # Global instance
 gemini_service = GeminiService()
