@@ -89,3 +89,11 @@ api_router.include_router(streak.router, prefix="/streak", tags=["streak"])
 # Engagement Features (Connect The Dots, Daily Wisdom)
 from app.api.api_v1.endpoints import engagement
 api_router.include_router(engagement.router, prefix="/engagement", tags=["engagement"])
+
+# Habit Tracking System
+from app.api.api_v1.endpoints import habits
+api_router.include_router(habits.router, prefix="/habits", tags=["habits"])
+
+# Mastery Level System
+from app.api.api_v1.endpoints import mastery
+api_router.include_router(mastery.router, prefix="/mastery", tags=["mastery"])
