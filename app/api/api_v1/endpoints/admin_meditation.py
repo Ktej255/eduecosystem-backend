@@ -304,3 +304,93 @@ async def upload_bell_sound(
     
     return process
 
+
+# ============ PROGRESS MANAGEMENT ENDPOINTS ============
+
+@router.delete("/progress/reset/{user_id}")
+def reset_user_progress(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Reset a user's meditation progress to Day 1 (for testing purposes)"""
+    from app.models.meditation import MeditationProgress, MeditationDayCompletion, MeditationProcessCompletion
+    
+    # Find user's progress
+    progress = db.query(MeditationProgress).filter(MeditationProgress.user_id == user_id).first()
+    
+    if not progress:
+        raise HTTPException(status_code=404, detail="User progress not found")
+    
+    # Delete all process completions first (due to foreign key)
+    day_completions = db.query(MeditationDayCompletion).filter(
+        MeditationDayCompletion.progress_id == progress.id
+    ).all()
+    
+    for day in day_completions:
+        db.query(MeditationProcessCompletion).filter(
+            MeditationProcessCompletion.day_completion_id == day.id
+        ).delete()
+    
+    # Delete all day completions
+    db.query(MeditationDayCompletion).filter(
+        MeditationDayCompletion.progress_id == progress.id
+    ).delete()
+    
+    # Reset progress to Day 1
+    progress.current_level = 1
+    progress.current_day = 1
+    progress.total_streak = 0
+    progress.last_practice_date = None
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Reset meditation progress for user {user_id} to Day 1",
+        "user_id": user_id
+    }
+
+
+@router.delete("/progress/reset-me")
+def reset_my_progress(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Reset the current admin user's own meditation progress to Day 1 (for testing)"""
+    from app.models.meditation import MeditationProgress, MeditationDayCompletion, MeditationProcessCompletion
+    
+    # Find current user's progress
+    progress = db.query(MeditationProgress).filter(MeditationProgress.user_id == current_user.id).first()
+    
+    if not progress:
+        return {"success": True, "message": "No progress to reset", "user_id": current_user.id}
+    
+    # Delete all process completions first
+    day_completions = db.query(MeditationDayCompletion).filter(
+        MeditationDayCompletion.progress_id == progress.id
+    ).all()
+    
+    for day in day_completions:
+        db.query(MeditationProcessCompletion).filter(
+            MeditationProcessCompletion.day_completion_id == day.id
+        ).delete()
+    
+    # Delete all day completions
+    db.query(MeditationDayCompletion).filter(
+        MeditationDayCompletion.progress_id == progress.id
+    ).delete()
+    
+    # Reset progress
+    progress.current_level = 1
+    progress.current_day = 1
+    progress.total_streak = 0
+    progress.last_practice_date = None
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Your meditation progress has been reset to Day 1",
+        "user_id": current_user.id
+    }

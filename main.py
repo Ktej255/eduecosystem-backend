@@ -16,6 +16,55 @@ from fastapi.responses import JSONResponse
 logger = logging.getLogger(__name__)
 
 
+def seed_meditation_processes():
+    """Seed default meditation processes if table is empty"""
+    from sqlalchemy import text, inspect
+    from app.db.session import engine
+    
+    # Sample meditation video URL for testing (replace with actual videos later)
+    SAMPLE_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    
+    # Format: (name, description, order, duration_min, level, video_url)
+    MEDITATION_PROCESSES = [
+        ("Relaxation", "Complete body relaxation from head to toe", 1, 3, 1, SAMPLE_VIDEO),
+        ("Breath Awareness", "Observe natural breathing without controlling", 2, 3, 1, SAMPLE_VIDEO),
+        ("Counting Breath", "Count breaths from 1 to 10, then restart", 3, 3, 1, SAMPLE_VIDEO),
+        ("Ajna Focus", "Focus attention on the third eye center", 4, 3, 1, SAMPLE_VIDEO),
+        ("Om Chanting", "Mental chanting of Om with each breath", 5, 3, 1, SAMPLE_VIDEO),
+        ("Light Visualization", "Visualize pure white light at the third eye", 6, 3, 1, SAMPLE_VIDEO),
+        ("Heart Opening", "Feel warmth and expansion in the heart center", 7, 3, 1, SAMPLE_VIDEO),
+        ("Energy Awareness", "Feel subtle energy in the body", 8, 3, 1, SAMPLE_VIDEO),
+        ("Silence", "Rest in complete inner silence", 9, 3, 1, SAMPLE_VIDEO),
+        ("Gratitude", "Feel deep gratitude for life and existence", 10, 3, 1, SAMPLE_VIDEO),
+        ("Intention Setting", "Set positive intentions for the day", 11, 2, 1, SAMPLE_VIDEO),
+        ("Gentle Awakening", "Slowly return to normal awareness", 12, 2, 1, SAMPLE_VIDEO),
+    ]
+    
+    try:
+        inspector = inspect(engine)
+        if 'meditation_processes' not in inspector.get_table_names():
+            logger.info("meditation_processes table not found, skipping seed")
+            return
+        
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT COUNT(*) FROM meditation_processes"))
+            if result.scalar() > 0:
+                logger.info("Meditation processes already seeded")
+                return
+            
+            for name, desc, order_num, duration, level, video_url in MEDITATION_PROCESSES:
+                conn.execute(text(
+                    'INSERT INTO meditation_processes '
+                    '(name, description, "order", duration_minutes, level, is_active, video_url) '
+                    'VALUES (:name, :desc, :order_num, :duration, :level, 1, :video_url)'
+                ), {"name": name, "desc": desc, "order_num": order_num, "duration": duration, "level": level, "video_url": video_url})
+            
+            conn.commit()
+            logger.info(f"Seeded {len(MEDITATION_PROCESSES)} meditation processes")
+    except Exception as e:
+        logger.warning(f"Could not seed meditation data: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -24,9 +73,13 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting Eduecosystem Backend (Production Mode)...")
     
+    # Auto-seed meditation processes if table is empty
+    seed_meditation_processes()
+    
     yield  # Application runs here
 
     logger.info("Shutting down Eduecosystem Backend...")
+
 
 
 # Import settings after defining lifespan to avoid circular imports
