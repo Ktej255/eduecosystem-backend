@@ -38,6 +38,42 @@ def generate_unique_filename(original_filename: str) -> str:
     return f"{safe_name}_{timestamp}_{unique_id}{ext}"
 
 
+from pydantic import BaseModel
+
+class VideoLinkCreate(BaseModel):
+    url: str
+    title: str = "YouTube Video"
+
+@router.post("/video/link")
+async def save_video_link(
+    *,
+    video_in: VideoLinkCreate,
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Save a YouTube video link as an asset.
+    """
+    # Simply store the URL in the Asset table
+    from app import crud, schemas
+    asset_in = schemas.AssetCreate(
+        filename=video_in.title,  # Use title as filename
+        original_name=video_in.url,
+        file_type="video",
+        url=video_in.url,
+        size=0,  # No file size
+        user_id=current_user.id,
+        mime_type="video/youtube"
+    )
+    asset = crud.asset.create(db=deps.get_db(), obj_in=asset_in)
+
+    return {
+        "url": asset.url,
+        "filename": asset.filename,
+        "type": asset.mime_type,
+        "user_id": asset.user_id,
+        "id": asset.id
+    }
+
 @router.post("/video")
 async def upload_video(
     *,

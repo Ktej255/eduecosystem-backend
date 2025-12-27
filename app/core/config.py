@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         "DATABASE_URL",
         "sqlite:///./eduecosystem_v2.db"
         if os.getenv("ENVIRONMENT", "development") != "production"
-        else "postgresql://postgres:Edueco123!@eduecosystem-prod.cw5ei40o4bwd.us-east-1.rds.amazonaws.com:5432/eduecosystem_prod",
+        else "postgresql://postgres:Edueco2025!Secure@db.ffzikovynwnnlettdzgw.supabase.co:5432/postgres",
     )
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 
@@ -155,7 +155,7 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     
     # Default AI model to use
-    DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-3-flash-preview")
+    DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "gemini-1.5-flash")
 
     model_config = SettingsConfigDict(
         env_file=".env",

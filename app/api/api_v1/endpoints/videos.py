@@ -1,4 +1,5 @@
 from typing import Any, Dict
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models
@@ -37,12 +38,38 @@ def get_video_upload_url(
     lesson.video_status = "uploading"
     db.commit()
 
-    # Return mock upload URL
-    # In production, this would call Cloudflare Stream API
     return {
         "upload_url": f"https://api.example.com/upload/{video_id}",
         "video_id": video_id,
     }
+
+
+class VideoLinkRequest(BaseModel):
+    lesson_id: int
+    youtube_url: str
+
+@router.post("/link")
+def link_youtube_video(
+    link_data: VideoLinkRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Link a YouTube video to a lesson.
+    """
+    lesson = db.query(models.Lesson).filter(models.Lesson.id == link_data.lesson_id).first()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    # Update lesson
+    lesson.video_url = link_data.youtube_url
+    lesson.video_provider = "youtube"
+    lesson.video_status = "ready"
+    lesson.video_uploaded_at = datetime.utcnow()
+    
+    db.commit()
+    
+    return {"status": "success", "video_url": lesson.video_url}
 
 
 @router.post("/{video_id}/status")

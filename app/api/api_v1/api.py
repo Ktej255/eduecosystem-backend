@@ -97,3 +97,20 @@ api_router.include_router(habits.router, prefix="/habits", tags=["habits"])
 # Mastery Level System
 from app.api.api_v1.endpoints import mastery
 api_router.include_router(mastery.router, prefix="/mastery", tags=["mastery"])
+
+# Video Management (LMS)
+from app.api.api_v1.endpoints import videos
+api_router.include_router(videos.router, prefix="/videos", tags=["videos"])
+
+# Content Generator (AI Flashcards & MCQs)
+from app.api.api_v1.endpoints import content_generator
+api_router.include_router(content_generator.router, prefix="/generate", tags=["content-generator"])
+
+# Audio Analysis (Voice Recording Analysis)
+from app.api.api_v1.endpoints import audio_analysis
+api_router.include_router(audio_analysis.router, prefix="/audio", tags=["audio-analysis"])
+
+# Progress Tracking (CSAT & Evening Sessions)
+from app.api.api_v1.endpoints import session_progress
+api_router.include_router(session_progress.router, prefix="/session-progress", tags=["session-progress"])
+
