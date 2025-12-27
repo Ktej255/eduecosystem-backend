@@ -114,3 +114,7 @@ api_router.include_router(audio_analysis.router, prefix="/audio", tags=["audio-a
 from app.api.api_v1.endpoints import session_progress
 api_router.include_router(session_progress.router, prefix="/session-progress", tags=["session-progress"])
 
+# Custom Study Planner (RAS Dynamic Planner)
+from app.api.api_v1.endpoints import custom_planner
+api_router.include_router(custom_planner.router, prefix="/planner", tags=["custom-planner"])
+
