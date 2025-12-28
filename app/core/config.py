@@ -27,11 +27,12 @@ class Settings(BaseSettings):
 
     # Database URL - use PostgreSQL in production, SQLite for development
     # IMPORTANT: Production uses Supabase connection pooler (port 6543) for IPv4 compatibility
+    # Note: ! in password is URL-encoded as %21
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
         "sqlite:///./eduecosystem_v2.db"
         if os.getenv("ENVIRONMENT", "development") != "production"
-        else "postgresql://postgres.ffzikovynwnnlettdzgw:Edueco2025!Secure@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
+        else "postgresql://postgres.ffzikovynwnnlettdzgw:Edueco2025%21Secure@aws-1-ap-south-1.pooler.supabase.com:6543/postgres",
     )
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 
