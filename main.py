@@ -76,8 +76,8 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting Eduecosystem Backend (Production Mode)...")
     
-    # Auto-seed meditation processes if table is empty
-    seed_meditation_processes()
+    # DISABLED: Auto-seed causes startup failure if DB is unreachable
+    # seed_meditation_processes()
     
     yield  # Application runs here
 
