@@ -21,7 +21,10 @@ from app.db.session import Base
 config = context.config
 
 # Set the sqlalchemy.url from our settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# NOTE: configparser interprets % as interpolation syntax, so we need to escape % as %%
+# This is necessary when DATABASE_URL contains URL-encoded characters like %21 (for !)
+escaped_db_url = settings.DATABASE_URL.replace("%", "%%")
+config.set_main_option("sqlalchemy.url", escaped_db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
