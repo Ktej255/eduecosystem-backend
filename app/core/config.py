@@ -26,11 +26,12 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "Tej@1106")
 
     # Database URL - use PostgreSQL in production, SQLite for development
+    # IMPORTANT: Production uses Supabase connection pooler (port 6543) for IPv4 compatibility
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
         "sqlite:///./eduecosystem_v2.db"
         if os.getenv("ENVIRONMENT", "development") != "production"
-        else "postgresql://postgres:Edueco2025!Secure@db.ffzikovynwnnlettdzgw.supabase.co:5432/postgres",
+        else "postgresql://postgres.ffzikovynwnnlettdzgw:Edueco2025!Secure@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
     )
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 
