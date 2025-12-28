@@ -20,7 +20,9 @@ def seed_meditation_processes():
     """Seed default meditation processes if table is empty"""
     try:
         from sqlalchemy import text, inspect
-        from app.db.session import engine
+        from app.db.session import get_engine
+        
+        engine = get_engine()
         
         # Sample meditation video URL for testing (replace with actual videos later)
         SAMPLE_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
