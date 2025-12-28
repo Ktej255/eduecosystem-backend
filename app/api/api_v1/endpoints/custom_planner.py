@@ -14,123 +14,178 @@ router = APIRouter()
 # Authorized email for custom planner
 AUTHORIZED_EMAILS = ["chitrakumawat33@gmail.com"]
 
-# RAS Syllabus Structure with Topics
+# RAS Syllabus Structure with Topics (Complete from Vijay Sir's Syllabus)
 RAS_SYLLABUS = {
-    "math": {
-        "name": "Mathematics",
+    "rajasthan_geography": {
+        "name": "Rajasthan Geography",
         "priority": "high",
+        "exam_type": "pre_mains",
         "topics": [
-            {"id": "math_1", "name": "Number System", "subtopics": ["Types of Numbers", "Divisibility", "Remainders"]},
-            {"id": "math_2", "name": "LCM & HCF", "subtopics": ["Finding LCM/HCF", "Word Problems"]},
-            {"id": "math_3", "name": "Percentages", "subtopics": ["Basic Concepts", "Successive Change", "Applications"]},
-            {"id": "math_4", "name": "Ratio & Proportion", "subtopics": ["Ratios", "Proportions", "Mixtures"]},
-            {"id": "math_5", "name": "Profit & Loss", "subtopics": ["Basic P&L", "Discount", "Marked Price"]},
-            {"id": "math_6", "name": "Simple & Compound Interest", "subtopics": ["SI", "CI", "Difference formulae"]},
-            {"id": "math_7", "name": "Time & Work", "subtopics": ["Work Efficiency", "Pipes & Cisterns"]},
-            {"id": "math_8", "name": "Time, Speed & Distance", "subtopics": ["Basics", "Relative Speed", "Trains"]},
-            {"id": "math_9", "name": "Averages", "subtopics": ["Weighted Average", "Age Problems"]},
-            {"id": "math_10", "name": "Data Interpretation", "subtopics": ["Tables", "Charts", "Graphs"]},
+            {"id": "rg_1", "name": "Basic Geography: Origin of Rajasthan", "subtopics": ["Formation", "Historical Evolution", "Geographic Setting"], "exam": "pre_mains"},
+            {"id": "rg_2", "name": "Location & Extension", "subtopics": ["Latitude & Longitude", "Boundaries", "Area"], "exam": "pre_mains"},
+            {"id": "rg_3", "name": "Physical Divisions", "subtopics": ["Aravalli Range", "Eastern Plains", "Western Desert", "Hadoti Plateau"], "exam": "pre_mains"},
+            {"id": "rg_4", "name": "Hydro Geography / Drainage System", "subtopics": ["River Systems", "Salt Lakes", "Irrigation Projects"], "exam": "pre_mains"},
+            {"id": "rg_5", "name": "Salt Lakes", "subtopics": ["Sambhar", "Didwana", "Pachpadra", "Lunkaransar"], "exam": "mains"},
+            {"id": "rg_6", "name": "Irrigation Projects", "subtopics": ["Major Dams", "Canal Systems", "Lift Irrigation"], "exam": "pre"},
+            {"id": "rg_7", "name": "Water Conservation Techniques", "subtopics": ["Johad", "Khadin", "Nadi", "Talab"], "exam": "pre_mains"},
+            {"id": "rg_8", "name": "IGNP (Indira Gandhi Canal Project)", "subtopics": ["History", "Stages", "Impact", "Challenges"], "exam": "pre_mains"},
+            {"id": "rg_9", "name": "Soil", "subtopics": ["Types of Soil", "Distribution", "Soil Erosion"], "exam": "pre"},
+            {"id": "rg_10", "name": "Minerals", "subtopics": ["Metallic", "Non-Metallic", "Distribution"], "exam": "pre_mains"},
+            {"id": "rg_11", "name": "Vegetation", "subtopics": ["Forest Types", "Flora", "Conservation"], "exam": "pre_mains"},
+            {"id": "rg_12", "name": "Wildlife & Biodiversity", "subtopics": ["National Parks", "Wildlife Sanctuaries", "Conservation"], "exam": "pre_mains"},
+            {"id": "rg_13", "name": "Agriculture", "subtopics": ["Major Crops", "Cropping Patterns", "Agricultural Problems"], "exam": "pre_mains"},
+            {"id": "rg_14", "name": "UNESCO Sites", "subtopics": ["World Heritage Sites", "Tentative List"], "exam": "pre_mains"},
+            {"id": "rg_15", "name": "Industry", "subtopics": ["Industrial Areas", "Major Industries", "Industrial Policy"], "exam": "pre_mains"},
+            {"id": "rg_16", "name": "Energy", "subtopics": ["Power Plants", "Renewable Energy", "Energy Policy"], "exam": "pre_mains"},
+            {"id": "rg_17", "name": "Population", "subtopics": ["Census Data", "Density", "Growth Rate", "Sex Ratio"], "exam": "pre_mains"},
+            {"id": "rg_18", "name": "Tourism", "subtopics": ["Tourist Circuits", "Heritage Sites", "Geo-parks", "Forts & Palaces"], "exam": "pre"},
         ]
     },
-    "medieval_history": {
-        "name": "Medieval History",
+    "physics": {
+        "name": "Physics",
+        "priority": "medium",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "phy_1", "name": "General Information (Samanya Jankari)", "subtopics": ["Units", "Measurements", "Basic Concepts"], "exam": "pre_mains"},
+            {"id": "phy_2", "name": "Gravitational Force (Gurutvakarshan Bal)", "subtopics": ["Newton's Laws", "Gravity", "Acceleration"], "exam": "pre_mains"},
+            {"id": "phy_3", "name": "Heat (Ushma)", "subtopics": ["Temperature", "Thermodynamics", "Heat Transfer"], "exam": "pre_mains"},
+            {"id": "phy_4", "name": "Sound & Electromagnetic Waves", "subtopics": ["Sound Properties", "Wave Types", "EM Spectrum"], "exam": "pre_mains"},
+            {"id": "phy_5", "name": "Light (Prakash)", "subtopics": ["Reflection", "Refraction", "Optical Instruments"], "exam": "pre_mains"},
+            {"id": "phy_6", "name": "Nuclear Fission & Fusion", "subtopics": ["Nuclear Reactions", "Applications", "Nuclear Energy"], "exam": "pre_mains"},
+            {"id": "phy_7", "name": "Electrostatics & Current Electricity", "subtopics": ["Electric Charge", "Current", "Circuits"], "exam": "pre_mains"},
+            {"id": "phy_8", "name": "Magnetism & Electromagnetism", "subtopics": ["Magnetic Field", "Electromagnetic Induction", "Motors"], "exam": "pre_mains"},
+            {"id": "phy_9", "name": "NMR & MRI", "subtopics": ["Principles", "Medical Applications", "Imaging"], "exam": "mains"},
+        ]
+    },
+    "reasoning": {
+        "name": "Reasoning",
         "priority": "high",
+        "exam_type": "pre",
+        "note": "20 Questions total (Maths + Reasoning). 5 questions from CSAT.",
         "topics": [
-            {"id": "med_1", "name": "Delhi Sultanate", "subtopics": ["Slave Dynasty", "Khilji Dynasty", "Tughlaq Dynasty"]},
-            {"id": "med_2", "name": "Vijayanagara Empire", "subtopics": ["Founders", "Administration", "Culture"]},
-            {"id": "med_3", "name": "Mughal Empire", "subtopics": ["Babur", "Akbar", "Aurangzeb"]},
-            {"id": "med_4", "name": "Bhakti Movement", "subtopics": ["Saints", "Philosophy", "Impact"]},
-            {"id": "med_5", "name": "Sufi Movement", "subtopics": ["Orders", "Teachings", "Influence"]},
-            {"id": "med_6", "name": "Regional Kingdoms", "subtopics": ["Rajputs", "Marathas", "Sikhs"]},
-            {"id": "med_7", "name": "Art & Architecture", "subtopics": ["Indo-Islamic", "Mughal Art", "Temples"]},
-            {"id": "med_8", "name": "Economy & Trade", "subtopics": ["Trade Routes", "Currency", "Agriculture"]},
+            {"id": "rsn_1", "name": "Shapes and Sub-sections", "subtopics": ["Figure Analysis", "Pattern Recognition"], "exam": "pre"},
+            {"id": "rsn_2", "name": "Problems Based on Relation", "subtopics": ["Blood Relations", "Family Tree"], "exam": "pre"},
+            {"id": "rsn_3", "name": "Coding-Decoding", "subtopics": ["Letter Coding", "Number Coding", "Mixed Coding"], "exam": "pre"},
+            {"id": "rsn_4", "name": "Mirror Image", "subtopics": ["Letter Mirror", "Figure Mirror"], "exam": "pre"},
+            {"id": "rsn_5", "name": "Water Image", "subtopics": ["Letter Water Image", "Figure Water Image"], "exam": "pre"},
+            {"id": "rsn_6", "name": "Direction Sense Test", "subtopics": ["Distance", "Direction", "Shadow"], "exam": "pre"},
+            {"id": "rsn_7", "name": "Cube, Cuboid, and Dice", "subtopics": ["Cube Cutting", "Dice Problems", "3D Visualization"], "exam": "pre"},
+            {"id": "rsn_8", "name": "Logical Venn Diagram", "subtopics": ["Set Theory", "Venn Diagrams"], "exam": "pre"},
+            {"id": "rsn_9", "name": "Number/Alphabet Sequence", "subtopics": ["Series Completion", "Pattern Finding"], "exam": "pre"},
+            {"id": "rsn_10", "name": "Sitting Arrangement", "subtopics": ["Linear", "Circular", "Complex"], "exam": "pre"},
+            {"id": "rsn_11", "name": "Syllogism (Nyay Nigaman)", "subtopics": ["All/Some/No", "Conclusions"], "exam": "pre"},
+            {"id": "rsn_12", "name": "Statement & Argument", "subtopics": ["Strong/Weak Arguments", "Evaluation"], "exam": "pre"},
+            {"id": "rsn_13", "name": "Statement & Assumptions", "subtopics": ["Implicit Assumptions", "Logic"], "exam": "pre"},
+            {"id": "rsn_14", "name": "Cause and Effect", "subtopics": ["Causal Relationships", "Analysis"], "exam": "pre"},
+            {"id": "rsn_15", "name": "Statement & Conclusions", "subtopics": ["Logical Inferences", "Deductions"], "exam": "pre"},
+            {"id": "rsn_16", "name": "Statement & Courses of Action", "subtopics": ["Appropriate Actions", "Decision Making"], "exam": "pre"},
         ]
     },
-    "polity": {
-        "name": "Indian Polity",
-        "priority": "medium",
-        "topics": [
-            {"id": "pol_1", "name": "Historical Background", "subtopics": ["Acts before 1947", "Constituent Assembly"]},
-            {"id": "pol_2", "name": "Preamble", "subtopics": ["Keywords", "Amendments", "Cases"]},
-            {"id": "pol_3", "name": "Fundamental Rights", "subtopics": ["Art 14-18", "Art 19-22", "Art 23-35"]},
-            {"id": "pol_4", "name": "DPSP", "subtopics": ["Classification", "Amendments", "Implementation"]},
-            {"id": "pol_5", "name": "Fundamental Duties", "subtopics": ["Art 51A", "Importance"]},
-            {"id": "pol_6", "name": "Union Executive", "subtopics": ["President", "PM & Council", "CAG"]},
-            {"id": "pol_7", "name": "Parliament", "subtopics": ["Lok Sabha", "Rajya Sabha", "Sessions"]},
-            {"id": "pol_8", "name": "Judiciary", "subtopics": ["Supreme Court", "High Courts", "PIL"]},
-            {"id": "pol_9", "name": "State Government", "subtopics": ["Governor", "CM", "State Legislature"]},
-            {"id": "pol_10", "name": "Local Government", "subtopics": ["73rd Amendment", "74th Amendment"]},
-        ]
-    },
-    "modern_history": {
-        "name": "Modern History",
-        "priority": "medium",
-        "topics": [
-            {"id": "mod_1", "name": "British Expansion", "subtopics": ["Battles", "Policies", "Annexations"]},
-            {"id": "mod_2", "name": "1857 Revolt", "subtopics": ["Causes", "Leaders", "Aftermath"]},
-            {"id": "mod_3", "name": "Social Reform Movements", "subtopics": ["Raja Ram Mohan Roy", "Dayanand Saraswati"]},
-            {"id": "mod_4", "name": "Early Nationalism", "subtopics": ["INC Formation", "Moderates", "Extremists"]},
-            {"id": "mod_5", "name": "Gandhi Era", "subtopics": ["NCM", "CDM", "QIM"]},
-            {"id": "mod_6", "name": "Revolutionary Movement", "subtopics": ["Bhagat Singh", "Subhas Bose"]},
-            {"id": "mod_7", "name": "Partition & Independence", "subtopics": ["Mountbatten Plan", "Integration"]},
-        ]
-    },
-    "geography": {
-        "name": "Geography",
-        "priority": "medium",
-        "topics": [
-            {"id": "geo_1", "name": "Physical Geography", "subtopics": ["Geomorphology", "Climatology"]},
-            {"id": "geo_2", "name": "Indian Geography", "subtopics": ["Physiographic Divisions", "Rivers"]},
-            {"id": "geo_3", "name": "Climate of India", "subtopics": ["Monsoon", "Seasons"]},
-            {"id": "geo_4", "name": "Natural Resources", "subtopics": ["Minerals", "Energy"]},
-            {"id": "geo_5", "name": "Agriculture", "subtopics": ["Crops", "Irrigation", "Green Revolution"]},
-            {"id": "geo_6", "name": "Industries", "subtopics": ["Types", "Industrial Regions"]},
-            {"id": "geo_7", "name": "Rajasthan Geography", "subtopics": ["Physical", "Climate", "Resources"]},
-        ]
-    },
-    "economy": {
+    "indian_economy": {
         "name": "Indian Economy",
-        "priority": "medium",
-        "topics": [
-            {"id": "eco_1", "name": "Economic Planning", "subtopics": ["Five Year Plans", "NITI Aayog"]},
-            {"id": "eco_2", "name": "Agriculture Sector", "subtopics": ["Policies", "MSP", "Reforms"]},
-            {"id": "eco_3", "name": "Industrial Sector", "subtopics": ["Policies", "Make in India"]},
-            {"id": "eco_4", "name": "Banking & Finance", "subtopics": ["RBI", "Banks", "NBFCs"]},
-            {"id": "eco_5", "name": "Fiscal Policy", "subtopics": ["Budget", "Taxation", "Deficit"]},
-            {"id": "eco_6", "name": "External Sector", "subtopics": ["Trade", "BOP", "FDI/FPI"]},
-        ]
-    },
-    "science_tech": {
-        "name": "Science & Technology",
-        "priority": "low",
-        "topics": [
-            {"id": "sci_1", "name": "Space Technology", "subtopics": ["ISRO", "Satellites", "Missions"]},
-            {"id": "sci_2", "name": "Defence Technology", "subtopics": ["Missiles", "Aircraft", "Ships"]},
-            {"id": "sci_3", "name": "Biotechnology", "subtopics": ["DNA", "Genetic Engineering"]},
-            {"id": "sci_4", "name": "IT & Communications", "subtopics": ["Digital India", "5G"]},
-            {"id": "sci_5", "name": "Energy Technology", "subtopics": ["Nuclear", "Solar", "Wind"]},
-        ]
-    },
-    "environment": {
-        "name": "Environment & Ecology",
-        "priority": "low",
-        "topics": [
-            {"id": "env_1", "name": "Ecology Basics", "subtopics": ["Ecosystems", "Food Chain"]},
-            {"id": "env_2", "name": "Biodiversity", "subtopics": ["Types", "Hotspots", "Conservation"]},
-            {"id": "env_3", "name": "Pollution", "subtopics": ["Air", "Water", "Soil"]},
-            {"id": "env_4", "name": "Climate Change", "subtopics": ["Global Warming", "Agreements"]},
-            {"id": "env_5", "name": "Environmental Laws", "subtopics": ["Acts", "Tribunals"]},
-        ]
-    },
-    "rajasthan_gk": {
-        "name": "Rajasthan GK",
         "priority": "high",
+        "exam_type": "pre_mains",
         "topics": [
-            {"id": "raj_1", "name": "Rajasthan History", "subtopics": ["Ancient", "Medieval", "Modern"]},
-            {"id": "raj_2", "name": "Geography of Rajasthan", "subtopics": ["Physical", "Climate", "Rivers"]},
-            {"id": "raj_3", "name": "Art & Culture", "subtopics": ["Fairs", "Festivals", "Folk Art"]},
-            {"id": "raj_4", "name": "Economy of Rajasthan", "subtopics": ["Agriculture", "Industries", "Schemes"]},
-            {"id": "raj_5", "name": "Current Affairs Rajasthan", "subtopics": ["Government Schemes", "Events"]},
+            {"id": "eco_1", "name": "Inflation", "subtopics": ["Types", "Causes", "Effects", "Control"], "exam": "pre_mains"},
+            {"id": "eco_2", "name": "Banking", "subtopics": ["RBI", "Commercial Banks", "NBFCs", "Monetary Policy"], "exam": "pre_mains"},
+            {"id": "eco_3", "name": "Finance Market", "subtopics": ["Money Market", "Capital Market", "SEBI"], "exam": "pre_mains"},
+            {"id": "eco_4", "name": "Fiscal Policy", "subtopics": ["Budget", "Taxation", "Deficit", "FRBM"], "exam": "pre_mains"},
+            {"id": "eco_5", "name": "Unemployment", "subtopics": ["Types", "Causes", "Remedies", "Employment Schemes"], "exam": "pre_mains"},
+            {"id": "eco_6", "name": "Human Development Report", "subtopics": ["HDI", "Indicators", "India's Ranking"], "exam": "pre_mains"},
+            {"id": "eco_7", "name": "Trade Policy", "subtopics": ["Export-Import", "Trade Agreements", "WTO"], "exam": "pre_mains"},
+            {"id": "eco_8", "name": "Global Financial Organisations", "subtopics": ["IMF", "World Bank", "ADB", "AIIB"], "exam": "pre_mains"},
+            {"id": "eco_9", "name": "Agriculture Sector", "subtopics": ["Problems", "Schemes", "Reforms", "MSP"], "exam": "pre_mains"},
+            {"id": "eco_10", "name": "Food Management", "subtopics": ["PDS", "Food Security", "Buffer Stock"], "exam": "pre_mains"},
+            {"id": "eco_11", "name": "Food Processing", "subtopics": ["Industry", "Policies", "Investment"], "exam": "pre_mains"},
+            {"id": "eco_12", "name": "Industrial Sector", "subtopics": ["Industrial Policy", "Make in India", "MSME"], "exam": "pre_mains"},
+            {"id": "eco_13", "name": "E-Commerce", "subtopics": ["Growth", "Regulations", "FDI Policy"], "exam": "pre_mains"},
+            {"id": "eco_14", "name": "Subsidy", "subtopics": ["Types", "Direct Benefit Transfer", "Reforms"], "exam": "pre_mains"},
+            {"id": "eco_15", "name": "Public, Private, and Merit Goods", "subtopics": ["Definitions", "Examples", "Role of State"], "exam": "pre_mains"},
+            {"id": "eco_16", "name": "Government Schemes", "subtopics": ["Central Schemes", "State Schemes", "Implementation"], "exam": "pre_mains"},
+            {"id": "eco_17", "name": "Regulatory Effectiveness", "subtopics": ["Regulators", "Governance", "Reforms"], "exam": "pre_mains"},
+            {"id": "eco_18", "name": "Role of Government in Economic Activities", "subtopics": ["Disinvestment", "PSUs", "Policy"], "exam": "pre_mains"},
+        ]
+    },
+    "rajasthan_history": {
+        "name": "Rajasthan History",
+        "priority": "high",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "rh_1", "name": "History of Rajasthan - General", "subtopics": ["Overview", "Periodization", "Significance"], "exam": "pre_mains"},
+            {"id": "rh_2", "name": "Sources of Ancient History", "subtopics": ["Archaeological", "Literary", "Inscriptions"], "exam": "pre_mains"},
+            {"id": "rh_3", "name": "Chauhan Dynasty", "subtopics": ["Ajmer Chauhans", "Prithviraj III", "Battles"], "exam": "pre_mains"},
+            {"id": "rh_4", "name": "Parmar Dynasty", "subtopics": ["Rulers", "Achievements", "Art & Architecture"], "exam": "pre_mains"},
+            {"id": "rh_5", "name": "Pratihar Dynasty", "subtopics": ["Origin", "Expansion", "Decline"], "exam": "pre_mains"},
+            {"id": "rh_6", "name": "Guhil / Sisodia Dynasty", "subtopics": ["Mewar", "Rana Kumbha", "Maharana Pratap"], "exam": "pre_mains"},
+            {"id": "rh_7", "name": "Rathore Dynasty", "subtopics": ["Marwar", "Jodhpur", "Rao Jodha"], "exam": "pre_mains"},
+            {"id": "rh_8", "name": "Kachhwaha Dynasty", "subtopics": ["Amber", "Jaipur", "Mughal Relations"], "exam": "pre_mains"},
+        ]
+    },
+    "biology": {
+        "name": "Biology",
+        "priority": "medium",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "bio_1", "name": "Balanced Diet", "subtopics": ["Nutrients", "Vitamins", "Minerals"], "exam": "pre"},
+            {"id": "bio_2", "name": "Blood Group", "subtopics": ["ABO System", "Rh Factor", "Blood Transfusion"], "exam": "pre_mains"},
+            {"id": "bio_3", "name": "Disease", "subtopics": ["Infectious", "Non-Infectious", "Prevention"], "exam": "pre_mains"},
+            {"id": "bio_4", "name": "Endocrine System", "subtopics": ["Glands", "Hormones", "Disorders"], "exam": "pre_mains"},
+            {"id": "bio_5", "name": "Eye", "subtopics": ["Structure", "Defects", "Correction"], "exam": "pre_mains"},
+            {"id": "bio_6", "name": "Reproductive System", "subtopics": ["Male", "Female", "Reproductive Health"], "exam": "pre_mains"},
+            {"id": "bio_7", "name": "Blood", "subtopics": ["Composition", "Functions", "Coagulation"], "exam": "pre_mains"},
+            {"id": "bio_8", "name": "Digestive System", "subtopics": ["Organs", "Digestion Process", "Enzymes"], "exam": "pre_mains"},
+            {"id": "bio_9", "name": "Blood Circulatory System", "subtopics": ["Heart", "Blood Vessels", "Circulation"], "exam": "pre_mains"},
+            {"id": "bio_10", "name": "Excretory System", "subtopics": ["Kidneys", "Nephron", "Urine Formation"], "exam": "mains"},
+            {"id": "bio_11", "name": "Reproduction in Plants", "subtopics": ["Sexual", "Asexual", "Pollination"], "exam": "pre_mains"},
+            {"id": "bio_12", "name": "Respiratory System", "subtopics": ["Lungs", "Respiration", "Gas Exchange"], "exam": "pre_mains"},
+            {"id": "bio_13", "name": "Nervous System", "subtopics": ["Brain", "Spinal Cord", "Nerves"], "exam": "pre_mains"},
+        ]
+    },
+    "hindi": {
+        "name": "Hindi",
+        "priority": "medium",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "hin_1", "name": "Synonyms (Paryayvachi Shabd)", "subtopics": ["Common Synonyms", "Practice"], "exam": "pre_mains"},
+            {"id": "hin_2", "name": "Antonyms (Vilom Shabd)", "subtopics": ["Common Antonyms", "Practice"], "exam": "pre_mains"},
+            {"id": "hin_3", "name": "One Word Substitution", "subtopics": ["Vakyansh ke liye ek shabd", "Practice"], "exam": "pre_mains"},
+            {"id": "hin_4", "name": "Technical Terminology", "subtopics": ["Paribhashik Shabdavali", "Official Terms"], "exam": "pre_mains"},
+            {"id": "hin_5", "name": "Idioms (Muhavare)", "subtopics": ["Common Idioms", "Usage", "Practice"], "exam": "pre_mains"},
+            {"id": "hin_6", "name": "Proverbs (Lokoktiyan)", "subtopics": ["Kahavate", "Meanings", "Usage"], "exam": "pre_mains"},
+            {"id": "hin_7", "name": "Word Purification (Shabd Shuddhi)", "subtopics": ["Spelling Errors", "Correction"], "exam": "pre_mains"},
+            {"id": "hin_8", "name": "Sentence Purification (Vakya Shuddhi)", "subtopics": ["Grammar Errors", "Correction"], "exam": "pre_mains"},
+            {"id": "hin_9", "name": "Word Pairs (Shabd Yugm)", "subtopics": ["Similar Words", "Differences"], "exam": "pre_mains"},
+            {"id": "hin_10", "name": "Prefix (Upsarg)", "subtopics": ["Common Prefixes", "Usage"], "exam": "pre_mains"},
+            {"id": "hin_11", "name": "Suffix (Pratyay)", "subtopics": ["Common Suffixes", "Usage"], "exam": "pre_mains"},
+        ]
+    },
+    "indian_polity": {
+        "name": "Indian Polity",
+        "priority": "high",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "pol_1", "name": "Making of the Constitution", "subtopics": ["Constituent Assembly", "Drafting", "Adoption"], "exam": "pre_mains"},
+            {"id": "pol_2", "name": "Features of the Constitution", "subtopics": ["Federal", "Parliamentary", "Written"], "exam": "pre_mains"},
+            {"id": "pol_3", "name": "Amendment of the Constitution", "subtopics": ["Procedure", "Types", "Key Amendments"], "exam": "pre_mains"},
+            {"id": "pol_4", "name": "Basic Structure Doctrine", "subtopics": ["Kesavananda Case", "Elements", "Significance"], "exam": "pre_mains"},
+            {"id": "pol_5", "name": "Fundamental Rights", "subtopics": ["Art 14-32", "Recent Cases", "Restrictions"], "exam": "pre_mains"},
+            {"id": "pol_6", "name": "Fundamental Duties", "subtopics": ["Art 51A", "11 Duties", "Importance"], "exam": "pre_mains"},
+            {"id": "pol_7", "name": "Federal System", "subtopics": ["Features", "Distribution of Powers", "Cooperative Federalism"], "exam": "pre_mains"},
+            {"id": "pol_8", "name": "Parliamentary System", "subtopics": ["Features", "Executive-Legislature", "Responsibility"], "exam": "pre_mains"},
+            {"id": "pol_9", "name": "President", "subtopics": ["Election", "Powers", "Ordinances"], "exam": "pre_mains"},
+            {"id": "pol_10", "name": "Prime Minister", "subtopics": ["Appointment", "Powers", "Cabinet"], "exam": "pre_mains"},
+            {"id": "pol_11", "name": "Central Council of Ministers", "subtopics": ["Categories", "Collective Responsibility"], "exam": "pre_mains"},
+            {"id": "pol_12", "name": "Centre-State Relations", "subtopics": ["Legislative", "Administrative", "Financial"], "exam": "pre_mains"},
+            {"id": "pol_13", "name": "Supreme Court", "subtopics": ["Composition", "Jurisdiction", "Powers"], "exam": "pre_mains"},
+            {"id": "pol_14", "name": "Judicial Review", "subtopics": ["Meaning", "Scope", "Cases"], "exam": "pre_mains"},
+            {"id": "pol_15", "name": "Judicial Activism", "subtopics": ["PIL", "Suo Moto", "Cases"], "exam": "pre_mains"},
+            {"id": "pol_16", "name": "Election Commission of India", "subtopics": ["Composition", "Powers", "Model Code"], "exam": "pre_mains"},
+            {"id": "pol_17", "name": "CAG", "subtopics": ["Appointment", "Functions", "Reports"], "exam": "pre_mains"},
+            {"id": "pol_18", "name": "UPSC", "subtopics": ["Composition", "Functions", "Independence"], "exam": "pre_mains"},
+            {"id": "pol_19", "name": "NITI Aayog", "subtopics": ["Structure", "Functions", "Initiatives"], "exam": "pre_mains"},
+            {"id": "pol_20", "name": "CVC", "subtopics": ["Central Vigilance Commission", "Functions", "Powers"], "exam": "pre_mains"},
+            {"id": "pol_21", "name": "CIC", "subtopics": ["Central Information Commission", "RTI Act", "Appeals"], "exam": "pre_mains"},
+            {"id": "pol_22", "name": "NHRC", "subtopics": ["National Human Rights Commission", "Functions", "Powers"], "exam": "pre_mains"},
         ]
     }
 }
@@ -183,6 +238,44 @@ async def get_syllabus():
         "total_subjects": len(RAS_SYLLABUS),
         "total_topics": sum(len(s["topics"]) for s in RAS_SYLLABUS.values())
     }
+
+
+@router.get("/syllabus/{subject_id}")
+async def get_subject_details(subject_id: str):
+    """Get details for a specific subject including all topics."""
+    if subject_id not in RAS_SYLLABUS:
+        raise HTTPException(status_code=404, detail=f"Subject '{subject_id}' not found")
+    
+    subject = RAS_SYLLABUS[subject_id]
+    return {
+        "subject_id": subject_id,
+        "name": subject["name"],
+        "priority": subject["priority"],
+        "exam_type": subject.get("exam_type", "pre_mains"),
+        "note": subject.get("note", ""),
+        "topics": subject["topics"],
+        "total_topics": len(subject["topics"])
+    }
+
+
+@router.get("/topic/{topic_id}")
+async def get_topic_details(topic_id: str):
+    """Get details for a specific topic including subtopics and PYQs."""
+    # Find the topic in all subjects
+    for subject_id, subject in RAS_SYLLABUS.items():
+        for topic in subject["topics"]:
+            if topic["id"] == topic_id:
+                return {
+                    "topic_id": topic_id,
+                    "subject_id": subject_id,
+                    "subject_name": subject["name"],
+                    "name": topic["name"],
+                    "subtopics": topic["subtopics"],
+                    "exam": topic.get("exam", "pre_mains"),
+                    "pyqs": SAMPLE_PYQS.get(topic_id, [])
+                }
+    
+    raise HTTPException(status_code=404, detail=f"Topic '{topic_id}' not found")
 
 
 @router.get("/dashboard/{email}")
