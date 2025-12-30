@@ -228,6 +228,39 @@ SAMPLE_PYQS = {
     ],
 }
 
+SAMPLE_MCQS = {
+    "rg_1": [
+        {
+            "id": "mcq_rg1_1",
+            "type": "prelims",
+            "question": "Which of the following geographical features of Rajasthan is the oldest?",
+            "options": ["Aravalli Range", "Thar Desert", "Eastern Plains", "Hadoti Plateau"],
+            "correct_answer": 0,
+            "explanation": "The Aravalli Range is one of the oldest fold mountain systems in the world."
+        }
+    ],
+    "rs_1": [
+        {
+            "id": "mcq_rs1_1",
+            "type": "prelims",
+            "question": "Which ISRO mission successfully placed a spacecraft in orbit around Mars?",
+            "options": ["Mangalyaan", "Chandrayaan-1", "Gaganyaan", "Aditya-L1"],
+            "correct_answer": 0,
+            "explanation": "Mangalyaan (Mars Orbiter Mission) was launched in 2013."
+        }
+    ],
+    "pol_5": [
+        {
+            "id": "mcq_pol5_1",
+            "type": "mains_mcq",
+            "question": "Under Article 21, the right to life includes:",
+            "options": ["Right to livelihood", "Right to privacy", "Right to shelter", "All of the above"],
+            "correct_answer": 3,
+            "explanation": "The Supreme Court has expanded Article 21 to include various rights necessary for a dignified life."
+        }
+    ]
+}
+
 # In-memory storage for plans (replace with database in production)
 _user_plans: Dict[str, Dict] = {}
 _topic_progress: Dict[str, Dict[str, Any]] = {}
@@ -552,3 +585,289 @@ async def reset_progress(email: str):
         del _user_plans[key]
     
     return {"success": True, "message": "Progress reset"}
+
+
+@router.get("/plan-by-date/{email}/{target_date}")
+async def get_plan_by_date(email: str, target_date: str):
+    """Get plan for a specific date (for calendar navigation)."""
+    if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        selected_date = date.fromisoformat(target_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    day_index = (selected_date - PLAN_START_DATE).days
+    
+    if day_index < 0:
+        return {
+            "email": email,
+            "date": target_date,
+            "status": "not_started",
+            "day_number": 0,
+            "message": f"This date is before the plan start (Jan 1, 2026)",
+            "slots": []
+        }
+    
+    if day_index >= PLAN_DURATION_DAYS:
+        return {
+            "email": email,
+            "date": target_date,
+            "status": "completed",
+            "day_number": PLAN_DURATION_DAYS,
+            "message": "Plan completed",
+            "slots": []
+        }
+    
+    # Generate plan for this specific date
+    all_topics = []
+    for subj_key, subj_data in RAS_SYLLABUS.items():
+        for topic in subj_data["topics"]:
+            all_topics.append({
+                **topic,
+                "subject": subj_data["name"],
+                "subject_key": subj_key,
+                "priority": subj_data["priority"]
+            })
+    
+    total_topics = len(all_topics)
+    topics_per_day = total_topics / PLAN_DURATION_DAYS
+    start_idx = int(day_index * topics_per_day)
+    end_idx = int((day_index + 1) * topics_per_day)
+    day_topics = all_topics[start_idx:end_idx]
+    
+    # Updated slots: 5h Primary + 1h Medieval + 1h Math
+    slots = [
+        {"time": "13:30 - 14:30", "type": "primary_subject", "duration": 60},
+        {"time": "14:30 - 15:30", "type": "primary_subject", "duration": 60},
+        {"time": "15:30 - 16:30", "type": "primary_subject", "duration": 60},
+        {"time": "16:30 - 17:30", "type": "primary_subject", "duration": 60},
+        {"time": "17:30 - 18:30", "type": "primary_subject", "duration": 60},
+        {"time": "18:30 - 19:30", "type": "medieval_history", "duration": 60},
+        {"time": "19:30 - 20:30", "type": "mathematics", "duration": 60},
+    ]
+    
+    topic_idx = 0
+    for slot in slots:
+        if slot["type"] == "primary_subject" and topic_idx < len(day_topics):
+            topic = day_topics[topic_idx]
+            # Check completion status
+            topic_key = f"{email}_{topic['id']}"
+            is_completed = _topic_progress.get(topic_key, {}).get("completed", False)
+            slot["topic"] = {**topic, "completed": is_completed}
+            slot["pyqs"] = SAMPLE_PYQS.get(topic["id"], [])
+            topic_idx += 1
+        elif slot["type"] == "medieval_history":
+            slot["description"] = "Medieval History Focus"
+            slot["subject"] = "Medieval History"
+        elif slot["type"] == "mathematics":
+            slot["description"] = "Mathematics Practice"
+            slot["subject"] = "Mathematics"
+    
+    return {
+        "email": email,
+        "date": target_date,
+        "day_number": day_index + 1,
+        "total_days": PLAN_DURATION_DAYS,
+        "slots": slots,
+        "total_topics_today": len(day_topics),
+        "status": "active"
+    }
+
+
+@router.get("/syllabus-topics/{subject_key}")
+async def get_syllabus_topics(subject_key: str, email: str):
+    """Get all topics for a subject with completion status."""
+    if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if subject_key not in RAS_SYLLABUS:
+        raise HTTPException(status_code=404, detail="Subject not found")
+    
+    subject = RAS_SYLLABUS[subject_key]
+    topics_with_status = []
+    
+    for topic in subject["topics"]:
+        topic_key = f"{email}_{topic['id']}"
+        progress = _topic_progress.get(topic_key, {})
+        topics_with_status.append({
+            **topic,
+            "completed": progress.get("completed", False),
+            "completed_at": progress.get("completed_at"),
+            "marked_by": progress.get("marked_by", None)
+        })
+    
+    return {
+        "subject_key": subject_key,
+        "subject_name": subject["name"],
+        "priority": subject["priority"],
+        "total_topics": len(topics_with_status),
+        "completed_count": sum(1 for t in topics_with_status if t["completed"]),
+        "topics": topics_with_status
+    }
+
+
+@router.get("/reports/{email}")
+async def get_reports(email: str):
+    """Get retention and progress reports."""
+    if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user_recordings = _recordings.get(email, [])
+    
+    # Calculate per-subject completion
+    subject_stats = {}
+    for subj_key, subj_data in RAS_SYLLABUS.items():
+        completed = 0
+        for topic in subj_data["topics"]:
+            topic_key = f"{email}_{topic['id']}"
+            if _topic_progress.get(topic_key, {}).get("completed", False):
+                completed += 1
+        subject_stats[subj_key] = {
+            "name": subj_data["name"],
+            "total": len(subj_data["topics"]),
+            "completed": completed,
+            "percentage": round(completed / len(subj_data["topics"]) * 100) if subj_data["topics"] else 0
+        }
+    
+    # Daily retention (mock data for now)
+    retention_data = []
+    for i in range(10):
+        retention_data.append({
+            "day": i + 1,
+            "score": 70 + (i * 2) if i < 5 else 90 - (i - 5) * 3
+        })
+    
+    return {
+        "overall_retention": 82,
+        "total_submissions": len(user_recordings),
+        "daily_retention": retention_data,
+        "subject_stats": subject_stats,
+        "submissions": user_recordings[-10:]  # Last 10 submissions
+    }
+
+
+@router.get("/calendar-overview/{email}")
+async def get_calendar_overview(email: str):
+    """Get a 40-day calendar overview with completion status for each day."""
+    if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    calendar_days = []
+    current = date.today()
+    
+    for day_num in range(PLAN_DURATION_DAYS):
+        day_date = PLAN_START_DATE + timedelta(days=day_num)
+        
+        # Calculate topics for this day
+        all_topics = []
+        for subj_key, subj_data in RAS_SYLLABUS.items():
+            for topic in subj_data["topics"]:
+                all_topics.append(topic)
+        
+        total_topics = len(all_topics)
+        topics_per_day = total_topics / PLAN_DURATION_DAYS
+        start_idx = int(day_num * topics_per_day)
+        end_idx = int((day_num + 1) * topics_per_day)
+        day_topics = all_topics[start_idx:end_idx]
+        
+        # Check completion
+        completed_count = 0
+        for topic in day_topics:
+            topic_key = f"{email}_{topic['id']}"
+            if _topic_progress.get(topic_key, {}).get("completed", False):
+                completed_count += 1
+        
+        status = "future"
+        if day_date < current:
+            status = "completed" if completed_count == len(day_topics) else "partial"
+        elif day_date == current:
+            status = "today"
+        
+        calendar_days.append({
+            "day_number": day_num + 1,
+            "date": day_date.isoformat(),
+            "topics_count": len(day_topics),
+            "completed_count": completed_count,
+            "status": status
+        })
+    
+    return {
+        "email": email,
+        "plan_start": PLAN_START_DATE.isoformat(),
+        "plan_end": (PLAN_START_DATE + timedelta(days=PLAN_DURATION_DAYS - 1)).isoformat(),
+        "total_days": PLAN_DURATION_DAYS,
+        "days": calendar_days
+    }
+
+
+@router.get("/daily-test/{email}/{target_date}")
+async def get_daily_test(email: str, target_date: str):
+    """Get MCQs for the topics scheduled on a specific date."""
+    if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Reuse logical mapping from get_plan_by_date
+    try:
+        selected_date = date.fromisoformat(target_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    day_index = (selected_date - PLAN_START_DATE).days
+    
+    if day_index < 0 or day_index >= PLAN_DURATION_DAYS:
+        return {"email": email, "date": target_date, "questions": [], "message": "No test available for this date"}
+
+    # Get topics for this day
+    all_topics = []
+    for subj_key, subj_data in RAS_SYLLABUS.items():
+        for topic in subj_data["topics"]:
+            all_topics.append(topic)
+    
+    total_topics = len(all_topics)
+    topics_per_day = total_topics / PLAN_DURATION_DAYS
+    start_idx = int(day_index * topics_per_day)
+    end_idx = int((day_index + 1) * topics_per_day)
+    day_topics = all_topics[start_idx:end_idx]
+    
+    # Collect MCQs for these topics
+    test_questions = []
+    for topic in day_topics:
+        topic_mcqs = SAMPLE_MCQS.get(topic["id"], [])
+        for q in topic_mcqs:
+            test_questions.append({
+                **q,
+                "topic_name": topic["name"]
+            })
+            
+    # Add some generic questions if none found for specific topics to ensure a test experience
+    if not test_questions:
+        test_questions = [
+            {
+                "id": "gen_1",
+                "type": "prelims",
+                "question": "Which city of Rajasthan is known as the 'Pink City'?",
+                "options": ["Jodhpur", "Jaipur", "Udaipur", "Bikaner"],
+                "correct_answer": 1,
+                "explanation": "Jaipur was painted pink to welcome Prince Albert in 1876.",
+                "topic_name": "General Rajasthan"
+            },
+            {
+                "id": "gen_2",
+                "type": "mains_mcq",
+                "question": "The Rajasthan Public Service Commission (RPSC) is located in:",
+                "options": ["Jaipur", "Ajmer", "Udaipur", "Kota"],
+                "correct_answer": 1,
+                "explanation": "RPSC headquarters is in Ajmer.",
+                "topic_name": "General Rajasthan"
+            }
+        ]
+    
+    return {
+        "email": email,
+        "date": target_date,
+        "day_number": day_index + 1,
+        "questions": test_questions,
+        "total_questions": len(test_questions)
+    }

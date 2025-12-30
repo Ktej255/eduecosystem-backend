@@ -26,21 +26,12 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "Tej@1106")
 
     # Database URL - use PostgreSQL in production, SQLite for development
-    # IMPORTANT: Supports multiple production environments:
-    # - GCP Cloud SQL (via Unix socket): /cloudsql/PROJECT:REGION:INSTANCE
-    # - Supabase connection pooler (port 6543) for IPv4 compatibility
-    # Note: ! in password is URL-encoded as %21
-    
-    # GCP Cloud SQL configuration (Unix socket for Cloud Run)
-    CLOUD_SQL_CONNECTION_NAME: str = os.getenv("CLOUD_SQL_CONNECTION_NAME", "")
-    
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
         "sqlite:///./eduecosystem_v2.db"
         if os.getenv("ENVIRONMENT", "development") != "production"
-        else "postgresql://postgres.ffzikovynwnnlettdzgw:Edueco2025%21Secure@aws-1-ap-south-1.pooler.supabase.com:6543/postgres",
+        else "postgresql://postgres:Edueco123!@eduecosystem-prod.cw5ei40o4bwd.us-east-1.rds.amazonaws.com:5432/eduecosystem_prod",
     )
-
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 
     # Security - SECRET_KEY must be set in production
@@ -164,7 +155,7 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     
     # Default AI model to use
-    DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "gemini-1.5-flash")
+    DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-3-flash-preview")
 
     model_config = SettingsConfigDict(
         env_file=".env",

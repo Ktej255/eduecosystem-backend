@@ -101,7 +101,6 @@ class SegmentResponse(BaseModel):
     title: str
     key_points: str
     video_url: Optional[str]
-    video_link: Optional[str] = None
     duration: str
 
 
@@ -110,7 +109,6 @@ class DayContentResponse(BaseModel):
     cycle_id: int
     day_number: int
     part_number: int
-    part_pdf_url: Optional[str] = None
     segments: List[SegmentResponse]
 
 
@@ -125,10 +123,8 @@ async def get_part_content(
     Returns 4 segments per part.
     """
     segments = []
-    part_key = f"{cycle_id}_{day_number}_{part_number}"
-    
     for seg_num in range(1, 5):  # 4 segments per part
-        key = f"{part_key}_{seg_num}"
+        key = f"{cycle_id}_{day_number}_{part_number}_{seg_num}"
         
         if key in SEGMENTS_STORE:
             data = SEGMENTS_STORE[key]
@@ -137,7 +133,6 @@ async def get_part_content(
                 title=data.get("title", f"Segment {seg_num}"),
                 key_points=data.get("key_points", ""),
                 video_url=data.get("video_url"),
-                video_link=data.get("video_link"),
                 duration=data.get("duration", "25:00")
             ))
         else:
@@ -147,18 +142,13 @@ async def get_part_content(
                 title=f"Segment {seg_num} (Not Uploaded)",
                 key_points="Key points will appear here after admin uploads content",
                 video_url=None,
-                video_link=None,
                 duration="25:00"
             ))
-    
-    # Get part level PDF if exists
-    part_pdf_url = SEGMENTS_STORE.get(f"{part_key}_pdf")
     
     return DayContentResponse(
         cycle_id=cycle_id,
         day_number=day_number,
         part_number=part_number,
-        part_pdf_url=part_pdf_url,
         segments=segments
     )
 
@@ -172,7 +162,6 @@ async def save_segment(
     background_tasks: BackgroundTasks,
     title: str = Form(...),
     key_points: str = Form(""),  # Made optional with default empty string
-    video_link: Optional[str] = Form(None),
     video: Optional[UploadFile] = File(None)
 ):
     """
@@ -209,15 +198,13 @@ async def save_segment(
                 file_path = os.path.join(UPLOAD_DIR, os.path.basename(video_url))
         
         # Store segment data
-        existing_data = SEGMENTS_STORE.get(key, {})
         SEGMENTS_STORE[key] = {
             "title": title,
             "key_points": key_points,
             "video_url": video_url,
-            "video_link": video_link if video_link is not None else existing_data.get("video_link"),
             "duration": "25:00",
             "updated_at": datetime.utcnow().isoformat(),
-            "transcription_status": "pending" if video_uploaded else existing_data.get("transcription_status", "none")
+            "transcription_status": "pending" if video_uploaded else SEGMENTS_STORE.get(key, {}).get("transcription_status", "none")
         }
         
         # PERSIST TO FILE so data survives server restarts
@@ -241,69 +228,11 @@ async def save_segment(
             "message": f"Segment {segment_number} saved successfully" + (" - Transcription started in background" if video_uploaded else ""),
             "segment_key": key,
             "video_url": video_url,
-            "video_link": video_link,
             "transcription_started": video_uploaded
         }
     except Exception as e:
         print(f"Error saving segment: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to save segment: {str(e)}")
-
-
-@router.post("/cycle/{cycle_id}/day/{day_number}/part/{part_number}/pdf")
-async def upload_part_pdf(
-    cycle_id: int,
-    day_number: int,
-    part_number: int,
-    file: UploadFile = File(...)
-):
-    """
-    Upload a combined PDF for a 2-hour part.
-    """
-    try:
-        # Save PDF file
-        file_ext = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
-        unique_filename = f"c{cycle_id}_d{day_number}_p{part_number}_{uuid.uuid4().hex[:8]}{file_ext}"
-        file_path = os.path.join(UPLOAD_DIR, unique_filename)
-        
-        contents = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(contents)
-        
-        file_url = f"/uploads/batch1/{unique_filename}"
-        
-        # Store in segments store with special key suffix
-        key = f"{cycle_id}_{day_number}_{part_number}_pdf"
-        SEGMENTS_STORE[key] = file_url
-        save_segments()
-        
-        return {
-            "success": True,
-            "url": file_url,
-            "message": f"PDF for Part {part_number} uploaded successfully"
-        }
-    except Exception as e:
-        print(f"Error uploading PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to upload PDF: {str(e)}")
-
-
-@router.delete("/cycle/{cycle_id}/day/{day_number}/part/{part_number}/pdf")
-async def delete_part_pdf(
-    cycle_id: int,
-    day_number: int,
-    part_number: int
-):
-    """
-    Delete a part-level PDF.
-    """
-    key = f"{cycle_id}_{day_number}_{part_number}_pdf"
-    if key in SEGMENTS_STORE:
-        delete_url = SEGMENTS_STORE[key]
-        # Optionally delete the file from disk if needed
-        # ...
-        del SEGMENTS_STORE[key]
-        save_segments()
-        return {"success": True, "message": "PDF deleted"}
-    return {"success": False, "message": "PDF not found"}
 
 
 @router.get("/all-segments")
@@ -350,7 +279,7 @@ async def bulk_save_segments(
     data: str = Form(...)  # JSON string of all segments
 ):
     """
-    Bulk save segment metadata (titles, key points, and video links).
+    Bulk save segment metadata (titles and key points).
     Videos are uploaded separately.
     """
     try:
@@ -369,7 +298,6 @@ async def bulk_save_segments(
                         "title": seg.get("title", f"Segment {seg_num}"),
                         "key_points": seg.get("notes", ""),
                         "video_url": existing.get("video_url"),  # Keep existing video
-                        "video_link": seg.get("video_link", existing.get("video_link")),
                         "duration": "25:00",
                         "updated_at": datetime.utcnow().isoformat()
                     }

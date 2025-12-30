@@ -83,8 +83,5 @@ from app.models import (
     user_management,
     marketing_automation,
     retention,
-    streak,
-    habit,
-    mastery,
 )
 print("DEBUG: Models imported in base.py")

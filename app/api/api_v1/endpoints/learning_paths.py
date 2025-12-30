@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from pydantic import EmailStr
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.api import deps
 from app.crud import learning_path as crud
-from app.crud import user as user_crud
 from app.schemas import learning_path as schemas
 from app.models.user import User
 
@@ -318,32 +316,3 @@ def check_course_access(
     """
     has_access = crud.check_course_access(db, path_id, current_user.id, course_id)
     return {"has_access": has_access}
-
-
-@router.post("/{path_id}/assign")
-def assign_path_to_student(
-    path_id: int,
-    email: EmailStr = Body(..., embed=True),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
-):
-    """
-    Admin only: Assign a learning path to a student by email.
-    """
-    # Check if user is admin
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    # Get path
-    path = crud.get_learning_path(db, path_id)
-    if not path:
-        raise HTTPException(status_code=404, detail="Learning path not found")
-
-    # Get student
-    student = user_crud.get_user_by_email(db, email=email)
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found with this email")
-
-    # Enroll
-    return crud.enroll_in_path(db, path_id, student.id)
-
