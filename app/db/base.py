@@ -83,5 +83,6 @@ from app.models import (
     user_management,
     marketing_automation,
     retention,
+    ras_planner,
 )
 print("DEBUG: Models imported in base.py")

@@ -1,12 +1,10 @@
-"""
-Custom Study Planner API - Dynamic RAS Study Planner
-Personalized for specific email IDs with adaptive daily scheduling
-"""
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date, timedelta
+from sqlalchemy.orm import Session
+from app.api import deps
+from app.models.ras_planner import RASPlan, RASTopicProgress, RASRecording
 import json
 
 router = APIRouter()
@@ -261,10 +259,7 @@ SAMPLE_MCQS = {
     ]
 }
 
-# In-memory storage for plans (replace with database in production)
-_user_plans: Dict[str, Dict] = {}
-_topic_progress: Dict[str, Dict[str, Any]] = {}
-_recordings: Dict[str, List[Dict[str, Any]]] = {} # Store recording metadata
+# In-memory storage replaced by RDS database
 
 
 class TopicUpdate(BaseModel):
@@ -291,10 +286,14 @@ class AICheckRequest(BaseModel):
 
 
 @router.get("/check-access/{email}")
-async def check_access(email: str):
+async def check_access(email: str, db: Session = Depends(deps.get_db)):
     """Check if email has access to custom planner."""
+    # Also check if user exists in database
+    from app.crud import user as crud_user
+    user = crud_user.get_by_email(db, email=email)
+    
     return {
-        "has_access": email.lower() in [e.lower() for e in AUTHORIZED_EMAILS],
+        "has_access": email.lower() in [e.lower() for e in AUTHORIZED_EMAILS] or (user is not None),
         "email": email
     }
 
@@ -348,10 +347,17 @@ async def get_topic_details(topic_id: str):
 
 
 @router.get("/dashboard/{email}")
-async def get_dashboard(email: str):
+async def get_dashboard(email: str, db: Session = Depends(deps.get_db)):
     """Get complete dashboard data for the email."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        # Check if user exists in DB even if not in hardcoded list
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get progress from database
+    db_progress = db.query(RASTopicProgress).filter(RASTopicProgress.email == email).all()
+    progress_map = {p.topic_id: p.completed for p in db_progress}
     
     # Calculate progress per subject
     subject_progress = {}
@@ -363,8 +369,7 @@ async def get_dashboard(email: str):
         subject_completed = 0
         
         for topic in topics:
-            topic_key = f"{email}_{topic['id']}"
-            if _topic_progress.get(topic_key, {}).get("completed", False):
+            if progress_map.get(topic['id'], False):
                 subject_completed += 1
                 completed_topics += 1
             total_topics += 1
@@ -396,10 +401,12 @@ async def get_dashboard(email: str):
 
 
 @router.get("/today/{email}")
-async def get_today_plan(email: str):
+async def get_today_plan(email: str, db: Session = Depends(deps.get_db)):
     """Get today's dynamic study plan based on the 40-day schedule."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     current_date = date.today()
     day_index = (current_date - PLAN_START_DATE).days
@@ -422,10 +429,21 @@ async def get_today_plan(email: str):
             "slots": []
         }
 
-    # Generate or get plan for today
-    plan_key = f"{email}_{current_date.isoformat()}"
-    if plan_key in _user_plans:
-        return _user_plans[plan_key]
+    # Try to get plan from database
+    db_plan = db.query(RASPlan).filter(
+        RASPlan.email == email, 
+        RASPlan.date == current_date
+    ).first()
+    
+    if db_plan:
+        return {
+            "email": db_plan.email,
+            "date": db_plan.date.isoformat(),
+            "day_number": db_plan.day_number,
+            "total_days": PLAN_DURATION_DAYS,
+            "slots": db_plan.slots,
+            "status": db_plan.status
+        }
     
     # Flatten all topics to distribute them over 40 days
     all_topics = []
@@ -472,7 +490,18 @@ async def get_today_plan(email: str):
         elif slot["type"] == "summary":
             slot["description"] = "Daily summary and learning check"
     
-    plan = {
+    # Save plan to database
+    new_plan = RASPlan(
+        email=email,
+        date=current_date,
+        day_number=day_index + 1,
+        slots=slots,
+        status="active"
+    )
+    db.add(new_plan)
+    db.commit()
+    
+    return {
         "email": email,
         "date": current_date.isoformat(),
         "day_number": day_index + 1,
@@ -481,41 +510,55 @@ async def get_today_plan(email: str):
         "total_new_topics": len(day_topics),
         "status": "active"
     }
-    
-    _user_plans[plan_key] = plan
-    return plan
 
 
 @router.post("/record-and-submit")
-async def record_and_submit(submission: RecordingSubmit):
+async def record_and_submit(submission: RecordingSubmit, db: Session = Depends(deps.get_db)):
     """Submit a recording/explanation for a topic."""
     if submission.email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=submission.email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     # Simulate AI analysis (FSRS/Recall Score)
     recall_score = 85 # Placeholder for Gemini analysis result
     
-    entry = {
-        "timestamp": datetime.now().isoformat(),
-        "topic_id": submission.topic_id,
-        "recording_url": submission.recording_url,
-        "explanation_text": submission.explanation_text,
-        "recall_score": recall_score,
-        "duration": submission.duration
-    }
-    
-    if submission.email not in _recordings:
-        _recordings[submission.email] = []
-    _recordings[submission.email].append(entry)
+    # Save recording to database
+    new_recording = RASRecording(
+        email=submission.email,
+        topic_id=submission.topic_id,
+        recording_url=submission.recording_url,
+        explanation_text=submission.explanation_text,
+        recall_score=recall_score,
+        duration=submission.duration,
+        feedback="Excellent explanation. You have captured the key concepts well."
+    )
+    db.add(new_recording)
     
     # Auto-complete topic if score is high
     if recall_score >= 80:
-        topic_key = f"{submission.email}_{submission.topic_id}"
-        _topic_progress[topic_key] = {
-            "completed": True,
-            "completed_at": datetime.now().isoformat(),
-            "method": "ai_verification"
-        }
+        progress = db.query(RASTopicProgress).filter(
+            RASTopicProgress.email == submission.email,
+            RASTopicProgress.topic_id == submission.topic_id
+        ).first()
+        
+        if progress:
+            progress.completed = True
+            progress.completed_at = datetime.utcnow()
+            progress.recall_score = recall_score
+            progress.method = "ai_verification"
+        else:
+            progress = RASTopicProgress(
+                email=submission.email,
+                topic_id=submission.topic_id,
+                completed=True,
+                completed_at=datetime.utcnow(),
+                recall_score=recall_score,
+                method="ai_verification"
+            )
+            db.add(progress)
+            
+    db.commit()
     
     return {
         "success": True, 
@@ -539,16 +582,32 @@ async def ai_learning_check(request: AICheckRequest):
 
 
 @router.post("/update-progress")
-async def update_topic_progress(update: TopicUpdate):
+async def update_topic_progress(update: TopicUpdate, db: Session = Depends(deps.get_db)):
     """Update topic completion status."""
     if update.email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=update.email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
-    topic_key = f"{update.email}_{update.topic_id}"
-    _topic_progress[topic_key] = {
-        "completed": update.completed,
-        "completed_at": datetime.now().isoformat() if update.completed else None
-    }
+    progress = db.query(RASTopicProgress).filter(
+        RASTopicProgress.email == update.email,
+        RASTopicProgress.topic_id == update.topic_id
+    ).first()
+    
+    if progress:
+        progress.completed = update.completed
+        progress.completed_at = datetime.utcnow() if update.completed else None
+        progress.last_attempt_at = datetime.utcnow()
+    else:
+        progress = RASTopicProgress(
+            email=update.email,
+            topic_id=update.topic_id,
+            completed=update.completed,
+            completed_at=datetime.utcnow() if update.completed else None
+        )
+        db.add(progress)
+        
+    db.commit()
     
     return {
         "success": True,
@@ -569,34 +628,55 @@ async def get_pyqs(topic_id: str):
 
 
 @router.post("/reset-progress/{email}")
-async def reset_progress(email: str):
+async def reset_progress(email: str, db: Session = Depends(deps.get_db)):
     """Reset all progress for an email (for testing)."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
-    # Clear progress
-    keys_to_delete = [k for k in _topic_progress.keys() if k.startswith(email)]
-    for key in keys_to_delete:
-        del _topic_progress[key]
+    # Delete progress
+    db.query(RASTopicProgress).filter(RASTopicProgress.email == email).delete()
     
-    # Clear plans
-    keys_to_delete = [k for k in _user_plans.keys() if k.startswith(email)]
-    for key in keys_to_delete:
-        del _user_plans[key]
+    # Delete plans
+    db.query(RASPlan).filter(RASPlan.email == email).delete()
+    
+    # Delete recordings
+    db.query(RASRecording).filter(RASRecording.email == email).delete()
+    
+    db.commit()
     
     return {"success": True, "message": "Progress reset"}
 
 
 @router.get("/plan-by-date/{email}/{target_date}")
-async def get_plan_by_date(email: str, target_date: str):
+async def get_plan_by_date(email: str, target_date: str, db: Session = Depends(deps.get_db)):
     """Get plan for a specific date (for calendar navigation)."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     try:
         selected_date = date.fromisoformat(target_date)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    # Try to get existing plan from DB
+    db_plan = db.query(RASPlan).filter(
+        RASPlan.email == email,
+        RASPlan.date == selected_date
+    ).first()
+    
+    if db_plan:
+        return {
+            "email": db_plan.email,
+            "date": db_plan.date.isoformat(),
+            "day_number": db_plan.day_number,
+            "total_days": PLAN_DURATION_DAYS,
+            "slots": db_plan.slots,
+            "status": db_plan.status
+        }
     
     day_index = (selected_date - PLAN_START_DATE).days
     
@@ -637,33 +717,16 @@ async def get_plan_by_date(email: str, target_date: str):
     end_idx = int((day_index + 1) * topics_per_day)
     day_topics = all_topics[start_idx:end_idx]
     
-    # Updated slots: 5h Primary + 1h Medieval + 1h Math
-    slots = [
-        {"time": "13:30 - 14:30", "type": "primary_subject", "duration": 60},
-        {"time": "14:30 - 15:30", "type": "primary_subject", "duration": 60},
-        {"time": "15:30 - 16:30", "type": "primary_subject", "duration": 60},
-        {"time": "16:30 - 17:30", "type": "primary_subject", "duration": 60},
-        {"time": "17:30 - 18:30", "type": "primary_subject", "duration": 60},
-        {"time": "18:30 - 19:30", "type": "medieval_history", "duration": 60},
-        {"time": "19:30 - 20:30", "type": "mathematics", "duration": 60},
-    ]
-    
-    topic_idx = 0
-    for slot in slots:
-        if slot["type"] == "primary_subject" and topic_idx < len(day_topics):
-            topic = day_topics[topic_idx]
-            # Check completion status
-            topic_key = f"{email}_{topic['id']}"
-            is_completed = _topic_progress.get(topic_key, {}).get("completed", False)
-            slot["topic"] = {**topic, "completed": is_completed}
-            slot["pyqs"] = SAMPLE_PYQS.get(topic["id"], [])
-            topic_idx += 1
-        elif slot["type"] == "medieval_history":
-            slot["description"] = "Medieval History Focus"
-            slot["subject"] = "Medieval History"
-        elif slot["type"] == "mathematics":
-            slot["description"] = "Mathematics Practice"
-            slot["subject"] = "Mathematics"
+    # Create and save plan if it doesn't exist
+    new_plan = RASPlan(
+        email=email,
+        date=selected_date,
+        day_number=day_index + 1,
+        slots=slots,
+        status="active"
+    )
+    db.add(new_plan)
+    db.commit()
     
     return {
         "email": email,
@@ -677,25 +740,30 @@ async def get_plan_by_date(email: str, target_date: str):
 
 
 @router.get("/syllabus-topics/{subject_key}")
-async def get_syllabus_topics(subject_key: str, email: str):
+async def get_syllabus_topics(subject_key: str, email: str, db: Session = Depends(deps.get_db)):
     """Get all topics for a subject with completion status."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     if subject_key not in RAS_SYLLABUS:
         raise HTTPException(status_code=404, detail="Subject not found")
+    
+    # Get progress from database
+    db_progress = db.query(RASTopicProgress).filter(RASTopicProgress.email == email).all()
+    progress_map = {p.topic_id: p for p in db_progress}
     
     subject = RAS_SYLLABUS[subject_key]
     topics_with_status = []
     
     for topic in subject["topics"]:
-        topic_key = f"{email}_{topic['id']}"
-        progress = _topic_progress.get(topic_key, {})
+        progress = progress_map.get(topic["id"])
         topics_with_status.append({
             **topic,
-            "completed": progress.get("completed", False),
-            "completed_at": progress.get("completed_at"),
-            "marked_by": progress.get("marked_by", None)
+            "completed": progress.completed if progress else False,
+            "completed_at": progress.completed_at.isoformat() if progress and progress.completed_at else None,
+            "marked_by": progress.method if progress else None
         })
     
     return {
@@ -709,20 +777,25 @@ async def get_syllabus_topics(subject_key: str, email: str):
 
 
 @router.get("/reports/{email}")
-async def get_reports(email: str):
+async def get_reports(email: str, db: Session = Depends(deps.get_db)):
     """Get retention and progress reports."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
-    user_recordings = _recordings.get(email, [])
+    user_recordings = db.query(RASRecording).filter(RASRecording.email == email).all()
+    
+    # Get progress from database
+    db_progress = db.query(RASTopicProgress).filter(RASTopicProgress.email == email).all()
+    progress_map = {p.topic_id: p.completed for p in db_progress}
     
     # Calculate per-subject completion
     subject_stats = {}
     for subj_key, subj_data in RAS_SYLLABUS.items():
         completed = 0
         for topic in subj_data["topics"]:
-            topic_key = f"{email}_{topic['id']}"
-            if _topic_progress.get(topic_key, {}).get("completed", False):
+            if progress_map.get(topic["id"], False):
                 completed += 1
         subject_stats[subj_key] = {
             "name": subj_data["name"],
@@ -744,15 +817,29 @@ async def get_reports(email: str):
         "total_submissions": len(user_recordings),
         "daily_retention": retention_data,
         "subject_stats": subject_stats,
-        "submissions": user_recordings[-10:]  # Last 10 submissions
+        "submissions": [
+            {
+                "timestamp": r.created_at.isoformat(),
+                "topic_id": r.topic_id,
+                "recording_url": r.recording_url,
+                "recall_score": r.recall_score,
+                "duration": r.duration
+            } for r in user_recordings[-10:]
+        ]
     }
 
 
 @router.get("/calendar-overview/{email}")
-async def get_calendar_overview(email: str):
+async def get_calendar_overview(email: str, db: Session = Depends(deps.get_db)):
     """Get a 40-day calendar overview with completion status for each day."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get progress from database
+    db_progress = db.query(RASTopicProgress).filter(RASTopicProgress.email == email).all()
+    progress_map = {p.topic_id: p.completed for p in db_progress}
     
     calendar_days = []
     current = date.today()
@@ -775,8 +862,7 @@ async def get_calendar_overview(email: str):
         # Check completion
         completed_count = 0
         for topic in day_topics:
-            topic_key = f"{email}_{topic['id']}"
-            if _topic_progress.get(topic_key, {}).get("completed", False):
+            if progress_map.get(topic["id"], False):
                 completed_count += 1
         
         status = "future"
@@ -803,10 +889,12 @@ async def get_calendar_overview(email: str):
 
 
 @router.get("/daily-test/{email}/{target_date}")
-async def get_daily_test(email: str, target_date: str):
+async def get_daily_test(email: str, target_date: str, db: Session = Depends(deps.get_db)):
     """Get MCQs for the topics scheduled on a specific date."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     # Reuse logical mapping from get_plan_by_date
     try:
