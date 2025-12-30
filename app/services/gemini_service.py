@@ -36,22 +36,35 @@ class GeminiService:
     def _get_execution_plan(self, user: Any = None, is_complex: bool = False) -> List[Tuple[str, str, str]]:
         """
         Determines the plan of (PROVIDER, API_KEY, MODEL) triples to try.
-        Provider: 'google' or 'openrouter'
+        Now detects if keys are Google (AIza...) or OpenRouter (sk-or-...).
         """
         is_premium = getattr(user, "is_premium", False) or getattr(user, "subscription_status", "free") == "active"
         
         plan = []
-        
-        # Primary: Google Direct (Fast, Free/Paid)
-        if is_premium and self.paid_key:
-             # Paid Pro -> Free Flash
-             plan.append(("google", self.paid_key, "gemini-1.5-pro"))
-             plan.append(("google", self.free_key, "gemini-1.5-flash"))
-        else:
-             # Free Flash
-             plan.append(("google", self.free_key, "gemini-1.5-flash"))
-             
-        # Fallbacks (OpenRouter)
+
+        def get_provider(key: str) -> str:
+            if key.startswith("AIza"):
+                return "google"
+            return "openrouter"
+
+        # 1. Primary: FREE_GEMINI_API_KEY
+        if self.free_key:
+            provider = get_provider(self.free_key)
+            model = "gemini-1.5-flash" if provider == "google" else "google/gemini-2.0-flash-exp:free"
+            plan.append((provider, self.free_key, model))
+            
+            # If it's openrouter, add a backup model
+            if provider == "openrouter":
+                plan.append((provider, self.free_key, "google/gemini-1.5-flash:free"))
+                plan.append((provider, self.free_key, "google/gemini-flash-1.5-8b:free"))
+
+        # 2. Premium: PAID_GEMINI_API_KEY
+        if self.paid_key:
+            provider = get_provider(self.paid_key)
+            model = "gemini-1.5-pro" if provider == "google" else "google/gemini-pro-1.5"
+            plan.append((provider, self.paid_key, model))
+
+        # 3. Specific Fallbacks
         if self.gemma_key:
             plan.append(("openrouter", self.gemma_key, "google/gemma-2-9b-it:free"))
         if self.llama_key:

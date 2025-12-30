@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.ras_planner import RASPlan, RASTopicProgress, RASRecording
+from app.services.gemini_service import gemini_service
 import json
 
 router = APIRouter()
@@ -514,16 +515,42 @@ async def get_today_plan(email: str, db: Session = Depends(deps.get_db)):
 
 @router.post("/record-and-submit")
 async def record_and_submit(submission: RecordingSubmit, db: Session = Depends(deps.get_db)):
-    """Submit a recording/explanation for a topic."""
+    """Submit a recording/explanation for a topic with real AI analysis."""
     if submission.email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
         from app.crud import user as crud_user
         if not crud_user.get_by_email(db, email=submission.email):
             raise HTTPException(status_code=403, detail="Access denied")
     
-    # Simulate AI analysis (FSRS/Recall Score)
-    recall_score = 85 # Placeholder for Gemini analysis result
+    # 1. Fetch topic subtopics for AI comparison
+    subtopics = []
+    topic_name = ""
+    for subject in RAS_SYLLABUS.values():
+        for topic in subject["topics"]:
+            if topic["id"] == submission.topic_id:
+                subtopics = topic.get("subtopics", [])
+                topic_name = topic["name"]
+                break
     
-    # Save recording to database
+    # 2. Analyze using real AI (Gemini)
+    try:
+        if submission.explanation_text:
+            analysis = gemini_service.analyze_comprehension(
+                student_summary=submission.explanation_text,
+                key_concepts=subtopics,
+                user=None  # Can pass user object if needed for tier-based routing
+            )
+            recall_score = int(analysis.get("score", 0) * 100)
+            feedback = analysis.get("feedback", "Good effort. Keep practicing.")
+        else:
+            # Fallback for voice-only without transcript (mock for now)
+            recall_score = 75
+            feedback = "Recording received. Transcribe your explanation for detailed AI feedback."
+    except Exception as e:
+        print(f"AI Analysis Error: {e}")
+        recall_score = 70
+        feedback = "AI analysis currently unavailable, but your progress has been recorded."
+    
+    # 3. Save recording to database
     new_recording = RASRecording(
         email=submission.email,
         topic_id=submission.topic_id,
@@ -531,11 +558,11 @@ async def record_and_submit(submission: RecordingSubmit, db: Session = Depends(d
         explanation_text=submission.explanation_text,
         recall_score=recall_score,
         duration=submission.duration,
-        feedback="Excellent explanation. You have captured the key concepts well."
+        feedback=feedback
     )
     db.add(new_recording)
     
-    # Auto-complete topic if score is high
+    # 4. Auto-complete topic if score is high (Mastery Threshold: 80%)
     if recall_score >= 80:
         progress = db.query(RASTopicProgress).filter(
             RASTopicProgress.email == submission.email,
@@ -563,22 +590,56 @@ async def record_and_submit(submission: RecordingSubmit, db: Session = Depends(d
     return {
         "success": True, 
         "recall_score": recall_score,
-        "feedback": "Excellent explanation. You have captured the key concepts well."
+        "feedback": feedback
     }
 
 
 @router.post("/ai-learning-check")
-async def ai_learning_check(request: AICheckRequest):
-    """Generate or verify learning using AI for a specific topic."""
+async def ai_learning_check(request: AICheckRequest, db: Session = Depends(deps.get_db)):
+    """Generate a personalized learning check question using AI."""
     if request.email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.crud import user as crud_user
+        if not crud_user.get_by_email(db, email=request.email):
+            raise HTTPException(status_code=403, detail="Access denied")
     
-    # Placeholder for Gemini-powered quiz/check
-    return {
-        "question": "Explain the major physical divisions of Rajasthan and their impact on the state's climate.",
-        "type": "open_ended",
-        "context": "Based on Rajasthan Geography - Physical Divisions"
-    }
+    # 1. Fetch topic details
+    subtopics = []
+    topic_name = ""
+    for subject in RAS_SYLLABUS.values():
+        for topic in subject["topics"]:
+            if topic["id"] == request.topic_id:
+                subtopics = topic.get("subtopics", [])
+                topic_name = topic["name"]
+                break
+    
+    if not topic_name:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    # 2. Generate question using Gemini
+    prompt = f"""You are an RAS (Rajasthan Administrative Services) Exam Coach. 
+Generate ONE challenging active recall question for the topic: '{topic_name}'.
+Focus on these subtopics: {subtopics}.
+The question should test deep understanding, not just rote memorization.
+JSON ONLY:
+{{
+    "question": "Your question here",
+    "type": "active_recall",
+    "context": "Context from syllabus"
+}}"""
+
+    try:
+        response = gemini_service.generate_text(prompt, temperature=0.7)
+        import json
+        clean = response.replace("```json", "").replace("```", "").strip()
+        result = json.loads(clean)
+        return result
+    except Exception as e:
+        print(f"AI Quiz Generation Error: {e}")
+        return {
+            "question": f"Explain the key principles and importance of {topic_name} in the context of the RAS syllabus.",
+            "type": "active_recall",
+            "context": f"Based on {topic_name}"
+        }
 
 
 @router.post("/update-progress")
