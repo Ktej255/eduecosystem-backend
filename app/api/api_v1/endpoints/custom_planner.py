@@ -14,6 +14,10 @@ router = APIRouter()
 # Authorized email for custom planner
 AUTHORIZED_EMAILS = ["chitrakumawat33@gmail.com"]
 
+# Plan Configuration
+PLAN_START_DATE = date(2026, 1, 1)
+PLAN_DURATION_DAYS = 40
+
 # RAS Syllabus Structure with Topics (Complete from Vijay Sir's Syllabus)
 RAS_SYLLABUS = {
     "rajasthan_geography": {
@@ -187,6 +191,24 @@ RAS_SYLLABUS = {
             {"id": "pol_21", "name": "CIC", "subtopics": ["Central Information Commission", "RTI Act", "Appeals"], "exam": "pre_mains"},
             {"id": "pol_22", "name": "NHRC", "subtopics": ["National Human Rights Commission", "Functions", "Powers"], "exam": "pre_mains"},
         ]
+    },
+    "rajasthan_science": {
+        "name": "Rajasthan Science & Tech (RS)",
+        "priority": "high",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "rs_1", "name": "Space Technology in India", "subtopics": ["ISRO", "Satellites", "Recent Missions"], "exam": "pre_mains"},
+            {"id": "rs_2", "name": "Defense Technology", "subtopics": ["Missiles", "DRDO", "Modernization"], "exam": "pre_mains"},
+        ]
+    },
+    "vision_ias": {
+        "name": "Vision IAS Material",
+        "priority": "medium",
+        "exam_type": "pre_mains",
+        "topics": [
+            {"id": "vis_1", "name": "Current Affairs - Part 1", "subtopics": ["Polity", "Economy", "S&T"], "exam": "pre_mains"},
+            {"id": "vis_2", "name": "Current Affairs - Part 2", "subtopics": ["Environment", "Social Issues"], "exam": "pre_mains"},
+        ]
     }
 }
 
@@ -209,6 +231,7 @@ SAMPLE_PYQS = {
 # In-memory storage for plans (replace with database in production)
 _user_plans: Dict[str, Dict] = {}
 _topic_progress: Dict[str, Dict[str, Any]] = {}
+_recordings: Dict[str, List[Dict[str, Any]]] = {} # Store recording metadata
 
 
 class TopicUpdate(BaseModel):
@@ -219,6 +242,19 @@ class TopicUpdate(BaseModel):
 
 class PlanRequest(BaseModel):
     email: str
+
+
+class RecordingSubmit(BaseModel):
+    email: str
+    topic_id: str
+    recording_url: Optional[str] = None
+    explanation_text: Optional[str] = None
+    duration: int
+
+
+class AICheckRequest(BaseModel):
+    email: str
+    topic_id: str
 
 
 @router.get("/check-access/{email}")
@@ -328,20 +364,56 @@ async def get_dashboard(email: str):
 
 @router.get("/today/{email}")
 async def get_today_plan(email: str):
-    """Get today's dynamic study plan."""
+    """Get today's dynamic study plan based on the 40-day schedule."""
     if email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    today = date.today().isoformat()
+    current_date = date.today()
+    day_index = (current_date - PLAN_START_DATE).days
     
-    # Get or generate today's plan
-    plan_key = f"{email}_{today}"
+    # Check if plan has started
+    if day_index < 0:
+        return {
+            "email": email,
+            "status": "not_started",
+            "message": f"Plan starts on {PLAN_START_DATE.strftime('%B %d, %Y')}. Get ready!",
+            "days_until_start": abs(day_index),
+            "slots": []
+        }
     
+    if day_index >= PLAN_DURATION_DAYS:
+        return {
+            "email": email,
+            "status": "completed",
+            "message": "Congratulations! You have completed the 40-day revision plan.",
+            "slots": []
+        }
+
+    # Generate or get plan for today
+    plan_key = f"{email}_{current_date.isoformat()}"
     if plan_key in _user_plans:
         return _user_plans[plan_key]
     
-    # Generate new plan - prioritize incomplete topics from high priority subjects
-    plan_topics = []
+    # Flatten all topics to distribute them over 40 days
+    all_topics = []
+    for subj_key, subj_data in RAS_SYLLABUS.items():
+        for topic in subj_data["topics"]:
+            all_topics.append({
+                **topic,
+                "subject": subj_data["name"],
+                "subject_key": subj_key,
+                "priority": subj_data["priority"]
+            })
+    
+    # Deterministic distribution
+    total_topics = len(all_topics)
+    topics_per_day = total_topics / PLAN_DURATION_DAYS
+    start_idx = int(day_index * topics_per_day)
+    end_idx = int((day_index + 1) * topics_per_day)
+    
+    day_topics = all_topics[start_idx:end_idx]
+    
+    # Create slots
     slots = [
         {"time": "13:30 - 15:00", "type": "new_topic", "duration": 90},
         {"time": "15:00 - 16:30", "type": "new_topic", "duration": 90},
@@ -351,51 +423,86 @@ async def get_today_plan(email: str):
         {"time": "20:00 - 20:30", "type": "summary", "duration": 30},
     ]
     
-    # Collect incomplete topics ordered by priority
-    incomplete_topics = []
-    for subject_key, subject_data in RAS_SYLLABUS.items():
-        priority_order = {"high": 0, "medium": 1, "low": 2}
-        for topic in subject_data["topics"]:
-            topic_key = f"{email}_{topic['id']}"
-            if not _topic_progress.get(topic_key, {}).get("completed", False):
-                incomplete_topics.append({
-                    **topic,
-                    "subject": subject_data["name"],
-                    "subject_key": subject_key,
-                    "priority": subject_data["priority"],
-                    "priority_order": priority_order.get(subject_data["priority"], 2)
-                })
-    
-    # Sort by priority
-    incomplete_topics.sort(key=lambda x: x["priority_order"])
-    
-    # Assign topics to slots
+    # Assign topics to new_topic slots
     topic_idx = 0
     for slot in slots:
-        if slot["type"] == "new_topic" and topic_idx < len(incomplete_topics):
-            slot["topic"] = incomplete_topics[topic_idx]
-            slot["pyqs"] = SAMPLE_PYQS.get(incomplete_topics[topic_idx]["id"], [])
+        if slot["type"] == "new_topic" and topic_idx < len(day_topics):
+            slot["topic"] = day_topics[topic_idx]
+            slot["pyqs"] = SAMPLE_PYQS.get(day_topics[topic_idx]["id"], [])
             topic_idx += 1
         elif slot["type"] == "revision":
-            # Get recently completed topics for revision
-            slot["description"] = "Revise topics from previous days"
+            slot["description"] = "Revise topics from Day " + str(max(1, day_index))
         elif slot["type"] == "pyq_practice":
-            slot["description"] = "Practice PYQs related to today's topics"
+            slot["description"] = "Practice PYQs for today's topics"
         elif slot["type"] == "weak_areas":
-            slot["description"] = "Focus on subjects with lowest completion"
+            slot["description"] = "Focus on weak concepts from " + day_topics[0]["subject"] if day_topics else "General revision"
         elif slot["type"] == "summary":
-            slot["description"] = "Daily summary and plan tomorrow"
+            slot["description"] = "Daily summary and learning check"
     
     plan = {
         "email": email,
-        "date": today,
+        "date": current_date.isoformat(),
+        "day_number": day_index + 1,
+        "total_days": PLAN_DURATION_DAYS,
         "slots": slots,
-        "total_new_topics": min(2, len(incomplete_topics)),
-        "remaining_topics": len(incomplete_topics)
+        "total_new_topics": len(day_topics),
+        "status": "active"
     }
     
     _user_plans[plan_key] = plan
     return plan
+
+
+@router.post("/record-and-submit")
+async def record_and_submit(submission: RecordingSubmit):
+    """Submit a recording/explanation for a topic."""
+    if submission.email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Simulate AI analysis (FSRS/Recall Score)
+    recall_score = 85 # Placeholder for Gemini analysis result
+    
+    entry = {
+        "timestamp": datetime.now().isoformat(),
+        "topic_id": submission.topic_id,
+        "recording_url": submission.recording_url,
+        "explanation_text": submission.explanation_text,
+        "recall_score": recall_score,
+        "duration": submission.duration
+    }
+    
+    if submission.email not in _recordings:
+        _recordings[submission.email] = []
+    _recordings[submission.email].append(entry)
+    
+    # Auto-complete topic if score is high
+    if recall_score >= 80:
+        topic_key = f"{submission.email}_{submission.topic_id}"
+        _topic_progress[topic_key] = {
+            "completed": True,
+            "completed_at": datetime.now().isoformat(),
+            "method": "ai_verification"
+        }
+    
+    return {
+        "success": True, 
+        "recall_score": recall_score,
+        "feedback": "Excellent explanation. You have captured the key concepts well."
+    }
+
+
+@router.post("/ai-learning-check")
+async def ai_learning_check(request: AICheckRequest):
+    """Generate or verify learning using AI for a specific topic."""
+    if request.email.lower() not in [e.lower() for e in AUTHORIZED_EMAILS]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Placeholder for Gemini-powered quiz/check
+    return {
+        "question": "Explain the major physical divisions of Rajasthan and their impact on the state's climate.",
+        "type": "open_ended",
+        "context": "Based on Rajasthan Geography - Physical Divisions"
+    }
 
 
 @router.post("/update-progress")

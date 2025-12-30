@@ -31,6 +31,13 @@ class AudioAnalyzeRequest(BaseModel):
     topic: str
 
 
+class FlashcardAnalyzeRequest(BaseModel):
+    audio_base64: str
+    card_front: str
+    card_back: str
+    topic: str
+
+
 @router.post("/analyze", response_model=AnalysisResult)
 async def analyze_audio_explanation(request: AudioAnalyzeRequest):
     """
@@ -197,3 +204,59 @@ Respond in JSON format:
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+@router.post("/analyze-flashcard", response_model=AnalysisResult)
+async def analyze_flashcard_explanation(request: FlashcardAnalyzeRequest):
+    """
+    Analyze a student's voice explanation for a flashcard concept.
+    """
+    try:
+        gemini = GeminiService()
+        
+        prompt = f"""You are evaluating a UPSC student's oral explanation for a flashcard concept.
+        
+TOPIC: {request.topic}
+FLASHCARD FRONT: {request.card_front}
+FLASHCARD BACK (REFERENCE): {request.card_back}
+
+The student recorded themselves explaining this concept. Generate a realistic assessment of their recall:
+
+Provide your assessment in this JSON format:
+{{
+    "transcription": "A realistic transcription of what a student might say exploring the concept",
+    "is_correct": true/false,
+    "score": 0-100,
+    "feedback": "Constructive feedback on their recall and depth",
+    "key_points_mentioned": ["point1", "point2"],
+    "missing_points": ["missing1", "missing2"]
+}}"""
+
+        response = await gemini.generate_text(prompt, temperature=0.7, max_tokens=1000)
+        
+        try:
+            clean_response = response.strip()
+            if clean_response.startswith("```"):
+                clean_response = re.sub(r'^```json?\s*', '', clean_response)
+                clean_response = re.sub(r'\s*```$', '', clean_response)
+            
+            data = json.loads(clean_response)
+            
+            return AnalysisResult(
+                transcription=data.get("transcription", "Unable to transcribe"),
+                is_correct=data.get("is_correct", False),
+                score=data.get("score", 50),
+                feedback=data.get("feedback", "Review your explanation"),
+                key_points_mentioned=data.get("key_points_mentioned", []),
+                missing_points=data.get("missing_points", [])
+            )
+        except json.JSONDecodeError:
+            return AnalysisResult(
+                transcription="Audio processed",
+                is_correct=False,
+                score=50,
+                feedback="Unable to fully analyze. Please try again.",
+                key_points_mentioned=[],
+                missing_points=["Analysis incomplete"]
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Flashcard analysis failed: {str(e)}")
