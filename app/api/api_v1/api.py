@@ -14,6 +14,7 @@ from app.api.api_v1.endpoints import (
     batch1_content,
     ai_debug,
     ai,
+    custom_planner,
 )
 
 api_router = APIRouter()
@@ -81,3 +82,6 @@ api_router.include_router(marketing_automation.router, prefix="/marketing-automa
 # Retention System (FSRS-based knowledge decay tracking)
 from app.api.api_v1.endpoints import retention
 api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
+
+# Custom Planner (RAS Revision)
+api_router.include_router(custom_planner.router, prefix="/planner", tags=["planner"])
