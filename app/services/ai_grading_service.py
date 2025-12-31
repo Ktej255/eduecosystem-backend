@@ -4,7 +4,7 @@ Uses GeminiService with tiered Pro/Flash logic for grading.
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from decimal import Decimal
 from sqlalchemy.orm import Session
 from datetime import datetime
