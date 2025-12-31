@@ -1,8 +1,9 @@
 # Import all the models, so that Base has them before being
 # imported by Alembic
 from app.db.session import Base  # noqa
-
-# Import all model modules to ensure they are registered with Base
+from app.models.student_progress import QuizResult
+from app.models.batch1 import Batch1Segment  # noqa
+from app.models.ai_coaching import CoachingSession  # noqa
 print("DEBUG: Importing models in base.py")
 from app.models import (
     achievement,
@@ -83,6 +84,8 @@ from app.models import (
     user_management,
     marketing_automation,
     retention,
-    ras_planner,
+    field_activity,
+    voice_note,
+    call_log,
 )
 print("DEBUG: Models imported in base.py")

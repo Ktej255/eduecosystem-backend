@@ -14,8 +14,9 @@ from app.api.api_v1.endpoints import (
     batch1_content,
     ai_debug,
     ai,
-    custom_planner,
 )
+print("DEBUG: Standard endpoints imported")
+
 
 api_router = APIRouter()
 
@@ -83,5 +84,13 @@ api_router.include_router(marketing_automation.router, prefix="/marketing-automa
 from app.api.api_v1.endpoints import retention
 api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
 
-# Custom Planner (RAS Revision)
-api_router.include_router(custom_planner.router, prefix="/planner", tags=["planner"])
+# AI Learning (MCQ Generator, Coaching)
+print("DEBUG: Importing ai_learning...")
+from app.api.api_v1.endpoints import ai_learning
+print("DEBUG: ai_learning imported")
+api_router.include_router(ai_learning.router, prefix="/ai-learning", tags=["ai-learning"])
+
+# RAS Revision Planner (40-Day Plan)
+from app.api.api_v1.endpoints import planner
+api_router.include_router(planner.router, prefix="/planner", tags=["planner"])
+
