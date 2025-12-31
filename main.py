@@ -108,24 +108,37 @@ else:
         lifespan=lifespan,
     )
 
-# Set all CORS enabled origins
-if BACKEND_CORS_ORIGINS:
-    # If using credentials, we cannot use "*" for allow_origins.
-    # We must either list specific origins or handle it dynamically.
-    # For now, if "*" is provided, we set allow_credentials to False.
-    use_credentials = True
-    origins = [str(origin) for origin in BACKEND_CORS_ORIGINS]
-    
-    if "*" in origins:
-        use_credentials = False
-        
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=use_credentials,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Set all CORS enabled origins - CRITICAL: Hardcode to ensure AI features work
+# Must include Vercel frontend for CORS to work properly
+HARDCODED_CORS_ORIGINS = [
+    "https://eduecosystem-frontend.vercel.app",
+    "https://eduecosystem-frontend-ktej255.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+
+# Merge with any additional origins from settings
+all_cors_origins = list(set(HARDCODED_CORS_ORIGINS + (BACKEND_CORS_ORIGINS if BACKEND_CORS_ORIGINS else [])))
+
+# Remove wildcard if specific origins are also present (wildcard with credentials fails)
+if "*" in all_cors_origins and len(all_cors_origins) > 1:
+    all_cors_origins.remove("*")
+
+use_credentials = "*" not in all_cors_origins
+
+print(f"CORS Origins configured: {all_cors_origins}")
+print(f"CORS Credentials: {use_credentials}")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=all_cors_origins,
+    allow_credentials=use_credentials,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 # Compression Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
