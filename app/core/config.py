@@ -62,10 +62,26 @@ class Settings(BaseSettings):
     @property
     def BACKEND_CORS_ORIGINS(self) -> list[str]:
         """Parse CORS origins from environment variable (comma-separated)"""
-        origins_str = os.getenv(
-            "BACKEND_CORS_ORIGINS", "*"
-        )
-        return [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+        # Default origins that must always be allowed
+        default_origins = [
+            "https://eduecosystem-frontend.vercel.app",
+            "https://eduecosystem-frontend-ktej255.vercel.app",
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+        ]
+        
+        origins_str = os.getenv("BACKEND_CORS_ORIGINS", "")
+        if origins_str.strip():
+            if origins_str.strip() == "*":
+                return ["*"]  # Wildcard overrides everything
+            env_origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+            # Combine defaults with any additional env origins
+            all_origins = list(set(default_origins + env_origins))
+            return all_origins
+        
+        return default_origins
 
     # Email Configuration
     MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "your_email@gmail.com")
