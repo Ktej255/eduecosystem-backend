@@ -94,3 +94,15 @@ api_router.include_router(ai_learning.router, prefix="/ai-learning", tags=["ai-l
 from app.api.api_v1.endpoints import planner
 api_router.include_router(planner.router, prefix="/planner", tags=["planner"])
 
+# AI Tools (Essay Grading, Quiz Generation, Difficulty Analysis, Plagiarism Detection)
+from app.api.api_v1.endpoints import ai_tools
+api_router.include_router(ai_tools.router, prefix="/ai-tools", tags=["ai-tools"])
+
+# AI Course Generation
+from app.api.api_v1.endpoints import ai_course
+api_router.include_router(ai_course.router, prefix="/ai-course", tags=["ai-course"])
+
+# AI Avatars
+from app.api.api_v1.endpoints import ai_avatars
+api_router.include_router(ai_avatars.router, prefix="/ai-avatars", tags=["ai-avatars"])
+
