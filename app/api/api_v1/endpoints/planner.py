@@ -20,76 +20,191 @@ AUTHORIZED_RAS_USERS = {
 }
 
 # ============================================================
-# RAS SYLLABUS DATA
+# RAS SYLLABUS DATA - Updated from Vijay Sir's Syllabus
 # ============================================================
 RAS_SUBJECTS = {
-    "history_rajasthan": {
-        "name": "History of Rajasthan",
+    # ==================== RAJASTHAN GEOGRAPHY ====================
+    "rajasthan_geography": {
+        "name": "Rajasthan Geography",
         "priority": "high",
         "topics": [
-            {"id": "hr_01", "name": "Pre-Historic Rajasthan", "subtopics": ["Paleolithic", "Mesolithic", "Chalcolithic sites"]},
-            {"id": "hr_02", "name": "Rajput Dynasties", "subtopics": ["Chauhans", "Rathores", "Sisodias", "Kachwahas"]},
-            {"id": "hr_03", "name": "Medieval Rajasthan", "subtopics": ["Delhi Sultanate", "Mughal Relations", "Marathas"]},
-            {"id": "hr_04", "name": "1857 Revolt in Rajasthan", "subtopics": ["Causes", "Leaders", "Aftermath"]},
-            {"id": "hr_05", "name": "Formation of Rajasthan", "subtopics": ["Integration phases", "Key personalities"]},
+            {"id": "rg_01", "name": "Basic Geography: Origin of Rajasthan", "subtopics": ["Formation", "Geological history", "Tectonic features"]},
+            {"id": "rg_02", "name": "Location & Extension", "subtopics": ["Latitude", "Longitude", "Boundaries", "Area"]},
+            {"id": "rg_03", "name": "Physical Divisions", "subtopics": ["Aravalli Range", "Thar Desert", "Eastern Plains", "Hadoti Plateau"]},
+            {"id": "rg_04", "name": "Hydro Geography / Drainage System", "subtopics": ["Rivers", "Drainage patterns", "Mains Points"]},
+            {"id": "rg_05", "name": "Salt Lakes", "subtopics": ["Sambhar", "Didwana", "Pachpadra", "Lunkaransar"]},
+            {"id": "rg_06", "name": "Irrigation Projects (Pre)", "subtopics": ["Major projects", "Minor projects", "Lift irrigation"]},
+            {"id": "rg_07", "name": "Water Conservation Techniques", "subtopics": ["Traditional methods", "Johad", "Taanka", "Check dams"]},
+            {"id": "rg_08", "name": "IGNP (Indira Gandhi Canal Project)", "subtopics": ["Phases", "Impact", "Command area", "Challenges"]},
+            {"id": "rg_09", "name": "Soil (Pre)", "subtopics": ["Types", "Distribution", "Soil conservation"]},
+            {"id": "rg_10", "name": "Minerals", "subtopics": ["Metallic", "Non-metallic", "Mining industry", "Distribution"]},
+            {"id": "rg_11", "name": "Vegetation", "subtopics": ["Forest types", "Distribution", "Conservation", "Afforestation"]},
+            {"id": "rg_12", "name": "Wildlife & Biodiversity", "subtopics": ["National Parks", "Wildlife Sanctuaries", "Conservation efforts"]},
+            {"id": "rg_13", "name": "Agriculture", "subtopics": ["Cropping patterns", "Major crops", "Agricultural issues"]},
+            {"id": "rg_14", "name": "UNESCO Sites", "subtopics": ["World Heritage Sites", "Tentative list", "Criteria"]},
+            {"id": "rg_15", "name": "Industry", "subtopics": ["Major industries", "Industrial areas", "SEZs"]},
+            {"id": "rg_16", "name": "Energy", "subtopics": ["Thermal", "Solar", "Wind", "Nuclear energy"]},
+            {"id": "rg_17", "name": "Population", "subtopics": ["Census data", "Density", "Sex ratio", "Literacy"]},
+            {"id": "rg_18", "name": "Tourism (Pre)", "subtopics": ["Circuits", "Sites", "Parks", "World Heritage Sites", "Geo-parks"]},
         ]
     },
-    "geography_rajasthan": {
-        "name": "Geography of Rajasthan",
-        "priority": "high",
-        "topics": [
-            {"id": "gr_01", "name": "Physical Features", "subtopics": ["Aravalli", "Thar Desert", "Rivers"]},
-            {"id": "gr_02", "name": "Climate", "subtopics": ["Monsoon patterns", "Droughts", "Climate zones"]},
-            {"id": "gr_03", "name": "Minerals & Resources", "subtopics": ["Mining industry", "Major minerals", "Energy resources"]},
-            {"id": "gr_04", "name": "Agriculture", "subtopics": ["Cropping patterns", "Irrigation", "Land reforms"]},
-            {"id": "gr_05", "name": "Wildlife & Environment", "subtopics": ["National Parks", "Sanctuaries", "Conservation"]},
-        ]
-    },
-    "polity_rajasthan": {
-        "name": "Polity & Governance",
-        "priority": "high",
-        "topics": [
-            {"id": "pr_01", "name": "Constitutional Provisions", "subtopics": ["Governor", "CM", "State Legislature"]},
-            {"id": "pr_02", "name": "Panchayati Raj", "subtopics": ["73rd Amendment", "3-tier structure", "Rajasthan PR Act"]},
-            {"id": "pr_03", "name": "Urban Governance", "subtopics": ["Municipalities", "74th Amendment", "Smart Cities"]},
-            {"id": "pr_04", "name": "State Administration", "subtopics": ["Secretariat", "Districts", "Divisions"]},
-            {"id": "pr_05", "name": "Judiciary", "subtopics": ["High Court", "District Courts", "Lok Adalat"]},
-        ]
-    },
-    "economy_rajasthan": {
-        "name": "Economy of Rajasthan",
+    
+    # ==================== PHYSICS ====================
+    "physics": {
+        "name": "Physics",
         "priority": "medium",
         "topics": [
-            {"id": "er_01", "name": "Economic Overview", "subtopics": ["GSDP", "Per capita income", "Growth trends"]},
-            {"id": "er_02", "name": "Industries", "subtopics": ["Textile", "Tourism", "Handicrafts", "IT"]},
-            {"id": "er_03", "name": "Infrastructure", "subtopics": ["Roads", "Railways", "Airports", "Power"]},
-            {"id": "er_04", "name": "Budget & Finance", "subtopics": ["State budget", "Revenue sources", "Expenditure"]},
-            {"id": "er_05", "name": "Welfare Schemes", "subtopics": ["Social security", "Employment", "Health schemes"]},
+            {"id": "ph_01", "name": "General Information (Samanya Jankari)", "subtopics": ["Units", "Measurements", "Physical quantities"]},
+            {"id": "ph_02", "name": "Gravitational Force (Gurutvakarshan Bal)", "subtopics": ["Newton's laws", "Gravity", "Orbits", "Satellites"]},
+            {"id": "ph_03", "name": "Heat (Ushma)", "subtopics": ["Temperature", "Thermal expansion", "Calorimetry", "Heat transfer"]},
+            {"id": "ph_04", "name": "Sound & Electromagnetic Waves", "subtopics": ["Wave properties", "Sound propagation", "EM spectrum"]},
+            {"id": "ph_05", "name": "Light (Prakash)", "subtopics": ["Reflection", "Refraction", "Lenses", "Optical instruments"], "note": "Pre = 2 Questions, Mains = 12 Marks"},
+            {"id": "ph_06", "name": "Nuclear Fission & Fusion", "subtopics": ["Nuclear reactions", "Reactors", "Applications"]},
+            {"id": "ph_07", "name": "Electrostatics & Current Electricity", "subtopics": ["Charges", "Electric field", "Circuits", "Ohm's law"], "note": "Pre + Mains"},
+            {"id": "ph_08", "name": "Magnetism & Electromagnetism", "subtopics": ["Magnets", "Magnetic field", "Electromagnetic induction"]},
+            {"id": "ph_09", "name": "NMR & MRI", "subtopics": ["Principles", "Applications", "Medical imaging"], "note": "Mains Only"},
         ]
     },
-    "culture_rajasthan": {
-        "name": "Art, Culture & Heritage",
-        "priority": "medium",
-        "topics": [
-            {"id": "cr_01", "name": "Folk Arts", "subtopics": ["Ghoomar", "Kalbeliya", "Puppetry", "Music"]},
-            {"id": "cr_02", "name": "Fairs & Festivals", "subtopics": ["Pushkar", "Desert Festival", "Gangaur"]},
-            {"id": "cr_03", "name": "Architecture", "subtopics": ["Forts", "Palaces", "Temples", "Havelis"]},
-            {"id": "cr_04", "name": "Handicrafts", "subtopics": ["Pottery", "Textiles", "Jewelry", "Paintings"]},
-            {"id": "cr_05", "name": "Literature & Saints", "subtopics": ["Meerabai", "Dadu", "Rajasthani literature"]},
-        ]
-    },
-    "current_affairs": {
-        "name": "Current Affairs & GK",
+    
+    # ==================== REASONING ====================
+    "reasoning": {
+        "name": "Reasoning",
         "priority": "high",
         "topics": [
-            {"id": "ca_01", "name": "Recent Government Schemes", "subtopics": ["2024-25 schemes", "Budget highlights"]},
-            {"id": "ca_02", "name": "Awards & Personalities", "subtopics": ["State awards", "Notable personalities"]},
-            {"id": "ca_03", "name": "Sports & Events", "subtopics": ["Rajasthan in sports", "Major events"]},
-            {"id": "ca_04", "name": "Environmental Issues", "subtopics": ["Water crisis", "Pollution", "Conservation efforts"]},
-            {"id": "ca_05", "name": "Development Projects", "subtopics": ["ERCP", "RUIDP", "Connectivity projects"]},
+            {"id": "rs_01", "name": "Shapes and their sub-sections", "subtopics": ["Figure analysis", "Pattern recognition"]},
+            {"id": "rs_02", "name": "Problems Based on Relation", "subtopics": ["Blood relations", "Family tree", "Coded relations"]},
+            {"id": "rs_03", "name": "Coding-Decoding", "subtopics": ["Letter coding", "Number coding", "Mixed coding"]},
+            {"id": "rs_04", "name": "Mirror Image", "subtopics": ["Letter/Number mirrors", "Figure mirrors"]},
+            {"id": "rs_05", "name": "Water Image", "subtopics": ["Reflection principles", "Figure inversion"]},
+            {"id": "rs_06", "name": "Direction Sense Test", "subtopics": ["Cardinal directions", "Distance calculation", "Route finding"]},
+            {"id": "rs_07", "name": "Cube, Cuboid, and Dice", "subtopics": ["Dice problems", "Cube cutting", "Painted cubes"]},
+            {"id": "rs_08", "name": "Logical Venn Diagram", "subtopics": ["Set relationships", "Multi-set diagrams"]},
+            {"id": "rs_09", "name": "Number/Alphabet Sequence", "subtopics": ["Series completion", "Pattern finding"]},
+            {"id": "rs_10", "name": "Sitting Arrangement", "subtopics": ["Linear", "Circular", "Complex arrangements"]},
+            {"id": "rs_11", "name": "Syllogism (Nyay Nigaman)", "subtopics": ["Statements", "Conclusions", "Venn approach"]},
+            {"id": "rs_12", "name": "Statement & Argument (Kathan Tark)", "subtopics": ["Strong/Weak arguments", "Validity check"]},
+            {"id": "rs_13", "name": "Statement & Assumptions", "subtopics": ["Implicit assumptions", "Explicit assumptions"]},
+            {"id": "rs_14", "name": "Cause and Effect", "subtopics": ["Identifying cause", "Effect analysis", "Independent events"]},
+            {"id": "rs_15", "name": "Statement & Conclusions/Inferences", "subtopics": ["Drawing conclusions", "Valid inferences"]},
+            {"id": "rs_16", "name": "Statement & Courses of Action", "subtopics": ["Practical actions", "Feasibility check"]},
+        ],
+        "note": "20 Questions total (Maths + Reasoning). 5 questions from CSAT."
+    },
+    
+    # ==================== INDIAN ECONOMY ====================
+    "indian_economy": {
+        "name": "Indian Economy",
+        "priority": "high",
+        "topics": [
+            {"id": "ie_01", "name": "Inflation", "subtopics": ["Types", "Measurement", "Control measures", "WPI", "CPI"]},
+            {"id": "ie_02", "name": "Banking", "subtopics": ["RBI", "Commercial banks", "NBFCs", "Digital banking"]},
+            {"id": "ie_03", "name": "Finance Market", "subtopics": ["Money market", "Capital market", "Stock exchanges"]},
+            {"id": "ie_04", "name": "Fiscal Policy", "subtopics": ["Budget", "Taxation", "Public expenditure", "Deficit financing"]},
+            {"id": "ie_05", "name": "Unemployment", "subtopics": ["Types", "Measurement", "Employment schemes"]},
+            {"id": "ie_06", "name": "Human Development Report", "subtopics": ["HDI", "Indicators", "India's ranking"]},
+            {"id": "ie_07", "name": "Trade Policy", "subtopics": ["Exports", "Imports", "FTAs", "WTO"]},
+            {"id": "ie_08", "name": "Global Financial Organisations", "subtopics": ["IMF", "World Bank", "ADB", "NDB", "AIIB"]},
+            {"id": "ie_09", "name": "Agriculture Sector", "subtopics": ["Problems", "Schemes", "MSP", "Land reforms"]},
+            {"id": "ie_10", "name": "Food Management", "subtopics": ["PDS", "Food security", "Buffer stocks"]},
+            {"id": "ie_11", "name": "Food Processing", "subtopics": ["Industry scope", "Schemes", "Cold chain"]},
+            {"id": "ie_12", "name": "Industrial Sector", "subtopics": ["Manufacturing", "MSMEs", "Industrial policy"]},
+            {"id": "ie_13", "name": "E-Commerce", "subtopics": ["Digital economy", "Regulations", "FDI in e-commerce"]},
+            {"id": "ie_14", "name": "Subsidy", "subtopics": ["Types", "Pros/Cons", "Rationalization", "DBT"]},
+            {"id": "ie_15", "name": "Public, Private, and Merit Goods", "subtopics": ["Definitions", "Examples", "Government role"]},
+            {"id": "ie_16", "name": "Government Schemes (Types)", "subtopics": ["CSS", "State schemes", "Social security"]},
+            {"id": "ie_17", "name": "Regulatory Effectiveness", "subtopics": ["Regulatory bodies", "Governance", "Reforms"]},
+            {"id": "ie_18", "name": "Role of Government in Economic Activities", "subtopics": ["PSUs", "Disinvestment", "PPP"]},
+            {"id": "ie_19", "name": "India's Education Policy", "subtopics": ["NEP 2020", "Sarva Shiksha", "Higher education"], "note": "Not Imp."},
         ]
-    }
+    },
+    
+    # ==================== RAJASTHAN HISTORY ====================
+    "rajasthan_history": {
+        "name": "Rajasthan History",
+        "priority": "high",
+        "topics": [
+            {"id": "rh_01", "name": "History of Rajasthan - General", "subtopics": ["Overview", "Periodization", "Historical sources"]},
+            {"id": "rh_02", "name": "Sources of Ancient History", "subtopics": ["Archaeological", "Literary", "Inscriptions", "Coins"]},
+            {"id": "rh_03", "name": "Chauhan Dynasty", "subtopics": ["Prithviraj III", "Ajmer", "Battles", "Administration"]},
+            {"id": "rh_04", "name": "Parmar Dynasty", "subtopics": ["Abu", "Malwa", "Architecture", "Contributions"]},
+            {"id": "rh_05", "name": "Pratihar Dynasty", "subtopics": ["Gurjara-Pratihara", "Mandore", "Jodhpur foundation"]},
+            {"id": "rh_06", "name": "Guhil / Sisodia Dynasty", "subtopics": ["Mewar", "Rana Kumbha", "Pratap", "Rajput pride"]},
+            {"id": "rh_07", "name": "Rathore Dynasty", "subtopics": ["Marwar", "Jodhpur", "Bikaner", "Military history"]},
+            {"id": "rh_08", "name": "Kachhwaha Dynasty", "subtopics": ["Amber", "Jaipur", "Mughal alliance", "Man Singh"]},
+        ]
+    },
+    
+    # ==================== BIOLOGY ====================
+    "biology": {
+        "name": "Biology",
+        "priority": "medium",
+        "topics": [
+            {"id": "bi_01", "name": "Balanced Diet", "subtopics": ["Nutrients", "Vitamins", "Minerals", "Deficiency diseases"], "note": "Pre Only"},
+            {"id": "bi_02", "name": "Blood Group", "subtopics": ["ABO system", "Rh factor", "Transfusion", "Compatibility"], "note": "Pre + Mains"},
+            {"id": "bi_03", "name": "Disease", "subtopics": ["Infectious", "Non-infectious", "Prevention", "Immunity"]},
+            {"id": "bi_04", "name": "Endocrine System", "subtopics": ["Glands", "Hormones", "Disorders", "Feedback mechanism"]},
+            {"id": "bi_05", "name": "Eye", "subtopics": ["Structure", "Function", "Defects", "Corrections"]},
+            {"id": "bi_06", "name": "Reproductive System", "subtopics": ["Male", "Female", "Reproductive health"]},
+            {"id": "bi_07", "name": "Blood", "subtopics": ["Composition", "Functions", "Clotting", "Blood cells"]},
+            {"id": "bi_08", "name": "Digestive System", "subtopics": ["Organs", "Digestion process", "Enzymes", "Absorption"]},
+            {"id": "bi_09", "name": "Blood Circulatory System", "subtopics": ["Heart", "Blood vessels", "Circulation types"]},
+            {"id": "bi_10", "name": "Excretory System", "subtopics": ["Kidneys", "Nephron", "Urine formation"], "note": "Mains Only"},
+            {"id": "bi_11", "name": "Sexual and Asexual Reproduction in Plants", "subtopics": ["Methods", "Pollination", "Fertilization"]},
+            {"id": "bi_12", "name": "Respiratory System", "subtopics": ["Organs", "Mechanism", "Gas exchange", "Disorders"]},
+            {"id": "bi_13", "name": "Nervous System", "subtopics": ["Brain", "Spinal cord", "Nerves", "Reflexes"]},
+        ]
+    },
+    
+    # ==================== HINDI ====================
+    "hindi": {
+        "name": "Hindi",
+        "priority": "medium",
+        "topics": [
+            {"id": "hi_01", "name": "Synonyms (Paryayvachi Shabd)", "subtopics": ["Common words", "Practice sets"]},
+            {"id": "hi_02", "name": "Antonyms (Vilom Shabd)", "subtopics": ["Common words", "Practice sets"]},
+            {"id": "hi_03", "name": "One word for a phrase (Vakyansh ke liye ek shabd)", "subtopics": ["Phrases", "Single words"]},
+            {"id": "hi_04", "name": "Technical Terminology (Paribhashik Shabdavali)", "subtopics": ["Administrative terms", "Legal terms"]},
+            {"id": "hi_05", "name": "Idioms (Muhavare)", "subtopics": ["Common idioms", "Usage", "Meanings"]},
+            {"id": "hi_06", "name": "Proverbs (Kahavate, Lokoktiyan)", "subtopics": ["Common proverbs", "Meanings", "Usage"]},
+            {"id": "hi_07", "name": "Word Purification (Shabd Shuddhi)", "subtopics": ["Common errors", "Correct forms"]},
+            {"id": "hi_08", "name": "Sentence Purification (Vakya Shuddhi)", "subtopics": ["Grammar errors", "Correct sentences"]},
+            {"id": "hi_09", "name": "Word Pairs (Shabd Yugm)", "subtopics": ["Similar words", "Different meanings"]},
+            {"id": "hi_10", "name": "Prefix (Upsarg)", "subtopics": ["Common prefixes", "Word formation"]},
+            {"id": "hi_11", "name": "Suffix (Pratyay)", "subtopics": ["Common suffixes", "Word formation"]},
+        ]
+    },
+    
+    # ==================== INDIAN POLITY ====================
+    "indian_polity": {
+        "name": "Indian Polity",
+        "priority": "high",
+        "topics": [
+            {"id": "ip_01", "name": "Making of the Constitution", "subtopics": ["Constituent Assembly", "Drafting", "Key debates"]},
+            {"id": "ip_02", "name": "Features of the Constitution", "subtopics": ["Salient features", "Borrowed provisions", "Uniqueness"]},
+            {"id": "ip_03", "name": "Amendment of the Constitution", "subtopics": ["Article 368", "Types", "Important amendments"]},
+            {"id": "ip_04", "name": "Basic Structure of Constitution", "subtopics": ["Kesavananda Bharati case", "Doctrine evolution"]},
+            {"id": "ip_05", "name": "Fundamental Rights", "subtopics": ["Article 12-35", "Right to equality", "Freedoms", "Remedies"]},
+            {"id": "ip_06", "name": "Fundamental Duties", "subtopics": ["Article 51A", "11 duties", "Swaran Singh Committee"]},
+            {"id": "ip_07", "name": "Federal System", "subtopics": ["Centre-State relations", "Federal features", "Unitary features"]},
+            {"id": "ip_08", "name": "Parliamentary System", "subtopics": ["Features", "Parliament structure", "Sessions"]},
+            {"id": "ip_09", "name": "President", "subtopics": ["Election", "Powers", "Impeachment", "Ordinances"]},
+            {"id": "ip_10", "name": "Prime Minister", "subtopics": ["Appointment", "Powers", "PMO", "Council of Ministers"]},
+            {"id": "ip_11", "name": "Central Council of Ministers", "subtopics": ["Categories", "Collective responsibility", "Cabinet committees"]},
+            {"id": "ip_12", "name": "Centre-State Relations", "subtopics": ["Legislative", "Administrative", "Financial", "Sarkaria Commission"]},
+            {"id": "ip_13", "name": "Supreme Court", "subtopics": ["Composition", "Jurisdiction", "Judicial review"]},
+            {"id": "ip_14", "name": "Judicial Review", "subtopics": ["Scope", "Limitations", "Cases"]},
+            {"id": "ip_15", "name": "Judicial Activism", "subtopics": ["PIL", "Judicial overreach", "Significance"]},
+            {"id": "ip_16", "name": "Election Commission of India", "subtopics": ["Composition", "Functions", "Model code"]},
+            {"id": "ip_17", "name": "CAG (Comptroller and Auditor General)", "subtopics": ["Article 148-151", "Functions", "Reports"]},
+            {"id": "ip_18", "name": "UPSC", "subtopics": ["Composition", "Functions", "Examinations"]},
+            {"id": "ip_19", "name": "NITI Aayog", "subtopics": ["Structure", "Functions", "Comparison with Planning Commission"]},
+            {"id": "ip_20", "name": "Central Vigilance Commission (CVC)", "subtopics": ["Composition", "Functions", "Lokpal link"]},
+            {"id": "ip_21", "name": "Central Information Commission (CIC)", "subtopics": ["RTI Act", "Functions", "Appeals"]},
+            {"id": "ip_22", "name": "National Human Rights Commission (NHRC)", "subtopics": ["Composition", "Functions", "Powers"]},
+        ]
+    },
 }
+
 
 # In-memory progress storage (Phase 2: Move to database)
 USER_PROGRESS: Dict[str, Dict[str, bool]] = {}
@@ -555,3 +670,62 @@ async def revoke_access(email: str):
         AUTHORIZED_RAS_USERS.discard(email.lower())
         return {"success": True, "email": email, "message": f"Access revoked for {email}"}
     raise HTTPException(status_code=404, detail="User not in authorized list")
+
+@router.post("/admin/reset-progress/{email}")
+async def reset_progress(email: str):
+    """Reset all progress for a specific user (clears all completed topics)"""
+    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+        raise HTTPException(status_code=404, detail="User not found in authorized list")
+    
+    if email in USER_PROGRESS:
+        USER_PROGRESS[email] = {}
+    
+    return {
+        "success": True, 
+        "email": email, 
+        "message": f"All progress has been reset for {email}",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+@router.post("/admin/reset-all-progress")
+async def reset_all_progress():
+    """Reset progress for all users (admin only)"""
+    global USER_PROGRESS
+    USER_PROGRESS = {}
+    return {
+        "success": True, 
+        "message": "All user progress has been reset",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+# ============================================================
+# PDF CONTENT INTEGRATION (Phase 2 - Future Implementation)
+# ============================================================
+# Placeholder for topic PDF attachments
+# Topics can have PDF content attached via:
+# POST /planner/admin/topic/{topic_id}/upload-pdf
+# GET /planner/topic/{topic_id}/pdf
+
+@router.get("/topic/{topic_id}/materials")
+async def get_topic_materials(topic_id: str, email: str):
+    """Get study materials (PDFs, notes) for a specific topic"""
+    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Find the topic
+    for subject_key, subject_data in RAS_SUBJECTS.items():
+        for topic in subject_data["topics"]:
+            if topic["id"] == topic_id:
+                return {
+                    "topic_id": topic_id,
+                    "topic_name": topic["name"],
+                    "subject": subject_data["name"],
+                    "subtopics": topic["subtopics"],
+                    "note": topic.get("note", None),
+                    "pdf_available": False,  # Will be True when PDFs are uploaded
+                    "pdf_url": None,  # Future: S3/storage URL
+                    "message": "PDF content will be available soon. Contact admin to upload study materials."
+                }
+    
+    raise HTTPException(status_code=404, detail="Topic not found")
+
