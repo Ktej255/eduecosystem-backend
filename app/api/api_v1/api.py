@@ -110,6 +110,10 @@ api_router.include_router(ai_avatars.router, prefix="/ai-avatars", tags=["ai-ava
 from app.api.api_v1.endpoints import flashcards
 api_router.include_router(flashcards.router, prefix="/flashcards", tags=["flashcards"])
 
+# Audio Analysis (Flashcard Recall)
+from app.api.api_v1.endpoints import audio_analysis
+api_router.include_router(audio_analysis.router, prefix="/audio-analysis", tags=["audio-analysis"])
+
 # Wolf Packs (Competitive Study Groups)
 from app.api.api_v1.endpoints import packs
 api_router.include_router(packs.router, prefix="/packs", tags=["packs"])
