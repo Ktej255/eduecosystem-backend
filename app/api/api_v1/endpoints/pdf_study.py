@@ -137,6 +137,19 @@ async def get_pdf_segment(segment_key: str):
     }
 
 
+@router.get("/check/{segment_key}")
+async def check_pdf_availability(segment_key: str):
+    """Check if a PDF is available for a given segment. Used by frontend to show Video/PDF options."""
+    load_pdf_data()  # Reload to get latest data
+    available = segment_key in PDF_STORE
+    return {
+        "segment_key": segment_key,
+        "available": available,
+        "page_count": PDF_STORE.get(segment_key, {}).get("page_count", 0) if available else 0
+    }
+
+
+
 @router.get("/page/{segment_key}/{page_number}")
 async def get_pdf_page(segment_key: str, page_number: int):
     """Get a single page content (text + image) for student study."""
