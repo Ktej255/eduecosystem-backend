@@ -238,5 +238,68 @@ Student: {student_summary}"""
              print(f"Analysis error: {e}")
              return {"score": 0.5, "grade": 2, "feedback": "AI Error", "missing_concepts": []}
 
+    def transcribe_audio(self, audio_base64: str) -> str:
+        """Transcribe audio using Gemini's multimodal capability."""
+        import base64
+        
+        prompt = """Transcribe the following audio recording exactly as spoken. 
+Return ONLY the transcription text, nothing else."""
+        
+        try:
+            # For audio, we need to handle it as a file upload or use a specialized endpoint
+            # Gemini 1.5 supports audio in the API
+            genai.configure(api_key=self.free_key)
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            
+            # Create audio part
+            audio_bytes = base64.b64decode(audio_base64)
+            audio_part = {
+                "mime_type": "audio/webm",
+                "data": audio_bytes
+            }
+            
+            response = model.generate_content([prompt, audio_part])
+            return response.text.strip()
+        except Exception as e:
+            print(f"Audio transcription error: {e}")
+            return "[Audio transcription failed]"
+
+    def evaluate_recall(self, original_text: str, student_recall: str) -> Dict[str, Any]:
+        """Compare student's recall with original text and identify gaps."""
+        prompt = f"""You are an educational assessment AI. Compare the student's recall with the original text.
+
+ORIGINAL TEXT:
+{original_text}
+
+STUDENT'S RECALL:
+{student_recall}
+
+Analyze what the student remembered correctly and what they missed.
+Return JSON ONLY in this exact format:
+{{
+    "score": 0-100 (percentage of key points recalled),
+    "recalled_points": ["point1", "point2", ...],
+    "missing_points": ["missed1", "missed2", ...],
+    "feedback": "Brief encouraging feedback with specific improvement tips"
+}}
+
+Focus on main concepts, facts, and key details. Be fair but accurate."""
+
+        try:
+            response = self.generate_text(prompt, is_complex=False, temperature=0.3)
+            
+            import json
+            clean = response.replace("```json", "").replace("```", "").strip()
+            result = json.loads(clean)
+            return result
+        except Exception as e:
+            print(f"Recall evaluation error: {e}")
+            return {
+                "score": 50,
+                "recalled_points": [],
+                "missing_points": ["Evaluation failed"],
+                "feedback": "We couldn't analyze your recall. Please try again."
+            }
+
 # Global instance
 gemini_service = GeminiService()

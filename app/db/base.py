@@ -13,6 +13,7 @@ from app.models import (
     ai_avatar,
     ai_conversation,
     ai_features,
+    flashcard,
     analytics,
     announcement,
     asset,

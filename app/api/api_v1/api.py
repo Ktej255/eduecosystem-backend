@@ -106,3 +106,19 @@ api_router.include_router(ai_course.router, prefix="/ai-course", tags=["ai-cours
 from app.api.api_v1.endpoints import ai_avatars
 api_router.include_router(ai_avatars.router, prefix="/ai-avatars", tags=["ai-avatars"])
 
+# Flashcards (AI-driven spaced repetition)
+from app.api.api_v1.endpoints import flashcards
+api_router.include_router(flashcards.router, prefix="/flashcards", tags=["flashcards"])
+
+# Wolf Packs (Competitive Study Groups)
+from app.api.api_v1.endpoints import packs
+api_router.include_router(packs.router, prefix="/packs", tags=["packs"])
+
+# Knowledge Graph (Interactive Syllabus Explorer)
+from app.api.api_v1.endpoints import knowledge_graph
+api_router.include_router(knowledge_graph.router, prefix="/knowledge-graph", tags=["knowledge-graph"])
+
+# PDF Study (Self-Study Mode for Batch 1)
+from app.api.api_v1.endpoints import pdf_study
+api_router.include_router(pdf_study.router, prefix="/pdf-study", tags=["pdf-study"])
+

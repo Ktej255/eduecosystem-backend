@@ -48,18 +48,6 @@ def award_coins(
 ) -> CoinTransaction:
     """
     Award coins to a user and create transaction record.
-
-    Args:
-        db: Database session
-        user: User to award coins to
-        amount: Number of coins (positive for earning)
-        reason: Short reason code (e.g., "lesson_complete")
-        description: Optional detailed description
-        reference_type: Type of related entity (e.g., "lesson", "quiz")
-        reference_id: ID of related entity
-
-    Returns:
-        CoinTransaction record
     """
     # Update user's coin balance
     user.coins += amount
@@ -80,6 +68,13 @@ def award_coins(
     db.commit()
     db.refresh(transaction)
 
+    # Wolf Packs: Sync points to user's pack(s)
+    try:
+        from app.services.pack_service import pack_service
+        pack_service.sync_points_to_pack(db, user.id, amount)
+    except Exception as pack_err:
+        print(f"Error syncing points to pack: {pack_err}")
+
     return transaction
 
 
@@ -94,9 +89,6 @@ def spend_coins(
 ) -> Optional[CoinTransaction]:
     """
     Deduct coins from user (for purchases).
-
-    Returns:
-        CoinTransaction if successful, None if insufficient coins
     """
     if user.coins < amount:
         return None
@@ -128,15 +120,6 @@ def trigger_coin_reward(
 ) -> Optional[CoinTransaction]:
     """
     Trigger coin reward for a specific action.
-
-    Args:
-        db: Database session
-        user: User performing action
-        action: Action key (e.g., "lesson_complete")
-        **context: Additional context (reference_id, score, etc.)
-
-    Returns:
-        CoinTransaction if coins were awarded, None otherwise
     """
     # Get reward amount for action
     amount = COIN_REWARDS.get(action, 0)
@@ -174,7 +157,6 @@ def trigger_coin_reward(
         return transaction
 
     except Exception as e:
-        # Log error but don't fail the main operation
         print(f"Error awarding coins: {e}")
         return None
 
@@ -224,7 +206,6 @@ def get_user_earnings_summary(db: Session, user_id: int) -> dict:
 def check_daily_login_and_streak(db: Session, user: User) -> dict:
     """
     Check for daily login and update streak.
-    Should be called on successful login.
     """
     from datetime import datetime, timedelta
 

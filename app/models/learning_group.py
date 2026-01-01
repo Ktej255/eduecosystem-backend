@@ -27,6 +27,13 @@ class GroupType(str, enum.Enum):
     PEER_SUPPORT = "peer_support"
 
 
+class HouseType(str, enum.Enum):
+    ALPHA = "alpha"  # For top performers
+    BETA = "beta"   # For consistent learners
+    GAMMA = "gamma"  # For active discussers
+    DELTA = "delta"  # For new explorers
+
+
 class GroupPrivacy(str, enum.Enum):
     PUBLIC = "public"
     PRIVATE = "private"
@@ -55,6 +62,12 @@ class LearningGroup(Base):
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Competitive Stats (Wolf Packs)
+    house_type = Column(Enum(HouseType), nullable=True)
+    pack_points = Column(Integer, default=0)
+    weekly_points = Column(Integer, default=0)
+    pack_metadata = Column(Text, nullable=True) # JSON for emblem, motto, colors
 
     # Relationships
     course = relationship("Course", back_populates="learning_groups")
