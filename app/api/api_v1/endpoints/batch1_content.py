@@ -92,6 +92,8 @@ class SegmentData(BaseModel):
     title: str
     key_points: str
     video_url: Optional[str] = None
+    youtube_url: Optional[str] = None
+    content_type: str = "video"  # video, pdf, youtube
     duration: str = "25:00"
 
 
@@ -101,6 +103,8 @@ class SegmentResponse(BaseModel):
     title: str
     key_points: str
     video_url: Optional[str]
+    youtube_url: Optional[str] = None
+    content_type: str = "video"
     duration: str
 
 
@@ -133,6 +137,8 @@ async def get_part_content(
                 title=data.get("title", f"Segment {seg_num}"),
                 key_points=data.get("key_points", ""),
                 video_url=data.get("video_url"),
+                youtube_url=data.get("youtube_url"),
+                content_type=data.get("content_type", "video"),
                 duration=data.get("duration", "25:00")
             ))
         else:
@@ -142,6 +148,8 @@ async def get_part_content(
                 title=f"Segment {seg_num} (Not Uploaded)",
                 key_points="Key points will appear here after admin uploads content",
                 video_url=None,
+                youtube_url=None,
+                content_type="video",
                 duration="25:00"
             ))
     
@@ -161,7 +169,9 @@ async def save_segment(
     segment_number: int,
     background_tasks: BackgroundTasks,
     title: str = Form(...),
-    key_points: str = Form(""),  # Made optional with default empty string
+    key_points: str = Form(""),
+    content_type: str = Form("video"),  # video, pdf, youtube
+    youtube_url: Optional[str] = Form(None),
     video: Optional[UploadFile] = File(None)
 ):
     """
@@ -202,6 +212,8 @@ async def save_segment(
             "title": title,
             "key_points": key_points,
             "video_url": video_url,
+            "youtube_url": youtube_url,
+            "content_type": content_type,
             "duration": "25:00",
             "updated_at": datetime.utcnow().isoformat(),
             "transcription_status": "pending" if video_uploaded else SEGMENTS_STORE.get(key, {}).get("transcription_status", "none")
