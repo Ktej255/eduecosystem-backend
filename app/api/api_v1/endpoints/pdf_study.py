@@ -84,42 +84,72 @@ async def upload_pdf(
         f.write(content)
     
     # Extract pages
-    doc = fitz.open(file_path)
-    pages_data = []
     
-    for page_num in range(len(doc)):
-        page = doc[page_num]
-        text = page.get_text()
-        
-        # Render page as image (base64)
-        pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
-        img_bytes = pix.tobytes("png")
-        img_base64 = base64.b64encode(img_bytes).decode()
-        
-        pages_data.append({
-            "page_number": page_num + 1,
-            "text": text,
-            "image_base64": img_base64
-        })
+    # Process the PDF using the shared function
+    success = await process_pdf_document(segment_key, file_path, pdf_file.filename)
     
-    doc.close()
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to process PDF")
     
-    # Store metadata
-    PDF_STORE[segment_key] = {
-        "pdf_path": file_path,
-        "page_count": len(pages_data),
-        "pages": pages_data,
-        "uploaded_at": datetime.utcnow().isoformat(),
-        "title": pdf_file.filename
-    }
-    save_pdf_data()
+    # Return success based on updated store
+    page_count = PDF_STORE.get(segment_key, {}).get("page_count", 0)
     
     return {
         "success": True,
         "segment_key": segment_key,
-        "page_count": len(pages_data),
-        "message": f"PDF uploaded with {len(pages_data)} pages"
+        "page_count": page_count,
+        "message": f"PDF uploaded with {page_count} pages"
     }
+
+async def process_pdf_document(segment_key: str, file_path: str, title: str = "PDF Document"):
+    """
+    Process a PDF file: extract text and images for each page.
+    Updates PDF_STORE with the processed data.
+    """
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        print("PyMuPDF not installed")
+        return False
+        
+    print(f"Processing PDF for {segment_key}: {file_path}")
+    
+    try:
+        # Extract pages
+        doc = fitz.open(file_path)
+        pages_data = []
+        
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            text = page.get_text()
+            
+            # Render page as image (base64)
+            pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
+            img_bytes = pix.tobytes("png")
+            img_base64 = base64.b64encode(img_bytes).decode()
+            
+            pages_data.append({
+                "page_number": page_num + 1,
+                "text": text,
+                "image_base64": img_base64
+            })
+        
+        doc.close()
+        
+        # Store metadata
+        PDF_STORE[segment_key] = {
+            "pdf_path": file_path,
+            "page_count": len(pages_data),
+            "pages": pages_data,
+            "uploaded_at": datetime.utcnow().isoformat(),
+            "title": title
+        }
+        save_pdf_data()
+        print(f"Successfully processed PDF for {segment_key} with {len(pages_data)} pages")
+        return True
+    except Exception as e:
+        print(f"Error processing PDF: {str(e)}")
+        return False
 
 
 @router.get("/segment/{segment_key}")
