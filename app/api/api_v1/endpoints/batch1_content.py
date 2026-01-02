@@ -12,6 +12,19 @@ import os
 import uuid
 import json
 import asyncio
+import tempfile
+import urllib.request
+
+# Database imports for persistence
+from app.db.session import SessionLocal
+from app.models.batch1 import Batch1Segment
+from app.core.config import settings
+
+# Optional S3 import
+try:
+    import boto3
+except ImportError:
+    boto3 = None
 
 router = APIRouter()
 
@@ -106,7 +119,6 @@ class SegmentResponse(BaseModel):
     key_points: str
     video_url: Optional[str]
     youtube_url: Optional[str] = None
-    youtube_url: Optional[str] = None
     content_type: str = "video"
     pdf_files: List[Dict[str, Any]] = []
     duration: str
@@ -130,38 +142,49 @@ async def get_part_content(
     Get all video segments for a specific part of a day.
     Returns 4 segments per part.
     """
-    segments = []
-    for seg_num in range(1, 5):  # 4 segments per part
-        key = f"{cycle_id}_{day_number}_{part_number}_{seg_num}"
-        
-        if key in SEGMENTS_STORE:
-            data = SEGMENTS_STORE[key]
-            segments.append(SegmentResponse(
-                id=seg_num,
-                title=data.get("title", f"Segment {seg_num}"),
-                key_points=data.get("key_points", ""),
-                video_url=data.get("video_url"),
-                youtube_url=data.get("youtube_url"),
-                video_url=data.get("video_url"),
-                youtube_url=data.get("youtube_url"),
-                content_type=data.get("content_type", "video"),
-                pdf_files=data.get("pdf_files", []),
-                duration=data.get("duration", "25:00")
-            ))
-        else:
-            # Default segment if not uploaded
-            segments.append(SegmentResponse(
-                id=seg_num,
-                title=f"Segment {seg_num} (Not Uploaded)",
-                key_points="Key points will appear here after admin uploads content",
-                video_url=None,
-                youtube_url=None,
-                video_url=None,
-                youtube_url=None,
-                content_type="video",
-                pdf_files=[],
-                duration="25:00"
-            ))
+    # --- PERSISTENCE FIX: Read from DB ---
+    from app.db.session import SessionLocal
+    from app.models.batch1 import Batch1Segment
+    
+    with SessionLocal() as db:
+        segments = []
+        for seg_num in range(1, 5):  # 4 segments per part
+            key = f"{cycle_id}_{day_number}_{part_number}_{seg_num}"
+            
+            # Query DB
+            segment_data = db.query(Batch1Segment).filter(Batch1Segment.segment_key == key).first()
+            
+            if segment_data:
+                # Parse PDF list
+                pdf_list = []
+                if segment_data.pdf_files:
+                    try:
+                        pdf_list = json.loads(segment_data.pdf_files)
+                    except:
+                        pass
+                
+                segments.append(SegmentResponse(
+                    id=seg_num,
+                    title=segment_data.title,
+                    key_points=segment_data.key_points or "",
+                    video_url=segment_data.video_url,
+                    youtube_url=segment_data.youtube_url,
+                    content_type=segment_data.content_type or "video",
+                    pdf_files=pdf_list,
+                    duration=segment_data.duration or "25:00"
+                ))
+            else:
+                # Default segment if not uploaded
+                segments.append(SegmentResponse(
+                    id=seg_num,
+                    title=f"Segment {seg_num} (Not Uploaded)",
+                    key_points="Key points will appear here after admin uploads content",
+                    video_url=None,
+                    youtube_url=None,
+                    content_type="video",
+                    pdf_files=[],
+                    duration="25:00"
+                ))
     
     return DayContentResponse(
         cycle_id=cycle_id,
@@ -192,161 +215,192 @@ async def save_segment(
     Automatically triggers video transcription for AI analysis.
     """
     try:
+        # --- PERSISTENCE: Database & S3 ---
         key = f"{cycle_id}_{day_number}_{part_number}_{segment_number}"
         
-        video_url = None
-        file_path = None
-        video_uploaded = False
-        
-        if video and video.filename:
-            # Ensure upload directory exists
-            os.makedirs(UPLOAD_DIR, exist_ok=True)
+        # Create database session
+        with SessionLocal() as db:
+            # Check if segment exists
+            segment = db.query(Batch1Segment).filter(Batch1Segment.segment_key == key).first()
+            if not segment:
+                segment = Batch1Segment(
+                    cycle_id=cycle_id,
+                    day_number=day_number,
+                    part_number=part_number,
+                    segment_number=segment_number,
+                    segment_key=key,
+                    title=title or f"Segment {segment_number}"
+                )
+                db.add(segment)
             
-            # Save video file
-            file_ext = os.path.splitext(video.filename)[1] if video.filename else ".mp4"
-            unique_filename = f"c{cycle_id}_d{day_number}_p{part_number}_s{segment_number}_{uuid.uuid4().hex[:8]}{file_ext}"
-            file_path = os.path.join(UPLOAD_DIR, unique_filename)
-            
-            contents = await video.read()
-            with open(file_path, "wb") as f:
-                f.write(contents)
-            
-            video_url = f"/uploads/batch1/{unique_filename}"
-            video_uploaded = True
-        elif key in SEGMENTS_STORE:
-            # Keep existing video URL if not uploading new one
-            video_url = SEGMENTS_STORE[key].get("video_url")
-            # Get file path from existing URL if available
-            if video_url:
-                file_path = os.path.join(UPLOAD_DIR, os.path.basename(video_url))
-        
-        # Handle PDF uploads
-        saved_pdfs = SEGMENTS_STORE.get(key, {}).get("pdf_files", []) if key in SEGMENTS_STORE else []
-        
-        # If new PDFs are uploaded, we might want to replace or append? 
-        # Current logic: If pdf_files provided, we process them. 
-        # Since frontend sends ALL files (including re-uploads if needed), we could replace?
-        # But frontend might only send NEW files? 
-        # Actually, for simplicity and "Save All" logic, let's assume the frontend sends the current state 
-        # or we need to manage "existing" vs "new". 
-        # To avoid data loss, let's Append new ones or Replace if logic dictates.
-        # Given the "DayContentUpload" state, it has full list. 
-        # Let's save new files.
-        
-        if pdf_files:
-            # Ensure pdfs directory
-            PDF_DIR = os.path.join(UPLOAD_DIR, "pdfs")
-            os.makedirs(PDF_DIR, exist_ok=True)
-            
-            new_pdfs = []
-            for idx, pdf in enumerate(pdf_files):
-                if pdf.filename:
-                    # Unique filename
-                    file_ext = os.path.splitext(pdf.filename)[1]
-                    unique_name = f"c{cycle_id}_d{day_number}_p{part_number}_s{segment_number}_pdf{idx}_{uuid.uuid4().hex[:6]}{file_ext}"
-                    dest_path = os.path.join(PDF_DIR, unique_name)
-                    
-                    content = await pdf.read()
-                    with open(dest_path, "wb") as f:
-                        f.write(content)
-                    
-                    pdf_url = f"/uploads/batch1/pdfs/{unique_name}"
-                    pdf_name = pdf_names[idx] if pdf_names and idx < len(pdf_names) else pdf.filename
-                    
-                    new_pdfs.append({
-                        "name": pdf_name,
-                        "url": pdf_url,
-                        "original_filename": pdf.filename
-                    })
-                    
-                    # Trigger PDF processing for the first PDF (as primary study material)
-                    if idx == 0:
-                        print(f"Triggering PDF processing for {key}")
-                        # We process it immediately so it is ready for student view
-                        try:
-                            await process_pdf_document(key, dest_path, pdf_name)
-                        except Exception as e:
-                            print(f"Failed to process PDF: {e}")
-            
-            # If we are in 'pdf' mode and sending files, we probably want to update the list.
-            # But we should preserve OLD files if they weren't re-uploaded.
-            # However, the frontend creates a list of "pdfFiles". 
-            # Ideally, the frontend should tell us the FINAL structure. 
-            # For now, let's APPEND new PDFs to existing ones? 
-            # No, if user deletes one in UI, we want it gone.
-            # But we don't know which ones are kept unless frontend sends "existing_pdf_urls".
-            # FIX: Just append for now to ensure AT LEAST they are saved.
-            # Better: The frontend should send "video" or "pdf" mode.
-            # Legacy/Default append behavior: if no preservation data sent, just append.
-            if new_pdfs and not preserved_pdf_data:
-                saved_pdfs.extend(new_pdfs)
-                
-        # Handle PDF Preservation/Merging
-        # If preserved_pdf_data is provided, we use it as the base.
-        # If not provided, we default to "append to existing" logic (handled above by extending saved_pdfs).
-        # BUT if the frontend sends preserved_pdf_data, it implies "EXACT STATE".
-        # So we should filter saved_pdfs to match preserved_pdf_data URLs.
-        
-        if preserved_pdf_data:
-            try:
-                preserved_list = json.loads(preserved_pdf_data)
-                preserved_urls = [p.get('url') for p in preserved_list if p.get('url')]
-                
-                # Filter existing stored PDFs to keep only those present in preserved_list
-                # This handles deletions from the frontend
-                kept_pdfs = [
-                    p for p in SEGMENTS_STORE.get(key, {}).get("pdf_files", [])
-                    if p.get('url') in preserved_urls
-                ]
-                
-                # Re-construct final list: Kept + New
-                # Note: saved_pdfs above was just a copy. We should rebuild to be safe.
-                saved_pdfs = kept_pdfs + (new_pdfs if 'new_pdfs' in locals() else [])
-                
-            except Exception as e:
-                print(f"Error parsing preserved_pdf_data: {e}")
-                # Fallback to append behavior if parse fails
-                pass
+            # Update common fields
+            segment.title = title
+            segment.key_points = key_points
+            segment.duration = "25:00"  # Default duration
 
-        # Store segment data
-        SEGMENTS_STORE[key] = {
-            "title": title,
-            "key_points": key_points,
-            "video_url": video_url,
-            "youtube_url": youtube_url,
-            "content_type": content_type,
-            "pdf_files": saved_pdfs,  # Persist PDF list
-            "duration": "25:00",
-            "updated_at": datetime.utcnow().isoformat(),
-            "transcription_status": "pending" if video_uploaded else SEGMENTS_STORE.get(key, {}).get("transcription_status", "none")
-        }
-        
-        # PERSIST TO FILE so data survives server restarts
-        save_segments()
-        
-        print(f"Saved segment: {key} with title: {title}, video_url: {video_url}")
-        
-        # Trigger background transcription if new video uploaded
-        if video_uploaded and file_path:
-            print(f"[Batch1Content] Triggering background transcription for {key}")
-            TRANSCRIPTION_STATUS[key] = "queued"
-            background_tasks.add_task(
-                run_transcription_background,
-                file_path,
-                key,
-                title
-            )
-        
-        return {
-            "success": True,
-            "message": f"Segment {segment_number} saved successfully" + (" - Transcription started in background" if video_uploaded else ""),
-            "segment_key": key,
-            "video_url": video_url,
-            "transcription_started": video_uploaded
-        }
+            video_uploaded = False
+            file_path_for_transcription = None  # Local path for transcription service
+
+            # 1. Video Upload
+            if video and video.filename:
+                file_ext = os.path.splitext(video.filename)[1]
+                file_name = f"c{cycle_id}_d{day_number}_p{part_number}_s{segment_number}_{uuid.uuid4().hex[:8]}{file_ext}"
+                
+                # Check if S3 is configured and boto3 is available
+                use_s3 = boto3 and hasattr(settings, 'STORAGE_BACKEND') and settings.STORAGE_BACKEND == 's3' and hasattr(settings, 'AWS_S3_BUCKET') and settings.AWS_S3_BUCKET
+                
+                if use_s3:
+                    try:
+                        s3 = boto3.client('s3',
+                                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                          region_name=settings.AWS_REGION)
+                        video.file.seek(0)
+                        s3.upload_fileobj(video.file, settings.AWS_S3_BUCKET, f"videos/{file_name}", ExtraArgs={'ACL': 'public-read'})
+                        segment.video_url = f"https://{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/videos/{file_name}"
+                        print(f"Uploaded video to S3: {segment.video_url}")
+                        file_path_for_transcription = segment.video_url
+                    except Exception as e:
+                        print(f"S3 Upload Error: {e}")
+                        raise HTTPException(status_code=500, detail=f"S3 Upload Failed: {str(e)}")
+                else:
+                    # Local Save
+                    file_path = os.path.join(UPLOAD_DIR, file_name)
+                    video.file.seek(0)
+                    contents = await video.read()
+                    with open(file_path, "wb") as f:
+                        f.write(contents)
+                    segment.video_url = f"/uploads/batch1/{file_name}"
+                    file_path_for_transcription = file_path
+                
+                segment.content_type = 'video'
+                segment.youtube_url = None
+                video_uploaded = True
+            elif segment.video_url and not video:
+                # Keep existing video_url
+                if segment.video_url.startswith("/uploads/batch1/"):
+                    file_path_for_transcription = os.path.join(BACKEND_ROOT, segment.video_url.lstrip('/'))
+                else:
+                    file_path_for_transcription = segment.video_url
+            elif youtube_url:
+                # 2. YouTube URL
+                segment.youtube_url = youtube_url
+                segment.content_type = 'youtube'
+                segment.video_url = None
+            
+            # 3. PDF Upload
+            PDF_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "pdfs")
+            os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
+
+            current_pdfs_list = []
+            if segment.pdf_files:
+                try:
+                    current_pdfs_list = json.loads(segment.pdf_files)
+                except json.JSONDecodeError:
+                    print(f"Error decoding existing pdf_files for {key}")
+                    current_pdfs_list = []
+            
+            # Handle preserved PDFs
+            final_pdf_list = []
+            if preserved_pdf_data:
+                try:
+                    preserved_list = json.loads(preserved_pdf_data)
+                    preserved_urls = {p.get('url') for p in preserved_list if p.get('url')}
+                    final_pdf_list = [p for p in current_pdfs_list if p.get('url') in preserved_urls]
+                except Exception as e:
+                    print(f"Error parsing preserved_pdf_data: {e}")
+                    final_pdf_list = current_pdfs_list
+            else:
+                final_pdf_list = current_pdfs_list
+
+            new_pdfs_uploaded = []
+            if pdf_files:
+                segment.content_type = 'pdf'
+                segment.video_url = None
+                segment.youtube_url = None
+
+                for idx, pdf in enumerate(pdf_files):
+                    if pdf.filename:
+                        file_ext = os.path.splitext(pdf.filename)[1]
+                        unique_name = f"c{cycle_id}_d{day_number}_p{part_number}_s{segment_number}_pdf{idx}_{uuid.uuid4().hex[:6]}{file_ext}"
+                        pdf_url = ""
+                        local_pdf_path = None
+
+                        # Check if S3 is configured
+                        use_s3 = boto3 and hasattr(settings, 'STORAGE_BACKEND') and settings.STORAGE_BACKEND == 's3' and hasattr(settings, 'AWS_S3_BUCKET') and settings.AWS_S3_BUCKET
+                        
+                        if use_s3:
+                            try:
+                                s3 = boto3.client('s3',
+                                                  aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                                  aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                                  region_name=settings.AWS_REGION)
+                                pdf.file.seek(0)
+                                s3.upload_fileobj(pdf.file, settings.AWS_S3_BUCKET, f"pdfs/{unique_name}", ExtraArgs={'ACL': 'public-read'})
+                                pdf_url = f"https://{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/pdfs/{unique_name}"
+                                print(f"Uploaded PDF to S3: {pdf_url}")
+                            except Exception as e:
+                                print(f"S3 Upload Failed for PDF: {e}")
+                                raise HTTPException(status_code=500, detail=f"S3 Upload Failed: {str(e)}")
+                        else:
+                            # Local Save
+                            dest_path = os.path.join(PDF_UPLOAD_DIR, unique_name)
+                            pdf.file.seek(0)
+                            content = await pdf.read()
+                            with open(dest_path, "wb") as f:
+                                f.write(content)
+                            pdf_url = f"/uploads/batch1/pdfs/{unique_name}"
+                            local_pdf_path = dest_path
+
+                        # Trigger PDF processing for first PDF
+                        if idx == 0:
+                            print(f"Triggering PDF processing for {key}")
+                            current_pdf_name = pdf_names[idx] if pdf_names and idx < len(pdf_names) else pdf.filename
+                            
+                            if local_pdf_path:
+                                # Local file - process directly
+                                await process_pdf_document(key, local_pdf_path, current_pdf_name)
+                            elif pdf_url.startswith("https://"):
+                                # S3 file - download to temp and process
+                                try:
+                                    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_file:
+                                        print(f"Downloading S3 PDF to temp: {pdf_url}")
+                                        urllib.request.urlretrieve(pdf_url, tmp_file.name)
+                                        await process_pdf_document(key, tmp_file.name, current_pdf_name)
+                                        # Clean up temp file
+                                        os.unlink(tmp_file.name)
+                                except Exception as e:
+                                    print(f"Error processing S3 PDF: {e}")
+
+                        new_pdfs_uploaded.append({
+                            "name": pdf_names[idx] if pdf_names and idx < len(pdf_names) else pdf.filename,
+                            "url": pdf_url,
+                            "order": len(final_pdf_list) + idx + 1
+                        })
+
+                # Append new PDFs to final list
+                final_pdf_list.extend(new_pdfs_uploaded)
+
+            if final_pdf_list:
+                segment.pdf_files = json.dumps(final_pdf_list)
+            
+            # Commit to Database
+            db.commit()
+            db.refresh(segment)
+
+            return {
+                "success": True,
+                "message": f"Segment {segment_number} saved successfully",
+                "segment_key": key,
+                "video_url": segment.video_url,
+                "pdf_count": len(final_pdf_list)
+            }
+
     except Exception as e:
-        print(f"Error saving segment: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to save segment: {str(e)}")
+        print(f"Error saving segment: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/all-segments")

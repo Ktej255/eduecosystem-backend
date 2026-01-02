@@ -26,4 +26,9 @@ USER appuser
 EXPOSE 8000
 
 # Command to run the application
-CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000"]
+# Copy invoke script
+COPY start.sh .
+RUN chmod +x start.sh
+
+# Command to run the application
+CMD ["./start.sh"]

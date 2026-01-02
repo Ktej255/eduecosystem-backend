@@ -12,6 +12,7 @@ from app.api.api_v1.endpoints import (
     admin_meditation,
     prelims_recall,
     batch1_content,
+    batch1_tests,
     ai_debug,
     ai,
 )
@@ -52,6 +53,9 @@ api_router.include_router(prelims_recall.router, prefix="/prelims", tags=["preli
 
 # Batch 1 Content (Videos/Segments)
 api_router.include_router(batch1_content.router, prefix="/batch1", tags=["batch1"])
+
+# Batch 1 Test Results
+api_router.include_router(batch1_tests.router, prefix="/batch1", tags=["batch1-tests"])
 
 # AI Debug (Teacher Portal Transparency Dashboard)
 api_router.include_router(ai_debug.router, prefix="/ai-debug", tags=["ai-debug"])

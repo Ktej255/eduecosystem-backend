@@ -47,6 +47,7 @@ boto3>=1.28.0
 # google-cloud-speech (Temporarily disabled)
 
 # PDF Generation
+pymupdf
 reportlab
 matplotlib
 pandas==2.1.4
