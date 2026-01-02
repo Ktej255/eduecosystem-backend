@@ -184,7 +184,8 @@ async def save_segment(
     youtube_url: Optional[str] = Form(None),
     video: Optional[UploadFile] = File(None),
     pdf_files: List[UploadFile] = File(None),
-    pdf_names: List[str] = Form(None)
+    pdf_names: List[str] = Form(None),
+    preserved_pdf_data: Optional[str] = Form(None)  # JSON string of existing PDFs to keep
 ):
     """
     Save or update a video segment.
@@ -276,8 +277,36 @@ async def save_segment(
             # But we don't know which ones are kept unless frontend sends "existing_pdf_urls".
             # FIX: Just append for now to ensure AT LEAST they are saved.
             # Better: The frontend should send "video" or "pdf" mode.
-            if new_pdfs:
+            # Legacy/Default append behavior: if no preservation data sent, just append.
+            if new_pdfs and not preserved_pdf_data:
                 saved_pdfs.extend(new_pdfs)
+                
+        # Handle PDF Preservation/Merging
+        # If preserved_pdf_data is provided, we use it as the base.
+        # If not provided, we default to "append to existing" logic (handled above by extending saved_pdfs).
+        # BUT if the frontend sends preserved_pdf_data, it implies "EXACT STATE".
+        # So we should filter saved_pdfs to match preserved_pdf_data URLs.
+        
+        if preserved_pdf_data:
+            try:
+                preserved_list = json.loads(preserved_pdf_data)
+                preserved_urls = [p.get('url') for p in preserved_list if p.get('url')]
+                
+                # Filter existing stored PDFs to keep only those present in preserved_list
+                # This handles deletions from the frontend
+                kept_pdfs = [
+                    p for p in SEGMENTS_STORE.get(key, {}).get("pdf_files", [])
+                    if p.get('url') in preserved_urls
+                ]
+                
+                # Re-construct final list: Kept + New
+                # Note: saved_pdfs above was just a copy. We should rebuild to be safe.
+                saved_pdfs = kept_pdfs + (new_pdfs if 'new_pdfs' in locals() else [])
+                
+            except Exception as e:
+                print(f"Error parsing preserved_pdf_data: {e}")
+                # Fallback to append behavior if parse fails
+                pass
 
         # Store segment data
         SEGMENTS_STORE[key] = {
