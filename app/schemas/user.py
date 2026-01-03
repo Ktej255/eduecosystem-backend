@@ -12,6 +12,9 @@ class UserBase(BaseModel):
     email_notifications: Optional[bool] = True
     is_premium: Optional[bool] = False
     subscription_status: Optional[str] = "free"
+    is_ras_authorized: bool = False
+    is_batch1_authorized: bool = False
+    is_batch2_authorized: bool = False
 
 
 # Properties to receive via API on creation

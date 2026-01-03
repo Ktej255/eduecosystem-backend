@@ -47,6 +47,8 @@ class User(Base):
     
     # RAS Authorization
     is_ras_authorized = Column(Boolean, default=False, index=True)
+    is_batch1_authorized = Column(Boolean, default=False, index=True)
+    is_batch2_authorized = Column(Boolean, default=False, index=True)
 
     # Subscription Relationship
     subscription = relationship("UserSubscription", back_populates="user")
