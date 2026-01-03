@@ -124,6 +124,9 @@ from app.api.api_v1.endpoints import knowledge_graph
 api_router.include_router(knowledge_graph.router, prefix="/knowledge-graph", tags=["knowledge-graph"])
 
 # PDF Study (Self-Study Mode for Batch 1)
-from app.api.api_v1.endpoints import pdf_study
 api_router.include_router(pdf_study.router, prefix="/pdf-study", tags=["pdf-study"])
+
+# Study Sessions (Pomodoro, Revision)
+from app.api.api_v1.endpoints import study
+api_router.include_router(study.router, prefix="/study", tags=["study"])
 

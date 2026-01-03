@@ -187,6 +187,8 @@ from app.models.upsc import (
     UPSCTimerConfig,
     UPSCRubric,
 )
+from app.models.ras_planner import RASTopicProgress
+from app.models.study_session import StudySession
 
 # Lead Management
 from app.models.lead import Lead

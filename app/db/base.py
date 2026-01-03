@@ -88,5 +88,7 @@ from app.models import (
     field_activity,
     voice_note,
     call_log,
+    ras_planner,
+    study_session,
 )
 print("DEBUG: Models imported in base.py")

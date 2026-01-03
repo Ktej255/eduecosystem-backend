@@ -3,21 +3,22 @@ RAS Revision Planner API
 40-Day Revision Plan Endpoints for Students, Teachers, and Admins
 """
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-from datetime import datetime, timedelta
 import json
+from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, Depends
+from app.api import deps
+from app.db.session import get_db
+from app.models.user import User
+from app.models.ras_planner import RASTopicProgress
+from app.services.gemini_service import gemini_service
 
 router = APIRouter()
 
 # ============================================================
 # AUTHORIZED USERS (Phase 1: In-memory, Phase 2: Database)
 # ============================================================
-AUTHORIZED_RAS_USERS = {
-    "chitrakumawat33@gmail.com",
-    "ktej255@gmail.com",  # Master ID always has access
-}
+# AUTHORIZED_RAS_USERS (Phase 1: In-memory, Phase 2: Database)
+# REMOVED: Using user.is_ras_authorized in database
 
 # ============================================================
 # RAS SYLLABUS DATA - Updated from Vijay Sir's Syllabus
@@ -207,7 +208,7 @@ RAS_SUBJECTS = {
 
 
 # In-memory progress storage (Phase 2: Move to database)
-USER_PROGRESS: Dict[str, Dict[str, bool]] = {}
+# In-memory progress storage (REMOVED: Using RASTopicProgress in database)
 
 # ============================================================
 # REQUEST/RESPONSE MODELS
@@ -233,6 +234,12 @@ class DashboardResponse(BaseModel):
     email: str
     overall_progress: dict
     subject_progress: Dict[str, SubjectProgress]
+
+class RecallSubmissionRequest(BaseModel):
+    email: str
+    topic_id: str
+    duration: int
+    explanation_text: str
 
 class CalendarDay(BaseModel):
     day_number: int
@@ -303,11 +310,16 @@ def get_user_progress(email: str) -> Dict[str, bool]:
         USER_PROGRESS[email] = {}
     return USER_PROGRESS[email]
 
-def count_completed_for_subject(email: str, subject_key: str) -> int:
-    progress = get_user_progress(email)
+def count_completed_for_subject(db: Session, user_id: int, subject_key: str) -> int:
     subject = RAS_SUBJECTS.get(subject_key, {})
     topics = subject.get("topics", [])
-    return sum(1 for t in topics if progress.get(t["id"], False))
+    topic_ids = [t["id"] for t in topics]
+    
+    return db.query(RASTopicProgress).filter(
+        RASTopicProgress.user_id == user_id,
+        RASTopicProgress.topic_id.in_(topic_ids),
+        RASTopicProgress.completed == True
+    ).count()
 
 def get_all_topics() -> List[dict]:
     """Get flat list of all topics across subjects"""
@@ -322,11 +334,19 @@ def get_all_topics() -> List[dict]:
             })
     return all_topics
 
-def generate_40_day_calendar(email: str, start_date: datetime) -> List[CalendarDay]:
+def generate_40_day_calendar(db: Session, user_id: int, start_date: datetime) -> List[CalendarDay]:
     """Generate 40-day calendar with topic distribution"""
     all_topics = get_all_topics()
     topics_per_day = max(1, len(all_topics) // 40)
-    progress = get_user_progress(email)
+    
+    # Get all completed topic IDs for this user
+    completed_topics = {
+        p.topic_id for p in db.query(RASTopicProgress).filter(
+            RASTopicProgress.user_id == user_id,
+            RASTopicProgress.completed == True
+        ).all()
+    }
+    
     today = datetime.now().date()
     
     days = []
@@ -337,7 +357,7 @@ def generate_40_day_calendar(email: str, start_date: datetime) -> List[CalendarD
         day_topics = all_topics[topic_idx:topic_idx + topics_per_day]
         topic_idx += topics_per_day
         
-        completed_count = sum(1 for t in day_topics if progress.get(t["id"], False))
+        completed_count = sum(1 for t in day_topics if t["id"] in completed_topics)
         
         if day_date.date() == today:
             status = "today"
@@ -361,9 +381,15 @@ def generate_40_day_calendar(email: str, start_date: datetime) -> List[CalendarD
 # ============================================================
 
 @router.get("/check-access/{email}", response_model=AccessCheckResponse)
-async def check_access(email: str):
+async def check_access(email: str, db: Session = Depends(get_db)):
     """Check if user has access to RAS Revision Plan"""
-    has_access = email.lower() in {e.lower() for e in AUTHORIZED_RAS_USERS}
+    user = db.query(User).filter(User.email == email.lower()).first()
+    has_access = user.is_ras_authorized if user else False
+    
+    # Master ID always has access
+    if email.lower() == "ktej255@gmail.com":
+        has_access = True
+
     return AccessCheckResponse(
         email=email,
         has_access=has_access,
@@ -371,9 +397,10 @@ async def check_access(email: str):
     )
 
 @router.get("/dashboard/{email}", response_model=DashboardResponse)
-async def get_dashboard(email: str):
+async def get_dashboard(email: str, db: Session = Depends(get_db)):
     """Get overall dashboard with progress stats"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
     subject_progress = {}
@@ -382,7 +409,7 @@ async def get_dashboard(email: str):
     
     for subject_key, subject_data in RAS_SUBJECTS.items():
         topic_count = len(subject_data["topics"])
-        completed = count_completed_for_subject(email, subject_key)
+        completed = count_completed_for_subject(db, user.id, subject_key)
         total_topics += topic_count
         total_completed += completed
         
@@ -405,16 +432,17 @@ async def get_dashboard(email: str):
     )
 
 @router.get("/calendar-overview/{email}", response_model=CalendarOverview)
-async def get_calendar_overview(email: str):
+async def get_calendar_overview(email: str, db: Session = Depends(get_db)):
     """Get 40-day calendar overview"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Plan starts Jan 1, 2026
     start_date = datetime(2026, 1, 1)
     end_date = start_date + timedelta(days=39)
     
-    days = generate_40_day_calendar(email, start_date)
+    days = generate_40_day_calendar(db, user.id, start_date)
     
     return CalendarOverview(
         plan_start=start_date.strftime("%Y-%m-%d"),
@@ -424,9 +452,10 @@ async def get_calendar_overview(email: str):
     )
 
 @router.get("/plan-by-date/{email}/{date}", response_model=DayPlanResponse)
-async def get_plan_by_date(email: str, date: str):
+async def get_plan_by_date(email: str, date: str, db: Session = Depends(get_db)):
     """Get detailed plan for a specific date"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
     start_date = datetime(2026, 1, 1)
@@ -441,7 +470,10 @@ async def get_plan_by_date(email: str, date: str):
     start_idx = (day_number - 1) * topics_per_day
     day_topics = all_topics[start_idx:start_idx + topics_per_day]
     
-    progress = get_user_progress(email)
+    progress_rows = db.query(RASTopicProgress).filter(
+        RASTopicProgress.user_id == user.id
+    ).all()
+    progress = {p.topic_id: p.completed for p in progress_rows}
     
     # Build time slots
     slots = []
@@ -492,13 +524,32 @@ async def get_plan_by_date(email: str, date: str):
     )
 
 @router.post("/update-progress")
-async def update_progress(request: ProgressUpdateRequest):
+async def update_progress(request: ProgressUpdateRequest, db: Session = Depends(get_db)):
     """Mark a topic as completed or incomplete"""
-    if request.email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == request.email.lower()).first()
+    if not user or (not user.is_ras_authorized and request.email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
-    progress = get_user_progress(request.email)
-    progress[request.topic_id] = request.completed
+    # Update or create progress entry
+    progress = db.query(RASTopicProgress).filter(
+        RASTopicProgress.user_id == user.id,
+        RASTopicProgress.topic_id == request.topic_id
+    ).first()
+    
+    if progress:
+        progress.completed = request.completed
+        if request.completed:
+            progress.completed_at = datetime.utcnow()
+    else:
+        progress = RASTopicProgress(
+            user_id=user.id,
+            topic_id=request.topic_id,
+            completed=request.completed,
+            completed_at=datetime.utcnow() if request.completed else None
+        )
+        db.add(progress)
+    
+    db.commit()
     
     return {
         "success": True,
@@ -508,16 +559,20 @@ async def update_progress(request: ProgressUpdateRequest):
     }
 
 @router.get("/syllabus-topics/{subject_key}")
-async def get_syllabus_topics(subject_key: str, email: str):
+async def get_syllabus_topics(subject_key: str, email: str, db: Session = Depends(get_db)):
     """Get all topics for a subject with completion status"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
     if subject_key not in RAS_SUBJECTS:
         raise HTTPException(status_code=404, detail="Subject not found")
     
     subject = RAS_SUBJECTS[subject_key]
-    progress = get_user_progress(email)
+    progress_rows = db.query(RASTopicProgress).filter(
+        RASTopicProgress.user_id == user.id
+    ).all()
+    progress = {p.topic_id: p.completed for p in progress_rows}
     
     topics_with_status = []
     for topic in subject["topics"]:
@@ -542,12 +597,17 @@ async def get_syllabus_topics(subject_key: str, email: str):
     )
 
 @router.get("/reports/{email}", response_model=ReportsResponse)
-async def get_reports(email: str):
+async def get_reports(email: str, db: Session = Depends(get_db)):
     """Get retention and progress reports"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
-    progress = get_user_progress(email)
+    progress_rows = db.query(RASTopicProgress).filter(
+        RASTopicProgress.user_id == user.id
+    ).all()
+    progress = {p.topic_id: p.completed for p in progress_rows}
+    
     total_topics = sum(len(s["topics"]) for s in RAS_SUBJECTS.values())
     completed = sum(1 for v in progress.values() if v)
     
@@ -559,7 +619,7 @@ async def get_reports(email: str):
     subject_stats = {}
     for subject_key, subject_data in RAS_SUBJECTS.items():
         topic_count = len(subject_data["topics"])
-        completed_count = count_completed_for_subject(email, subject_key)
+        completed_count = count_completed_for_subject(db, user.id, subject_key)
         subject_stats[subject_key] = {
             "name": subject_data["name"],
             "total": topic_count,
@@ -574,10 +634,70 @@ async def get_reports(email: str):
         subject_stats=subject_stats
     )
 
+@router.post("/record-and-submit")
+async def record_and_submit(request: RecallSubmissionRequest, db: Session = Depends(get_db)):
+    """Analyze student recall using AI and update progress"""
+    user = db.query(User).filter(User.email == request.email.lower()).first()
+    if not user or (not user.is_ras_authorized and request.email.lower() != "ktej255@gmail.com"):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # 1. Find topic name/details for context
+    topic_name = "Unknown Topic"
+    topic_subtopics = []
+    for subject in RAS_SUBJECTS.values():
+        for topic in subject["topics"]:
+            if topic["id"] == request.topic_id:
+                topic_name = topic["name"]
+                topic_subtopics = topic["subtopics"]
+                break
+    
+    # 2. Call AI to evaluate recall
+    # We provide subtopics as the 'original_text' context for comparison
+    context_text = f"Topic: {topic_name}. Key concepts: {', '.join(topic_subtopics)}"
+    evaluation = gemini_service.evaluate_recall(context_text, request.explanation_text)
+    
+    # 3. Update database
+    progress = db.query(RASTopicProgress).filter(
+        RASTopicProgress.user_id == user.id,
+        RASTopicProgress.topic_id == request.topic_id
+    ).first()
+    
+    mastery = int(evaluation.get("score", 50))
+    
+    if progress:
+        progress.summary_text = request.explanation_text
+        progress.mastery_level = mastery
+        progress.hours_spent += (request.duration / 3600) # Convert seconds to hours
+        # If mastery is high enough, mark as completed
+        if mastery >= 70:
+            progress.completed = True
+            progress.completed_at = datetime.utcnow()
+    else:
+        progress = RASTopicProgress(
+            user_id=user.id,
+            topic_id=request.topic_id,
+            completed=(mastery >= 70),
+            completed_at=datetime.utcnow() if mastery >= 70 else None,
+            summary_text=request.explanation_text,
+            mastery_level=mastery,
+            hours_spent=(request.duration / 3600)
+        )
+        db.add(progress)
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "evaluation": evaluation,
+        "mastery_level": mastery,
+        "completed": progress.completed
+    }
+
 @router.get("/daily-test/{email}/{date}")
-async def get_daily_test(email: str, date: str):
+async def get_daily_test(email: str, date: str, db: Session = Depends(get_db)):
     """Get daily test questions"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Generate sample MCQs for the day
@@ -631,54 +751,74 @@ async def get_daily_test(email: str, date: str):
 # ============================================================
 
 @router.get("/admin/student-list")
-async def get_student_list():
+async def get_student_list(db: Session = Depends(get_db)):
     """Get list of all authorized RAS students with their progress"""
+    users = db.query(User).filter(User.is_ras_authorized == True).all()
+    
+    # Always include master ID for admin list
+    master_user = db.query(User).filter(User.email == "ktej255@gmail.com").first()
+    if master_user and master_user not in users:
+        users.append(master_user)
+        
     students = []
-    for email in AUTHORIZED_RAS_USERS:
-        progress = get_user_progress(email)
-        total_topics = sum(len(s["topics"]) for s in RAS_SUBJECTS.values())
-        completed = sum(1 for v in progress.values() if v)
+    total_topics = sum(len(s["topics"]) for s in RAS_SUBJECTS.values())
+    
+    for user in users:
+        completed = db.query(RASTopicProgress).filter(
+            RASTopicProgress.user_id == user.id,
+            RASTopicProgress.completed == True
+        ).count()
+        
+        latest_progress = db.query(RASTopicProgress).filter(
+            RASTopicProgress.user_id == user.id
+        ).order_by(RASTopicProgress.last_updated.desc()).first()
         
         students.append(StudentListItem(
-            email=email,
-            name=email.split("@")[0].replace(".", " ").title(),
+            email=user.email,
+            name=user.full_name or user.email.split("@")[0].replace(".", " ").title(),
             overall_progress=round((completed / total_topics) * 100, 1) if total_topics > 0 else 0,
-            last_active=datetime.utcnow().isoformat() if progress else None
+            last_active=latest_progress.last_updated.isoformat() if latest_progress else None
         ))
     
     return {"students": students, "total_count": len(students)}
 
 @router.get("/admin/student-progress/{email}")
-async def get_student_progress_admin(email: str):
+async def get_student_progress_admin(email: str, db: Session = Depends(get_db)):
     """Admin view of a specific student's progress"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
-        raise HTTPException(status_code=404, detail="Student not found in authorized list")
-    
-    # Return full dashboard data for admin view
-    return await get_dashboard(email)
+    # Simply reuse dashboard logic for the specific email
+    return await get_dashboard(email, db)
 
 @router.post("/admin/authorize-user")
-async def authorize_user(email: str):
+async def authorize_user(email: str, db: Session = Depends(get_db)):
     """Add a user to the authorized RAS users list"""
-    AUTHORIZED_RAS_USERS.add(email.lower())
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_ras_authorized = True
+    db.commit()
     return {"success": True, "email": email, "message": f"{email} has been authorized for RAS Revision Plan"}
 
 @router.delete("/admin/revoke-access/{email}")
-async def revoke_access(email: str):
+async def revoke_access(email: str, db: Session = Depends(get_db)):
     """Remove a user from the authorized RAS users list"""
-    if email.lower() in {e.lower() for e in AUTHORIZED_RAS_USERS}:
-        AUTHORIZED_RAS_USERS.discard(email.lower())
-        return {"success": True, "email": email, "message": f"Access revoked for {email}"}
-    raise HTTPException(status_code=404, detail="User not in authorized list")
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_ras_authorized = False
+    db.commit()
+    return {"success": True, "email": email, "message": f"Access revoked for {email}"}
 
 @router.post("/admin/reset-progress/{email}")
-async def reset_progress(email: str):
+async def reset_progress(email: str, db: Session = Depends(get_db)):
     """Reset all progress for a specific user (clears all completed topics)"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
-        raise HTTPException(status_code=404, detail="User not found in authorized list")
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
-    if email in USER_PROGRESS:
-        USER_PROGRESS[email] = {}
+    db.query(RASTopicProgress).filter(RASTopicProgress.user_id == user.id).delete()
+    db.commit()
     
     return {
         "success": True, 
@@ -688,10 +828,10 @@ async def reset_progress(email: str):
     }
 
 @router.post("/admin/reset-all-progress")
-async def reset_all_progress():
+async def reset_all_progress(db: Session = Depends(get_db)):
     """Reset progress for all users (admin only)"""
-    global USER_PROGRESS
-    USER_PROGRESS = {}
+    db.query(RASTopicProgress).delete()
+    db.commit()
     return {
         "success": True, 
         "message": "All user progress has been reset",
@@ -707,9 +847,10 @@ async def reset_all_progress():
 # GET /planner/topic/{topic_id}/pdf
 
 @router.get("/topic/{topic_id}/materials")
-async def get_topic_materials(topic_id: str, email: str):
+async def get_topic_materials(topic_id: str, email: str, db: Session = Depends(get_db)):
     """Get study materials (PDFs, notes) for a specific topic"""
-    if email.lower() not in {e.lower() for e in AUTHORIZED_RAS_USERS}:
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user or (not user.is_ras_authorized and email.lower() != "ktej255@gmail.com"):
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Find the topic

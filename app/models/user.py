@@ -44,6 +44,9 @@ class User(Base):
     is_sso_user = Column(Boolean, default=False)
     sso_external_id = Column(String, nullable=True, index=True)
     is_verified = Column(Boolean, default=False)
+    
+    # RAS Authorization
+    is_ras_authorized = Column(Boolean, default=False, index=True)
 
     # Subscription Relationship
     subscription = relationship("UserSubscription", back_populates="user")

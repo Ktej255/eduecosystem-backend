@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Import settings and Base
 from app.core.config import settings
-from app.db.session import Base
+from app.db.base import Base
 
 # Import all models to ensure they're registered with Base.metadata
 
