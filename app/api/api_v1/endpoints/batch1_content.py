@@ -117,11 +117,16 @@ class SegmentResponse(BaseModel):
     id: int
     title: str
     key_points: str
-    video_url: Optional[str]
+    video_url: Optional[str] = None
     youtube_url: Optional[str] = None
     content_type: str = "video"
     pdf_files: List[Dict[str, Any]] = []
-    duration: str
+    duration: str = "25:00"
+    
+    model_config = {
+        "from_attributes": True,
+        "populate_by_name": True
+    }
 
 
 class DayContentResponse(BaseModel):
