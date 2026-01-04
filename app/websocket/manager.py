@@ -5,6 +5,12 @@ import os
 
 logger = logging.getLogger(__name__)
 
+# Get allowed CORS origins from environment (comma-separated) or use secure defaults
+ALLOWED_ORIGINS = os.getenv(
+    "WEBSOCKET_CORS_ORIGINS",
+    "https://eduecosystem.vercel.app,https://www.edueco.in,http://localhost:3001"
+).split(",")
+
 
 class ConnectionManager:
     """Manages WebSocket connections and rooms for real-time notifications"""
@@ -15,13 +21,14 @@ class ConnectionManager:
             self.sio = None
             logger.info("WebSocket manager initialized for testing (Socket.IO disabled)")
         else:
-            # Create Socket.IO server
+            # Create Socket.IO server with secure CORS configuration
             self.sio = socketio.AsyncServer(
                 async_mode="asgi",
-                cors_allowed_origins="*",  # Configure properly in production
+                cors_allowed_origins=ALLOWED_ORIGINS,  # SECURITY FIX: Restrict to specific origins
                 logger=True,
                 engineio_logger=True,
             )
+
 
         # Track active connections: {user_id: set(session_ids)}
         self.active_connections: Dict[int, Set[str]] = {}
