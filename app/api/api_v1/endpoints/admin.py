@@ -277,3 +277,165 @@ def get_admin_logs(
         .all()
     )
     return {"logs": jsonable_encoder(logs)}
+
+
+@router.get("/overview")
+def get_admin_overview(
+    db: Session = Depends(deps.get_db),
+    current_admin: User = Depends(deps.get_admin_user),
+) -> Any:
+    """
+    Get comprehensive overview for admin dashboard.
+    Includes student stats, batch authorizations, test completions, and activity.
+    """
+    from app.models.batch1 import Batch1TestResult
+    from app.models.study_session import StudySession
+    
+    # User counts
+    total_students = db.query(func.count(User.id)).filter(User.role == "student").scalar() or 0
+    total_teachers = db.query(func.count(User.id)).filter(User.role.in_(["teacher", "admin"])).scalar() or 0
+    
+    # Batch authorizations
+    batch1_count = db.query(func.count(User.id)).filter(User.is_batch1_authorized == True).scalar() or 0
+    ras_count = db.query(func.count(User.id)).filter(User.is_ras_authorized == True).scalar() or 0
+    
+    # Test activity
+    total_tests = db.query(func.count(Batch1TestResult.id)).scalar() or 0
+    avg_score = db.query(func.avg(Batch1TestResult.score)).scalar() or 0
+    
+    # Study sessions (last 7 days)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_study_sessions = db.query(func.count(StudySession.id)).filter(
+        StudySession.start_time >= week_ago
+    ).scalar() or 0
+    
+    # Active users (logged in last 24 hours)
+    day_ago = datetime.utcnow() - timedelta(days=1)
+    active_today = db.query(func.count(User.id)).filter(
+        User.last_login >= day_ago
+    ).scalar() or 0
+    
+    return {
+        "users": {
+            "total_students": total_students,
+            "total_teachers": total_teachers,
+            "active_today": active_today,
+        },
+        "batches": {
+            "batch1_authorized": batch1_count,
+            "ras_authorized": ras_count,
+        },
+        "activity": {
+            "total_tests_taken": total_tests,
+            "average_score": round(avg_score, 2) if avg_score else 0,
+            "study_sessions_this_week": recent_study_sessions,
+        }
+    }
+
+
+@router.get("/teachers")
+def get_all_teachers(
+    db: Session = Depends(deps.get_db),
+    current_admin: User = Depends(deps.get_admin_user),
+    skip: int = 0,
+    limit: int = 50,
+) -> Any:
+    """
+    Get all teachers with their student counts and upload statistics.
+    """
+    teachers = db.query(User).filter(
+        User.role.in_(["teacher", "admin"])
+    ).offset(skip).limit(limit).all()
+    
+    teacher_data = []
+    for teacher in teachers:
+        # Count students (all students for now, can be filtered by assignment later)
+        student_count = db.query(func.count(User.id)).filter(
+            User.role == "student"
+        ).scalar() or 0
+        
+        teacher_data.append({
+            "id": teacher.id,
+            "email": teacher.email,
+            "full_name": teacher.full_name,
+            "role": teacher.role,
+            "last_login": teacher.last_login.isoformat() if teacher.last_login else None,
+            "is_active": teacher.is_active,
+            "student_count": student_count,
+        })
+    
+    return {"teachers": teacher_data, "total": len(teacher_data)}
+
+
+@router.get("/teachers/{teacher_id}/students")
+def get_teacher_students(
+    teacher_id: int,
+    db: Session = Depends(deps.get_db),
+    current_admin: User = Depends(deps.get_admin_user),
+    skip: int = 0,
+    limit: int = 100,
+) -> Any:
+    """
+    Get students under a specific teacher.
+    """
+    # Verify teacher exists
+    teacher = crud_user.get(db, id=teacher_id)
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    
+    # Get all students (can be filtered by group/assignment later)
+    students = db.query(User).filter(User.role == "student").offset(skip).limit(limit).all()
+    
+    return {
+        "teacher": jsonable_encoder(teacher),
+        "students": jsonable_encoder(students),
+        "total": len(students)
+    }
+
+
+@router.get("/students/{student_id}/performance")
+def get_student_performance(
+    student_id: int,
+    db: Session = Depends(deps.get_db),
+    current_admin: User = Depends(deps.get_admin_user),
+) -> Any:
+    """
+    Get comprehensive performance data for a specific student.
+    Includes test history, study sessions, and progress metrics.
+    """
+    from app.models.batch1 import Batch1TestResult
+    from app.models.study_session import StudySession
+    
+    student = crud_user.get(db, id=student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Get test results
+    test_results = db.query(Batch1TestResult).filter(
+        Batch1TestResult.user_id == student_id
+    ).order_by(desc(Batch1TestResult.timestamp)).limit(20).all()
+    
+    # Get study sessions
+    study_sessions = db.query(StudySession).filter(
+        StudySession.user_id == student_id
+    ).order_by(desc(StudySession.start_time)).limit(20).all()
+    
+    # Calculate stats
+    test_count = len(test_results)
+    avg_score = sum(t.score for t in test_results) / test_count if test_count > 0 else 0
+    best_score = max((t.score for t in test_results), default=0)
+    total_study_time = sum(s.duration_seconds or 0 for s in study_sessions)
+    
+    return {
+        "student": jsonable_encoder(student),
+        "test_results": jsonable_encoder(test_results),
+        "study_sessions": jsonable_encoder(study_sessions),
+        "stats": {
+            "total_tests": test_count,
+            "average_score": round(avg_score, 2),
+            "best_score": best_score,
+            "total_study_time_minutes": round(total_study_time / 60, 1),
+            "streak_days": student.streak_days,
+            "coins_earned": student.coins,
+        }
+    }
