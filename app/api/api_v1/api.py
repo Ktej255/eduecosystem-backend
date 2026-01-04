@@ -15,6 +15,7 @@ from app.api.api_v1.endpoints import (
     batch1_tests,
     ai_debug,
     ai,
+    pdf_study,
 )
 
 

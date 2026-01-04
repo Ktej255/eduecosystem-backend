@@ -3,9 +3,12 @@ RAS Revision Planner API
 40-Day Revision Plan Endpoints for Students, Teachers, and Admins
 """
 
+from datetime import datetime, timedelta
 import json
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import List, Dict, Optional, Any
 from app.api import deps
 from app.db.session import get_db
 from app.models.user import User

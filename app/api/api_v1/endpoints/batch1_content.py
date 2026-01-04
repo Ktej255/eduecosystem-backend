@@ -223,6 +223,9 @@ async def save_segment(
         # --- PERSISTENCE: Database & S3 ---
         key = f"{cycle_id}_{day_number}_{part_number}_{segment_number}"
         
+        pending_pdf_task = None
+        pending_cleanup_file = None
+        
         # Create database session
         with SessionLocal() as db:
             # Check if segment exists
@@ -241,7 +244,11 @@ async def save_segment(
             # Update common fields
             segment.title = title
             segment.key_points = key_points
-            segment.duration = "25:00"  # Default duration
+            segment.duration = "25:00"
+            
+            # Update content_type if provided
+            if content_type:
+                segment.content_type = content_type
 
             video_uploaded = False
             file_path_for_transcription = None  # Local path for transcription service
@@ -362,20 +369,23 @@ async def save_segment(
                             print(f"Triggering PDF processing for {key}")
                             current_pdf_name = pdf_names[idx] if pdf_names and idx < len(pdf_names) else pdf.filename
                             
+                            # DECOUPLED PROCESSING: Capture task to run AFTER commit
                             if local_pdf_path:
                                 # Local file - process directly
-                                await process_pdf_document(key, local_pdf_path, current_pdf_name)
+                                pending_pdf_task = (key, local_pdf_path, current_pdf_name)
                             elif pdf_url.startswith("https://"):
                                 # S3 file - download to temp and process
                                 try:
-                                    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_file:
-                                        print(f"Downloading S3 PDF to temp: {pdf_url}")
-                                        urllib.request.urlretrieve(pdf_url, tmp_file.name)
-                                        await process_pdf_document(key, tmp_file.name, current_pdf_name)
-                                        # Clean up temp file
-                                        os.unlink(tmp_file.name)
+                                    # Create temp file but don't delete yet
+                                    tmp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+                                    print(f"Downloading S3 PDF to temp: {pdf_url}")
+                                    urllib.request.urlretrieve(pdf_url, tmp_file.name)
+                                    tmp_file.close() # Close handle
+                                    
+                                    pending_pdf_task = (key, tmp_file.name, current_pdf_name)
+                                    pending_cleanup_file = tmp_file.name
                                 except Exception as e:
-                                    print(f"Error processing S3 PDF: {e}")
+                                    print(f"Error preparing S3 PDF for processing: {e}")
 
                         new_pdfs_uploaded.append({
                             "name": pdf_names[idx] if pdf_names and idx < len(pdf_names) else pdf.filename,
@@ -390,16 +400,44 @@ async def save_segment(
                 segment.pdf_files = json.dumps(final_pdf_list)
             
             # Commit to Database
+            # Flush first to ensure data is written.
+            db.flush()
+            saved_video_url = segment.video_url
+            saved_id = segment.id
             db.commit()
-            db.refresh(segment)
-
-            return {
+            
+            # NO db.refresh(segment) needed as we don't access segment again
+            
+            response_data = {
                 "success": True,
                 "message": f"Segment {segment_number} saved successfully",
                 "segment_key": key,
-                "video_url": segment.video_url,
-                "pdf_count": len(final_pdf_list)
+                "video_url": saved_video_url,
+                "pdf_count": len(final_pdf_list),
+                "id": saved_id 
             }
+        
+        # --- END OF DATABASE SESSION ---
+        
+        # Now run potentially long-running processing tasks on a separate session/connection
+        if pending_pdf_task:
+            print(f"Executing pending PDF task: {pending_pdf_task[0]}")
+            try:
+                await process_pdf_document(*pending_pdf_task)
+            except Exception as e:
+                print(f"PDF Processing Background Error: {e}")
+                # We log but don't fail the request because upload succeeded
+                import traceback
+                traceback.print_exc()
+            
+            # Cleanup
+            if pending_cleanup_file and os.path.exists(pending_cleanup_file):
+                try:
+                    os.unlink(pending_cleanup_file)
+                except:
+                    pass
+
+        return response_data
 
     except Exception as e:
         print(f"Error saving segment: {e}")

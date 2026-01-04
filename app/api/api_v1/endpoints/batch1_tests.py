@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import json
 
@@ -24,6 +24,7 @@ class TestAnswer(BaseModel):
     qId: int
     answer: int
     isCorrect: bool
+    confidence: Optional[int] = None  # 1=100% Sure, 2=50-50, 3=One Known, 4=Blind Guess
 
 class TestResultCreate(BaseModel):
     cycle_id: int
