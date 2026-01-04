@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+import os
 
 from app.db.session import SessionLocal
 from app.core.security import get_password_hash
@@ -11,6 +12,11 @@ from app.models.submission import HandwritingSubmission
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# SECURITY: Get passwords from environment variables, not hardcoded
+ADMIN_PASSWORD = os.getenv("INIT_ADMIN_PASSWORD", "CHANGE_ME_IN_PRODUCTION")
+TEACHER_PASSWORD = os.getenv("INIT_TEACHER_PASSWORD", "CHANGE_ME_IN_PRODUCTION")
+STUDENT_PASSWORD = os.getenv("INIT_STUDENT_PASSWORD", "CHANGE_ME_IN_PRODUCTION")
+
 
 def init_db() -> None:
     db = SessionLocal()
@@ -19,13 +25,17 @@ def init_db() -> None:
         # 1. Create Users
         logger.info("Creating users...")
 
+        # Skip creating test users in production if password not set
+        if ADMIN_PASSWORD == "CHANGE_ME_IN_PRODUCTION":
+            logger.warning("SECURITY: Using default password. Set INIT_ADMIN_PASSWORD env var in production!")
+
         # Admin
         admin = db.query(User).filter(User.email == "ktej255@gmail.com").first()
         if not admin:
             admin = User(
                 email="ktej255@gmail.com",
                 full_name="Master Admin",
-                hashed_password=get_password_hash("Tej@1106"),
+                hashed_password=get_password_hash(ADMIN_PASSWORD),
                 is_superuser=True,
                 is_active=True,
                 coins=1000,
@@ -33,36 +43,43 @@ def init_db() -> None:
             )
             db.add(admin)
 
-        # Teacher
-        teacher = db.query(User).filter(User.email == "teacher@example.com").first()
-        if not teacher:
-            teacher = User(
-                email="teacher@example.com",
-                full_name="Professor Snape",
-                hashed_password=get_password_hash("teacher123"),
-                is_superuser=False,
-                is_active=True,
-                coins=500,
-                streak_days=5,
-            )
-            db.add(teacher)
+        # Only create test users in development/testing
+        if os.getenv("ENVIRONMENT") != "production":
+            # Teacher
+            teacher = db.query(User).filter(User.email == "teacher@example.com").first()
+            if not teacher:
+                teacher = User(
+                    email="teacher@example.com",
+                    full_name="Professor Snape",
+                    hashed_password=get_password_hash(TEACHER_PASSWORD),
+                    is_superuser=False,
+                    is_active=True,
+                    coins=500,
+                    streak_days=5,
+                )
+                db.add(teacher)
 
-        # Student
-        student = db.query(User).filter(User.email == "student@example.com").first()
-        if not student:
-            student = User(
-                email="student@example.com",
-                full_name="Harry Potter",
-                hashed_password=get_password_hash("student123"),
-                is_superuser=False,
-                is_active=True,
-                coins=150,
-                streak_days=3,
-            )
-            db.add(student)
+            # Student
+            student = db.query(User).filter(User.email == "student@example.com").first()
+            if not student:
+                student = User(
+                    email="student@example.com",
+                    full_name="Harry Potter",
+                    hashed_password=get_password_hash(STUDENT_PASSWORD),
+                    is_superuser=False,
+                    is_active=True,
+                    coins=150,
+                    streak_days=3,
+                )
+                db.add(student)
+        else:
+            logger.info("SECURITY: Skipping test account creation in production")
+            # Use admin as student reference for tasks
+            student = admin
 
         db.commit()
-        db.refresh(student)
+        db.refresh(student if student else admin)
+
 
         # 2. Create Tasks for Student
         logger.info("Creating tasks...")

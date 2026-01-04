@@ -21,9 +21,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "eduecosystem")
 
-    # Superuser
+    # Superuser - SECURITY: Must be set via environment in production
     FIRST_SUPERUSER: str = os.getenv("FIRST_SUPERUSER", "ktej255@gmail.com")
-    FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "Tej@1106")
+    FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "CHANGE_ME_IN_PRODUCTION")
 
     # Database URL - use PostgreSQL in production, SQLite for development
     DATABASE_URL: str = os.getenv(
@@ -42,7 +42,8 @@ class Settings(BaseSettings):
         if os.getenv("ENVIRONMENT", "development") == "development"
         else "",  # Empty string will trigger validation error in production
     )
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    # SECURITY: Reduced token lifetime from 8 days to 2 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))  # 2 hours default
 
     @field_validator("SECRET_KEY")
     @classmethod
