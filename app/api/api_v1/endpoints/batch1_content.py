@@ -165,14 +165,23 @@ async def get_part_content(
                 if segment_data.pdf_files:
                     try:
                         pdf_list = json.loads(segment_data.pdf_files)
+                        # CRITICAL FIX: Prepend base URL for locally stored files
+                        for pdf in pdf_list:
+                            if pdf.get("url", "").startswith("/uploads"):
+                                pdf["url"] = f"{settings.BASE_URL}{pdf['url']}"
                     except:
                         pass
+                
+                # Also fix video_url if local
+                video_url = segment_data.video_url
+                if video_url and video_url.startswith("/uploads"):
+                    video_url = f"{settings.BASE_URL}{video_url}"
                 
                 segments.append(SegmentResponse(
                     id=seg_num,
                     title=segment_data.title,
                     key_points=segment_data.key_points or "",
-                    video_url=segment_data.video_url,
+                    video_url=video_url,
                     youtube_url=segment_data.youtube_url,
                     content_type=segment_data.content_type or "video",
                     pdf_files=pdf_list,
