@@ -439,3 +439,42 @@ def get_student_performance(
             "coins_earned": student.coins,
         }
     }
+
+@router.put("/users/{user_id}/access")
+def update_user_batch_access(
+    user_id: int,
+    batch1: Optional[bool] = Query(None),
+    batch2: Optional[bool] = Query(None),
+    ras: Optional[bool] = Query(None),
+    db: Session = Depends(deps.get_db),
+    current_admin: User = Depends(deps.get_admin_user),
+) -> Any:
+    """
+    Update user batch access permissions.
+    """
+    user = crud_user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if batch1 is not None:
+        user.is_batch1_authorized = batch1
+    if batch2 is not None:
+        user.is_batch2_authorized = batch2
+    if ras is not None:
+        user.is_ras_authorized = ras
+        
+    db.commit()
+    db.refresh(user)
+
+    # Log action
+    log = AdminLog(
+        admin_id=current_admin.id,
+        action="update_access",
+        target_type="user",
+        target_id=user_id,
+        details=f"Updated access for {user.email}: Batch1={user.is_batch1_authorized}, Batch2={user.is_batch2_authorized}, RAS={user.is_ras_authorized}",
+    )
+    db.add(log)
+    db.commit()
+
+    return {"message": "User access updated successfully", "user": jsonable_encoder(user)}
