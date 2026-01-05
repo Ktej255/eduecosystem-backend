@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import json
+import traceback
 
 from app.api.deps import get_current_active_user
 from app.db.session import SessionLocal
@@ -59,6 +60,9 @@ async def save_test_result(
 ):
     """Save a student's MCQ test result"""
     try:
+        # Use model_dump() for Pydantic v2 compatibility (dict() is deprecated)
+        answers_data = [a.model_dump() if hasattr(a, 'model_dump') else a.dict() for a in result_data.answers]
+        
         db_result = Batch1TestResult(
             user_id=current_user.id,
             cycle_id=result_data.cycle_id,
@@ -68,7 +72,7 @@ async def save_test_result(
             correct_count=result_data.correct_count,
             incorrect_count=result_data.incorrect_count,
             unanswered_count=result_data.unanswered_count,
-            answers_json=json.dumps([a.dict() for a in result_data.answers])
+            answers_json=json.dumps(answers_data)
         )
         db.add(db_result)
         db.commit()
@@ -76,6 +80,8 @@ async def save_test_result(
         return {"success": True, "id": db_result.id}
     except Exception as e:
         db.rollback()
+        print(f"Error saving test result: {e}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/test-results", response_model=List[TestResultResponse])
