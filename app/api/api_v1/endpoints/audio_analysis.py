@@ -4,10 +4,176 @@ import base64
 from app.api import deps
 from app.models.user import User
 from typing import Optional
+from pydantic import BaseModel
 
 router = APIRouter()
 
+
+class FlashcardAnalysisRequest(BaseModel):
+    """Request model for flashcard audio analysis via JSON"""
+    audio_base64: str
+    card_front: str
+    card_back: str
+    topic: str = ""
+    chapter_content: Optional[str] = None  # Full chapter content for comprehensive validation
+
+
 @router.post("/analyze-flashcard")
+async def analyze_flashcard_json(
+    request: FlashcardAnalysisRequest,
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Analyze student's audio recall for a flashcard using JSON payload.
+    
+    1. Transcribes audio using Gemini.
+    2. Compares transcription with expected answer AND chapter content (if provided).
+    3. Returns score, feedback, and missing points.
+    """
+    try:
+        # 1. Decode Audio from Base64
+        audio_data = request.audio_base64
+        
+        # Remove data URL prefix if present
+        if "," in audio_data:
+            audio_data = audio_data.split(",")[1]
+        
+        # 2. Transcribe
+        transcript = gemini_service.transcribe_audio(audio_data)
+        
+        if not transcript or transcript.strip() == "":
+            return {
+                "transcription": "",
+                "is_correct": False,
+                "score": 0,
+                "feedback": "Could not transcribe audio. Please speak clearly and try again.",
+                "key_points_mentioned": [],
+                "missing_points": []
+            }
+        
+        # 3. Analyze Recall with comprehensive prompt
+        if request.chapter_content:
+            # Use chapter content for more comprehensive evaluation
+            analysis = evaluate_with_chapter_content(
+                question=request.card_front,
+                flashcard_answer=request.card_back,
+                chapter_content=request.chapter_content,
+                student_answer=transcript,
+                topic=request.topic
+            )
+        else:
+            # Fallback to standard evaluation
+            analysis = gemini_service.evaluate_recall(
+                original_text=request.card_back,
+                student_recall=transcript
+            )
+        
+        # Build response
+        return {
+            "transcription": transcript,
+            "is_correct": analysis.get("is_correct", analysis.get("score", 0) >= 70),
+            "score": analysis.get("score", 0),
+            "feedback": analysis.get("feedback", ""),
+            "key_points_mentioned": analysis.get("key_points_mentioned", []),
+            "missing_points": analysis.get("missing_points", [])
+        }
+
+    except Exception as e:
+        print(f"Error in analyze_flashcard: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def evaluate_with_chapter_content(
+    question: str, 
+    flashcard_answer: str, 
+    chapter_content: str, 
+    student_answer: str,
+    topic: str
+) -> dict:
+    """
+    Evaluate student's answer against both the flashcard answer and the full chapter content.
+    This provides more flexibility as students may express concepts differently.
+    """
+    
+    prompt = f"""You are an expert examiner evaluating a student's verbal explanation of an Indian Polity concept.
+
+**Question Asked:**
+{question}
+
+**Expected Key Points (from flashcard):**
+{flashcard_answer}
+
+**Full Chapter Context (for reference):**
+{chapter_content[:8000]}  # Limit to avoid token overflow
+
+**Student's Verbal Answer:**
+"{student_answer}"
+
+**Topic:** {topic}
+
+**Evaluation Instructions:**
+1. The student's answer does NOT need to match word-for-word with the flashcard answer.
+2. Evaluate based on conceptual understanding and key points coverage.
+3. Use the chapter content as additional context - if the student mentions related valid points from the chapter that aren't in the flashcard, give them credit.
+4. Be lenient with phrasing but strict with factual accuracy.
+
+**Please evaluate and provide:**
+
+1. **Score (0-100):** 
+   - 90-100: Excellent, covers all/most key points accurately
+   - 70-89: Good, covers majority of important concepts
+   - 50-69: Partial understanding, missing significant points
+   - Below 50: Needs improvement, major gaps in understanding
+
+2. **Key Points Mentioned:** List the correct concepts the student explained
+
+3. **Missing Points:** Important concepts the student missed
+
+4. **Feedback:** Brief, encouraging feedback (2-3 sentences)
+
+5. **Is Correct:** true if score >= 70, false otherwise
+
+Respond in JSON format:
+{{
+    "score": <number>,
+    "is_correct": <boolean>,
+    "key_points_mentioned": ["point1", "point2", ...],
+    "missing_points": ["point1", "point2", ...],
+    "feedback": "<feedback text>"
+}}"""
+
+    try:
+        result = gemini_service.generate_content(prompt)
+        
+        # Parse JSON response
+        import json
+        import re
+        
+        json_match = re.search(r'\{[\s\S]*\}', result)
+        if json_match:
+            analysis = json.loads(json_match.group())
+            return analysis
+        else:
+            # Fallback if parsing fails
+            return {
+                "score": 60,
+                "is_correct": False,
+                "key_points_mentioned": [],
+                "missing_points": ["Could not parse analysis"],
+                "feedback": "Your answer was recorded. Please review the correct answer."
+            }
+    except Exception as e:
+        print(f"Error in evaluate_with_chapter_content: {e}")
+        return {
+            "score": 50,
+            "is_correct": False,
+            "key_points_mentioned": [],
+            "missing_points": [],
+            "feedback": "Analysis could not be completed. Please try again."
+        }
+
+
+@router.post("/analyze-flashcard-form")
 async def analyze_flashcard(
     audio: UploadFile = File(...),
     question: str = Form(...),
@@ -15,7 +181,7 @@ async def analyze_flashcard(
     current_user: User = Depends(deps.get_current_user)
 ):
     """
-    Analyze student's audio recall for a flashcard.
+    Analyze student's audio recall for a flashcard (Form/File upload version).
     1. Transcribes audio using Gemini.
     2. Compares transcription with expected answer.
     3. Returns score, feedback, and missing points.
@@ -33,9 +199,6 @@ async def analyze_flashcard(
         transcript = gemini_service.transcribe_audio(audio_b64)
         
         # 3. Analyze Recall
-        # Combine Question + Answer for context if needed, but evaluate_recall expects "original_text"
-        # We pass expected_answer as original_text
-        
         analysis = gemini_service.evaluate_recall(
             original_text=expected_answer,
             student_recall=transcript
@@ -180,4 +343,3 @@ Respond in JSON format:
     except Exception as e:
         print(f"Error in analyze_study_explanation: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-

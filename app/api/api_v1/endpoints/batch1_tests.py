@@ -25,6 +25,7 @@ class TestAnswer(BaseModel):
     answer: int
     isCorrect: bool
     confidence: Optional[int] = None  # 1=100% Sure, 2=50-50, 3=One Known, 4=Blind Guess
+    timeSpentSeconds: Optional[int] = None  # Time spent on this question in seconds
 
 class TestResultCreate(BaseModel):
     cycle_id: int
