@@ -13,6 +13,12 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+# Simple health check to verify this module is loaded
+@router.get("/test-results-health")
+async def test_results_health():
+    """Health check for batch1 test results module"""
+    return {"status": "ok", "module": "batch1_tests", "message": "Test results API is loaded"}
+
 # Dependency to get DB session
 def get_db():
     db = SessionLocal()
@@ -20,6 +26,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 class TestAnswer(BaseModel):
     qId: int
