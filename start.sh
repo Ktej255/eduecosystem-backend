@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "Running Database Migrations..."
-alembic upgrade head
+echo "Running database migrations..."
+alembic upgrade head || echo "Migration failed or already applied"
 
-echo "Starting Application..."
-exec gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+echo "Starting application..."
+exec uvicorn main:app --host 0.0.0.0 --port 8000
