@@ -90,5 +90,6 @@ from app.models import (
     call_log,
     ras_planner,
     study_session,
+    polity,
 )
 print("DEBUG: Models imported in base.py")

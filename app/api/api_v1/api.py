@@ -131,3 +131,7 @@ api_router.include_router(pdf_study.router, prefix="/pdf-study", tags=["pdf-stud
 from app.api.api_v1.endpoints import study
 api_router.include_router(study.router, prefix="/study", tags=["study"])
 
+# Polity Chapter Tracker
+from app.api.api_v1.endpoints import polity
+api_router.include_router(polity.router, prefix="/polity", tags=["polity"])
+
