@@ -29,3 +29,4 @@ from .coupon import (
 from .digital_product import DigitalProduct, DigitalProductCreate, DigitalProductUpdate
 from .enquiry import Enquiry, EnquiryCreate, EnquiryUpdate
 from .asset import Asset, AssetCreate, AssetUpdate
+from .attendance import Attendance, AttendanceCreate

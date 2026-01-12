@@ -205,3 +205,20 @@ from app.models.marketing_automation import (
     MessageLog,
     AutomationAnalytics,
 )
+
+# Graphotherapy
+from app.models.graphotherapy import (
+    GraphotherapyProgress,
+    GraphotherapyDayCompletion
+)
+
+# Meditation
+from app.models.meditation import (
+    MeditationProgress,
+    MeditationDayCompletion,
+    MeditationProcess,
+    MeditationProcessCompletion
+)
+
+# Attendance
+from app.models.attendance import Attendance

@@ -189,3 +189,8 @@ class User(Base):
     # Retention System (FSRS-based knowledge decay tracking)
     topic_logs = relationship("UserTopicLog", back_populates="user", cascade="all, delete-orphan")
 
+    # Attendance
+    attendance_records = relationship(
+        "Attendance", back_populates="user", cascade="all, delete-orphan"
+    )
+

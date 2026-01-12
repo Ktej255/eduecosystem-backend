@@ -143,6 +143,13 @@ app.add_middleware(
 # Compression Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+from fastapi.staticfiles import StaticFiles
+# Ensure uploads directory exists
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+# Mount uploads directory for static access
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 
 # SECURITY: Add security headers middleware
 from starlette.middleware.base import BaseHTTPMiddleware
