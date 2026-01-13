@@ -42,8 +42,8 @@ class Settings(BaseSettings):
         if os.getenv("ENVIRONMENT", "development") == "development"
         else "",  # Empty string will trigger validation error in production
     )
-    # SECURITY: Reduced token lifetime from 8 days to 2 hours
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))  # 2 hours default
+    # SESSION: Extended to 7 days for better UX during study sessions
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))  # 7 days default
 
     @field_validator("SECRET_KEY")
     @classmethod
