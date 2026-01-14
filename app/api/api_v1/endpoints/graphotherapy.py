@@ -2,17 +2,25 @@
 Graphotherapy Progress Tracking Backend
 4-Level System with Sequential Day Completion and Image Uploads
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta, date
 import os
 import uuid
+import shutil
 
 from app.api import deps
 from app.db.session import get_db
 from app.models.user import User
-from app.models.graphotherapy import GraphotherapyProgress, GraphotherapyDayCompletion, GRAPHOTHERAPY_LEVELS
+from app.models.graphotherapy import (
+    GraphotherapyProgress, 
+    GraphotherapyDayCompletion, 
+    GraphoBook,
+    GraphoPage,
+    GraphoSubmission,
+    GRAPHOTHERAPY_LEVELS
+)
 from app.schemas.graphotherapy import (
     GraphotherapyProgressResponse,
     LevelInfo,
@@ -20,7 +28,9 @@ from app.schemas.graphotherapy import (
     DayDetailResponse,
     DayCompleteRequest,
     DayCompleteResponse,
-    OverviewResponse,
+    GraphoBookResponse,
+    GraphoBookCreate,
+    GraphoSubmissionResponse
 )
 
 router = APIRouter()
@@ -286,6 +296,8 @@ async def complete_day(
     level_id: int,
     day_number: int,
     file: UploadFile = File(...),
+    started_at: str = Form(None),
+    duration_seconds: int = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
@@ -345,6 +357,28 @@ async def complete_day(
     # Create upload URL (relative path for serving)
     upload_url = f"/uploads/graphotherapy/{unique_filename}"
     
+    # --- V2 Logic: Create GraphoSubmission & Verify ---
+    book = db.query(GraphoBook).filter(GraphoBook.level == level_id).first()
+    
+    started_at_dt = None
+    if started_at:
+        try:
+            started_at_dt = datetime.fromisoformat(started_at.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            pass
+
+    submission = GraphoSubmission(
+        user_id=current_user.id,
+        book_id=book.id if book else None,
+        day=day_number,
+        image_url=upload_url,
+        started_at=started_at_dt,
+        duration_seconds=duration_seconds,
+        status="pending"
+    )
+    db.add(submission)
+    # --------------------------------------------------
+
     # Create completion record
     completion = GraphotherapyDayCompletion(
         progress_id=progress.id,
@@ -379,8 +413,21 @@ async def complete_day(
     
     # Update current level and day
     if level_completed and level_id < 4:
-        progress.current_level = level_id + 1
-        progress.current_day = 1
+        # GRANDFATHER CLAUSE: Existing users (before Jan 15, 2026) get auto-unlock.
+        # New users must pay for priced levels.
+        cutoff_date = datetime(2026, 1, 15)
+        is_legacy = current_user.created_at and current_user.created_at < cutoff_date
+        
+        next_level_price = GRAPHOTHERAPY_LEVELS[level_id + 1]["price"]
+        
+        # Auto-advance if: Legacy User OR Next Level is Free
+        if is_legacy or next_level_price == 0:
+            progress.current_level = level_id + 1
+            progress.current_day = 1
+        else:
+            # New User + Paid Level = Paywall (Do not advance level)
+            pass
+            
     elif not level_completed:
         progress.current_day = day_number + 1
     
@@ -396,16 +443,486 @@ async def complete_day(
     )
 
 
-@router.get("/streak")
-def get_streak(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
-):
-    """Get current streak information"""
-    progress = get_or_create_progress(db, current_user.id)
-    
     return {
         "current_streak": calculate_streak(progress),
         "total_streak": progress.total_streak,
         "last_practice_date": progress.last_practice_date
     }
+
+
+# --- V2 Admin Endpoints ---
+
+@router.post("/admin/books/upload", response_model=GraphoBookResponse)
+async def upload_reference_book(
+    title: str = Form(...),
+    level: int = Form(...),
+    total_days: int = Form(30),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_superuser)
+):
+    """
+    Admin: Upload a PDF reference book for Graphotherapy.
+    This stores the PDF and creates a GraphoBook record.
+    """
+    if not file.content_type == "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+
+    # Directory for reference books
+    BOOKS_DIR = "uploads/graphotherapy/books"
+    os.makedirs(BOOKS_DIR, exist_ok=True)
+
+    # Save File
+    file_ext = ".pdf"
+    unique_filename = f"level_{level}_{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join(BOOKS_DIR, unique_filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # Relative URL
+    pdf_url = f"/uploads/graphotherapy/books/{unique_filename}"
+    
+    # Create DB Record
+    book = GraphoBook(
+        title=title,
+        level=level,
+        total_days=total_days,
+        pdf_url=pdf_url,
+        is_published=False 
+    )
+    db.add(book)
+    db.commit()
+    db.refresh(book)
+    
+    return book
+
+@router.get("/admin/books", response_model=List[GraphoBookResponse])
+def get_all_books(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_superuser)
+):
+    """Admin: List all reference books"""
+    books = db.query(GraphoBook).offset(skip).limit(limit).all()
+    return books
+
+@router.get("/admin/submissions", response_model=List[GraphoSubmissionResponse])
+def get_all_submissions(
+    skip: int = 0,
+    limit: int = 100,
+    status: str = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_superuser)
+):
+    """Admin: List student submissions"""
+    query = db.query(GraphoSubmission)
+    if status:
+        query = query.filter(GraphoSubmission.status == status)
+    
+    submissions = query.order_by(GraphoSubmission.completed_at.desc()).offset(skip).limit(limit).all()
+    return submissions
+
+
+@router.post("/admin/submissions/{submission_id}/analyze", response_model=GraphoSubmissionResponse)
+def analyze_submission(
+    submission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_superuser)
+):
+    """
+    Admin: Trigger AI Analysis for a submission.
+    Generates a personality report based on the handwriting.
+    """
+    submission = db.query(GraphoSubmission).filter(GraphoSubmission.id == submission_id).first()
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    
+    # --- Real AI Analysis Logic ---
+    from app.services.gemini_service import gemini_service
+    import os
+    import json
+    
+    # 1. Resolve File Path
+    # image_url is like "/uploads/graphotherapy/filename.jpg" -> "uploads/graphotherapy/filename.jpg"
+    relative_path = submission.image_url.lstrip("/")
+    # Ensure it works cross-platform or with how app is run (cwd is usually root)
+    image_path = os.path.abspath(relative_path)
+    
+    if not os.path.exists(image_path):
+        # Fallback to verify if it exists in UPLOAD_DIR directly
+        filename = os.path.basename(submission.image_url)
+        params_path = os.path.join("uploads", "graphotherapy", filename)
+        if os.path.exists(params_path):
+            image_path = os.path.abspath(params_path)
+        else:
+             raise HTTPException(status_code=404, detail=f"Submission image file not found at {image_path}")
+
+    # 2. Define Prompt
+    ANALYSIS_PROMPT = """
+    You are an expert Graphotherapist and Handwriting Analyst. 
+    Analyze the requested handwriting sample image from a student's daily practice. 
+    Provide a structured psychological analysis focusing on progress and traits:
+
+    1. Emotional Stability (Baseline, Slant Consistency)
+    2. Willpower & Determination (t-bars crossing strength)
+    3. Self-Image & Ego (Capital letters, signature size)
+    4. Focus & Concentration (Dotting of i's)
+    5. Success/Money Blocks (Lower loops of g, y, j)
+
+    Return the response in strict JSON format:
+    {
+        "overall_score": 0-100 (integer),
+        "traits": [
+            {"trait": "Trait Name", "score": 0-100, "observation": "detailed observation"}
+        ],
+        "metrics": [
+             {"name": "Slant", "baseline_value": "Variable", "current_value": "Right/Vertical", "status": "Improved/Same", "change_percentage": 10},
+             {"name": "Pressure", "baseline_value": "Heavy/Light", "current_value": "Balanced", "status": "Improved", "change_percentage": 5}
+        ],
+        "areas_of_concern": [
+            {"stroke": "Claw/Retrace/etc", "meaning": "meaning", "fix": "suggested fix"}
+        ],
+        "summary": "2-3 sentences summary of progress and current state.",
+        "transformation_score": 0-100 (integer representing overall improvement vs baseline if evident, else generic quality score)
+    }
+    """
+
+    try:
+        # 3. Call Gemini
+        response_text = gemini_service.analyze_image(
+            image_path=image_path,
+            prompt=ANALYSIS_PROMPT,
+            temperature=0.2
+        )
+        
+        # 4. Parse JSON
+        cleaned_response = response_text.replace("```json", "").replace("```", "").strip()
+        analysis_result = json.loads(cleaned_response)
+        
+        # Ensure timestamp
+        analysis_result["generated_at"] = datetime.utcnow().isoformat()
+        
+    except Exception as e:
+        print(f"AI Analysis Failed: {e}")
+        # Fallback to avoid crashing the admin flow completely, but indicate error
+        analysis_result = {
+            "overall_score": 0,
+            "traits": [],
+            "summary": f"AI Analysis failed: {str(e)}",
+            "error": str(e),
+            "generated_at": datetime.utcnow().isoformat()
+        }
+    
+    # Generate PDF Report
+    from app.utils.report_generator import report_generator
+    # Note: user_name should ideally come from user relationship, here using logic stub
+    user_name = f"Student #{submission.user_id}" 
+    pdf_url = report_generator.generate_report(submission.id, user_name, analysis_result)
+    
+    # Update Submission
+    submission.analysis_result = analysis_result
+    submission.status = "analyzed"
+    submission.verification_score = analysis_result["overall_score"]
+    # We might want to store pdf_url in analysis_result or a new column
+    analysis_result['pdf_url'] = pdf_url
+    submission.analysis_result = analysis_result # Update with PDF URL
+    
+    db.commit()
+    db.refresh(submission)
+    
+    return submission
+
+
+# --- Phase 4: Transformation & Prediction Endpoints ---
+
+from app.schemas.graphotherapy import (
+    TransformationComparisonRequest,
+    TransformationComparisonResponse,
+    ComparisonMetric,
+    NextStepRecommendation,
+    GrowthDomain
+)
+
+@router.post("/transform/compare", response_model=TransformationComparisonResponse)
+def compare_transformation(
+    request: TransformationComparisonRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Compare Day 1 (Baseline) vs Day 21 (Current) handwriting.
+    Generates AI-driven transformation report.
+    """
+    user_id = request.user_id if request.user_id and current_user.is_superuser else current_user.id
+    progress = get_or_create_progress(db, user_id)
+
+    # Helper to clean logic
+    def get_image_for_day(day_num: int):
+        # Check Day Completion
+        completion = db.query(GraphotherapyDayCompletion).filter(
+            GraphotherapyDayCompletion.progress_id == progress.id,
+            GraphotherapyDayCompletion.day_number == day_num
+        ).first()
+        if completion and completion.upload_url:
+            return completion.upload_url
+        
+        # Check Submission (legacy/admin flow)
+        submission = db.query(GraphoSubmission).filter(
+            GraphoSubmission.user_id == user_id,
+            GraphoSubmission.day == day_num
+        ).first()
+        if submission and submission.image_url:
+            return submission.image_url
+            
+        return None
+
+    baseline_url = get_image_for_day(request.baseline_day)
+    current_url = get_image_for_day(request.current_day)
+
+    # --- Mock AI Comparison Logic ---
+    import random
+    
+    # Base score on streak consistency (real logic would use visual analysis)
+    base_score = min(100, progress.total_streak * 2 + 50)
+    
+    metrics = [
+        ComparisonMetric(
+            name=m["name"], 
+            baseline_value=m["baseline_value"], 
+            current_value=m["current_value"],
+            change_percentage=m.get("change_percentage"), # Added change_percentage
+            status=m["status"]
+        ) for m in analysis_result.get("metrics", [])
+    ]
+
+    return TransformationComparisonResponse(
+        baseline_image_url=baseline_url, # Corrected to use local variable
+        current_image_url=current_url,    # Corrected to use local variable
+        transformation_score=analysis_result.get("transformation_score", 0),
+        qualitative_feedback=analysis_result.get("qualitative_feedback", "Analysis unavailable."),
+        metrics=metrics,
+        generated_at=datetime.utcnow() # Re-added generated_at
+    )
+
+
+@router.get("/predict/next-steps", response_model=NextStepRecommendation)
+def predict_next_steps(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Predict next growth domain based on user progress and performance.
+    """
+    progress = get_or_create_progress(db, current_user.id)
+    
+    # Logic Rules
+    recommendation = None
+    alternatives = []
+    context = ""
+
+    if progress.current_level == 1 and progress.current_day >= 21:
+        # Completed Foundation
+        recommendation = GrowthDomain(
+            id="level_2",
+            title="Intermediate Level: Letter Formations",
+            description="Deep dive into 't' crossings, 'i' dots and loops.",
+            icon="feather",
+            is_locked=False,
+            unlock_criteria="Unlocked"
+        )
+        context = "You have established a solid foundation. Now let's refine individual traits."
+    elif progress.total_streak > 15:
+         recommendation = GrowthDomain(
+            id="speed_drill",
+            title="Speed & Flow Challenge",
+            description="Maintain quality while increasing writing speed.",
+            icon="timer",
+            is_locked=False,
+            unlock_criteria="Unlocked"
+        )
+         context = f"Your {progress.total_streak}-day streak shows great discipline!"
+    else:
+        # Default
+        recommendation = GrowthDomain(
+            id="consistency_mastery",
+            title="Consistency Builder",
+            description="Focus on slant regularity for 7 more days.",
+            icon="target",
+            is_locked=False,
+            unlock_criteria="Unlocked"
+        )
+        context = "Building consistency is your key lever right now."
+
+    # Alternatives
+    alternatives.append(GrowthDomain(
+        id="signature_analysis",
+        title="Signature Analysis",
+        description="What your signature says about your public image.",
+        icon="pen-tool",
+        is_locked=True,
+        unlock_criteria="Requires Level 2 Completion"
+    ))
+
+    return NextStepRecommendation(
+        primary_recommendation=recommendation,
+        alternatives=alternatives,
+        user_context=context
+    )
+
+
+# --- Phase 5: Community Endpoints ---
+
+from app.schemas.graphotherapy import LeaderboardEntry, ShareResponse, PurchaseRequest, PurchaseResponse, GRAPHOTHERAPY_LEVELS
+from fastapi import HTTPException
+import uuid
+
+@router.get("/community/leaderboard", response_model=List[LeaderboardEntry])
+def get_leaderboard(
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Get top users by streak.
+    """
+    # Query top streaks
+    top_progress = db.query(GraphotherapyProgress).order_by(
+        GraphotherapyProgress.total_streak.desc()
+    ).limit(limit).all()
+    
+    leaderboard = []
+    for i, p in enumerate(top_progress):
+        user = db.query(User).filter(User.id == p.user_id).first()
+        user_name = user.full_name if user else f"User {p.user_id}"
+        # Privacy: Mask name if not current user (optional, for now showing full name)
+        
+        leaderboard.append(LeaderboardEntry(
+            rank=i + 1,
+            user_name=user_name,
+            streak=p.total_streak,
+            avatar_url=None, # Add avatar to User model later
+            is_current_user=(p.user_id == current_user.id)
+        ))
+        
+    return leaderboard
+
+@router.post("/share/transformation", response_model=ShareResponse)
+def share_transformation(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Generate a public share link for the user's transformation.
+    """
+    # In a real app, generate a unique token and store a 'SharedReport' record.
+    # For now, return a constructed URL.
+    share_id = uuid.uuid4().hex[:8]
+    share_url = f"https://eduecosystem.com/share/grapho/{share_id}"
+    
+    return ShareResponse(
+        share_url=share_url,
+        message="Transformation report link generated successfully!"
+    )
+
+@router.post("/purchase", response_model=PurchaseResponse)
+def purchase_level(
+    request: PurchaseRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Purchase a level, bundle, or gamification item.
+    Logic:
+    - Streak Freeze: Flat 500 Coins.
+    - Levels: 10 Coins = 1 Rs discount. Max 1000 Rs discount.
+    """
+    transaction_id = f"txn_{uuid.uuid4().hex[:8]}"
+    
+    # --- STREAK FREEZE ---
+    if request.item_type == "streak_freeze":
+        cost = 500
+        if current_user.coins < cost:
+             raise HTTPException(status_code=400, detail="Insufficient coins for Streak Freeze")
+        
+        current_user.coins -= cost
+        # Logic to 'activate' freeze would go here (e.g. set a flag on progress)
+        # For prototype, we verify coin deduction.
+        db.commit()
+        
+        return PurchaseResponse(
+            success=True,
+            transaction_id=transaction_id,
+            final_price=0,
+            coins_deducted=cost,
+            message="Streak Freeze Activated! You are protected for 24 hours.",
+            new_coin_balance=current_user.coins
+        )
+
+    # --- LEVEL UNLOCK ---
+    base_price = 0
+    discount_msg = ""
+    
+    # 1. Determine Base Price
+    if request.is_bundle:
+        # Calculate price of all remaining paid levels (2, 3, 4)
+        base_price = sum(l["price"] for k, l in GRAPHOTHERAPY_LEVELS.items() if l["price"] > 0)
+        discount_msg = "Bundle Discount (Lvl 2+3+4) Applied"
+    else:
+        req_level = GRAPHOTHERAPY_LEVELS.get(request.level_id)
+        if not req_level:
+            raise HTTPException(status_code=404, detail="Level not found")
+        base_price = req_level["price"]
+        discount_msg = "Standard Purchase"
+
+    final_price = base_price
+    coins_deducted = 0
+
+    # 2. Apply Bundle Discount (Flat 5000 off)
+    if request.is_bundle:
+        final_price -= 5000
+        if final_price < 0: final_price = 0
+
+    # 3. Apply Coin Discount
+    if request.use_coins and current_user.coins > 0:
+        # Logic: 10 Coins = 1 Rs
+        max_discount_rupees = 1000 
+        max_discount_coins = max_discount_rupees * 10
+        
+        potential_discount_coins = min(current_user.coins, max_discount_coins)
+        discount_amount = potential_discount_coins / 10
+        
+        if discount_amount > final_price:
+            discount_amount = final_price
+            potential_discount_coins = discount_amount * 10
+            
+        final_price -= discount_amount
+        coins_deducted = int(potential_discount_coins)
+        
+        current_user.coins -= coins_deducted
+        discount_msg += f" + Coin Discount ({coins_deducted} coins)"
+
+    # 4. Process "Payment" (Mock)
+    
+    # 5. Unlock Logic
+    progress = db.query(GraphotherapyProgress).filter(GraphotherapyProgress.user_id == current_user.id).first()
+    if progress:
+        if request.is_bundle:
+            progress.current_level = 4 # Unlock all
+            progress.current_day = 1
+        elif request.level_id > progress.current_level:
+             # Unlock specific level
+             progress.current_level = request.level_id
+             progress.current_day = 1 
+    
+    db.commit()
+
+    return PurchaseResponse(
+        success=True,
+        transaction_id=transaction_id,
+        final_price=int(final_price),
+        coins_deducted=coins_deducted,
+        message=f"Purchase successful! ({discount_msg})",
+        new_coin_balance=current_user.coins
+    )

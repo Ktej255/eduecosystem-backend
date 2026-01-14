@@ -184,6 +184,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Multi-Tenant Detection Middleware (Phase 6)
+from app.middleware.tenant import TenantMiddleware
+app.add_middleware(TenantMiddleware)
+
 
 # Import and include API router
 try:

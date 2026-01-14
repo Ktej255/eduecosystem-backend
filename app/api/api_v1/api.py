@@ -138,3 +138,27 @@ api_router.include_router(polity.router, prefix="/polity", tags=["polity"])
 # Attendance Tracking
 from app.api.api_v1.endpoints import attendance
 api_router.include_router(attendance.router, prefix="/attendance", tags=["attendance"])
+
+# Public Branding (Multi-Tenancy Phase 6)
+from app.api.api_v1.endpoints import branding
+api_router.include_router(branding.router, prefix="/public", tags=["branding"])
+
+# Admin Organizations Management (Multi-Tenancy Phase 7)
+from app.api.api_v1.endpoints import admin_organizations
+api_router.include_router(admin_organizations.router, prefix="/admin", tags=["admin-organizations"])
+
+# Graphotherapy Funnel Leads
+from app.api.api_v1.endpoints import funnel_leads
+api_router.include_router(funnel_leads.router, prefix="/leads", tags=["funnel-leads"])
+
+# Graphotherapy Analysis (AI)
+from app.api.api_v1.endpoints import funnel_analysis
+api_router.include_router(funnel_analysis.router, prefix="/funnel", tags=["funnel-analysis"])
+
+# Premium Analysis (AI)
+from app.api.api_v1.endpoints import premium_analysis
+api_router.include_router(premium_analysis.router, prefix="/funnel", tags=["premium-analysis"])
+
+# Advanced Health Analysis (Level 3)
+from app.api.api_v1.endpoints import advanced_health_analysis
+api_router.include_router(advanced_health_analysis.router, prefix="/graphotherapy", tags=["health-analysis"])

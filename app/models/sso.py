@@ -55,6 +55,11 @@ class Organization(Base):
     is_active = Column(Boolean, default=True)
     max_users = Column(Integer)  # User limit for subscription
     settings = Column(JSON, default={})  # Custom org settings
+    
+    # Multi-Tenant Branding (Phase 6)
+    logo_url = Column(String(500), nullable=True)
+    theme_config = Column(JSON, default={})  # {"primary_color": "#FF0000", "font": "Inter"}
+    hero_text = Column(String(500), nullable=True)  # Custom landing page headline
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())

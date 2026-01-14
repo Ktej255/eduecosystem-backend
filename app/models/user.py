@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 from app.models.permissions import user_roles
+from datetime import datetime
 
 
 class User(Base):
@@ -9,6 +10,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)  # Track account creation
     username = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
@@ -33,6 +35,10 @@ class User(Base):
     subscription_status = Column(
         String, default="free"
     )  # free, active, past_due, canceled
+    
+    # Graphotherapy Separation
+    graphotherapy_enrollment_date = Column(DateTime, nullable=True)
+    is_graphotherapy_exclusive = Column(Boolean, default=False)  # If True, hides UPSC dashboard
 
     # Organization (for Enterprise SSO)
     organization_id = Column(
