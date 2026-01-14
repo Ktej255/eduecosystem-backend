@@ -6,6 +6,7 @@ from app.services.gemini_service import gemini_service
 import os
 import json
 from app.utils.report_generator import report_generator
+from starlette.concurrency import run_in_threadpool
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -99,8 +100,9 @@ async def generate_health_report(request: AdvancedHealthRequest):
         if not request.file_path:
             raise HTTPException(status_code=400, detail="File path required")
 
-        # Call Gemini
-        response_text = gemini_service.analyze_image(
+        # Call Gemini (Async Wrapper for Blocking Service)
+        response_text = await run_in_threadpool(
+            gemini_service.analyze_image,
             image_path=request.file_path,
             prompt=ADVANCED_HEALTH_PROMPT,
             temperature=0.3
