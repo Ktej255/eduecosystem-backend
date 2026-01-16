@@ -56,26 +56,6 @@ def test_grandfather_clause_logic():
     assert is_legacy_boundary == False
 
 
-def test_grandfather_clause_logic():
-    """Verify that the date comparison logic for legacy users works as intended."""
-    from datetime import datetime
-    
-    cutoff_date = datetime(2026, 1, 15)
-    
-    # 1. Unknown/New User (After Cutoff)
-    new_user_created = datetime(2026, 1, 20)
-    is_legacy_new = new_user_created < cutoff_date
-    assert is_legacy_new == False, "New users should NOT be legacy"
-    
-    # 2. Existing User (Before Cutoff)
-    old_user_created = datetime(2025, 12, 31)
-    is_legacy_old = old_user_created < cutoff_date
-    assert is_legacy_old == True, "Existing users SHOULD be legacy"
-    
-    # 3. Exact Boundary (Technically existing if exactly at 00:00:00? No, created_at is usually precise)
-    # If created AT cutoff, they are NOT legacy (< operator)
-    boundary_user = datetime(2026, 1, 15)
-    is_legacy_boundary = boundary_user < cutoff_date
-    assert is_legacy_boundary == False
+
 
 

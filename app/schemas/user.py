@@ -15,6 +15,8 @@ class UserBase(BaseModel):
     is_ras_authorized: bool = False
     is_batch1_authorized: bool = False
     is_batch2_authorized: bool = False
+    revision_level: Optional[str] = None
+    revision_exam_id: Optional[str] = None
 
 
 # Properties to receive via API on creation
@@ -28,6 +30,8 @@ class UserCreate(UserBase):
 # Properties to receive via API on update
 class UserUpdate(UserBase):
     password: Optional[str] = None
+    revision_level: Optional[str] = None
+    revision_exam_id: Optional[str] = None
 
 
 class UserInDBBase(UserBase):

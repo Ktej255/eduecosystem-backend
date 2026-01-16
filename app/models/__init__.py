@@ -4,6 +4,7 @@ from app.models.task import Task
 from app.models.group import Group
 from app.models.meditation import MeditationSession
 from app.models.activity_log import ActivityLog
+from app.models.admin_log import AdminLog
 from app.models.submission import HandwritingSubmission
 from app.models.reward import UserReward
 from app.models.lesson_progress import LessonProgress

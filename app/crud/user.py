@@ -14,13 +14,9 @@ def get(db: Session, id: int) -> Optional[User]:
 
 
 def create(db: Session, *, obj_in: UserCreate) -> User:
-    db_obj = User(
-        email=obj_in.email,
-        hashed_password=get_password_hash(obj_in.password),
-        full_name=obj_in.full_name,
-        is_superuser=obj_in.is_superuser,
-        role=obj_in.role,
-    )
+    obj_in_data = obj_in.model_dump(exclude={"password"})
+    db_obj = User(**obj_in_data)
+    db_obj.hashed_password = get_password_hash(obj_in.password)
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)

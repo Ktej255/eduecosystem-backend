@@ -167,25 +167,9 @@ Return ONLY the JSON, no markdown, no explanations."""
     except json.JSONDecodeError as e:
         print(f"JSON parsing error: {e}")
         # Return fallback
-        return CourseOutlineResponse(
-            course_title=request.topic,
-            course_description=f"A comprehensive {request.difficulty} course on {request.topic}",
-            modules=[
-                ModuleSchema(
-                    title=f"Module {i + 1}: Introduction to {request.topic}",
-                    description="Learn the fundamentals",
-                    lessons=[
-                        LessonSchema(
-                            title=f"Lesson {j + 1}",
-                            description="Core concepts and practical examples",
-                            type="text",
-                            duration_minutes=25,
-                        )
-                        for j in range(3)
-                    ],
-                )
-                for i in range(request.module_count)
-            ],
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to parse AI response. Please try again."
         )
     except Exception as e:
         print(f"Error generating outline: {e}")

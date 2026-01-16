@@ -47,7 +47,7 @@ class OrganizationResponse(OrganizationBase):
 @router.get("/organizations", response_model=List[OrganizationResponse])
 def list_organizations(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_admin_user)
+    current_user: User = Depends(deps.get_admin_user)
 ):
     """List all organizations (admin only)."""
     return db.query(Organization).order_by(Organization.id).all()
@@ -57,7 +57,7 @@ def list_organizations(
 def create_organization(
     org: OrganizationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_admin_user)
+    current_user: User = Depends(deps.get_admin_user)
 ):
     """Create a new organization."""
     existing = db.query(Organization).filter(
@@ -77,7 +77,7 @@ def create_organization(
 def get_organization(
     org_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_admin_user)
+    current_user: User = Depends(deps.get_admin_user)
 ):
     """Get a single organization by ID."""
     org = db.query(Organization).filter(Organization.id == org_id).first()
@@ -91,7 +91,7 @@ def update_organization(
     org_id: int,
     updates: OrganizationUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_admin_user)
+    current_user: User = Depends(deps.get_admin_user)
 ):
     """Update an organization."""
     org = db.query(Organization).filter(Organization.id == org_id).first()
@@ -110,7 +110,7 @@ def update_organization(
 def delete_organization(
     org_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_admin_user)
+    current_user: User = Depends(deps.get_admin_user)
 ):
     """Delete an organization."""
     org = db.query(Organization).filter(Organization.id == org_id).first()

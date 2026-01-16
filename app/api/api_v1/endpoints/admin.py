@@ -1,14 +1,10 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, or_
 from app.api import deps
-from app.models.user import User
-from app.models.submission import HandwritingSubmission
-from app.models.shadow_mode import ShadowModeSession
-from app.models.group import Group
-from app.models.admin_log import AdminLog
+from app.models import User, HandwritingSubmission, ShadowModeSession, Group, AdminLog
 from app.crud import user as crud_user
 from datetime import datetime, timedelta
 
@@ -108,6 +104,10 @@ def get_user_details(
     user = crud_user.get(db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    print(f"DEBUG: User object type: {type(user)}")
+    print(f"DEBUG: is_batch1_authorized in dir(user)? {'is_batch1_authorized' in dir(user)}")
+    print(f"DEBUG: User dict: {getattr(user, '__dict__', {})}")
 
     # Get user statistics
     submissions_count = (

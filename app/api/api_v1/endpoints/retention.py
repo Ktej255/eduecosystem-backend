@@ -5,7 +5,7 @@ FSRS-based knowledge tracking and review scheduling.
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 
@@ -62,6 +62,19 @@ class TopicRetentionStatus(BaseModel):
     days_until_review: int
     next_review_date: Optional[datetime]
     last_reviewed: Optional[datetime]
+
+
+class ExperienceSubmission(BaseModel):
+    title: str
+    reflections: str
+    gunas: Dict[str, int]  # sattva, rajas, tamas
+
+
+class ExperienceResponse(BaseModel):
+    success: bool
+    guru_insight: str
+    spiritual_state: str  # e.g., "Sattvic flowing into Rajas"
+    consciousness_score: int
 
 
 class DashboardData(BaseModel):
@@ -393,6 +406,61 @@ async def get_decay_curve(
         "stability": topic.stability,
         "curve_points": points
     }
+
+
+# ============ EXPERIENCE ENDPOINT ============
+
+@router.post("/experience", response_model=ExperienceResponse)
+async def analyze_experience(
+    submission: ExperienceSubmission,
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Analyze partial spiritual experience reports.
+    Uses Gemini to provide "Guru-like" insight based on gunas and reflection.
+    """
+    from app.services.gemini_service import gemini_service
+    
+    # Construct prompt for the "Guru" persona
+    prompt = f"""
+    Act as an enlightened Vedantic Master (Guru). 
+    Student Reflection on {submission.title}:
+    "{submission.reflections}"
+    
+    Current Guna State:
+    - Sattva: {submission.gunas.get('sattva', 0)}%
+    - Rajas: {submission.gunas.get('rajas', 0)}%
+    - Tamas: {submission.gunas.get('tamas', 0)}%
+    
+    Provide a brief, profound insight (2-3 sentences max) to guide them deeper.
+    Also, identify their primary spiritual state (e.g., "Peaceful Contemplation", "Restless Seeking").
+    And assign a "Consciousness Alignment Score" (1-100) based on clarity.
+    
+    Return JSON: {{ "insight": "...", "state": "...", "score": 85 }}
+    """
+    
+    try:
+        response_text = gemini_service.generate_text(prompt, temperature=0.7, json_mode=True)
+        import json
+        # Extract JSON if wrapped (gemini_service helper does this but doing it safely here too)
+        clean_json = response_text.replace("```json", "").replace("```", "").strip()
+        data = json.loads(clean_json)
+        
+        return ExperienceResponse(
+            success=True,
+            guru_insight=data.get("insight", "Keep looking within."),
+            spiritual_state=data.get("state", "Contemplation"),
+            consciousness_score=data.get("score", 70)
+        )
+    except Exception as e:
+        print(f"Experience Analysis Error: {e}")
+        # Fallback if AI fails
+        return ExperienceResponse(
+            success=True,
+            guru_insight="Your sincere reflection is itself the path. Continue your Sadhana.",
+            spiritual_state="Introspection",
+            consciousness_score=75
+        )
 
 
 # ============ HELPERS ============

@@ -75,7 +75,7 @@ def list_funnel_leads(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_admin_user)
+    current_user: User = Depends(deps.get_admin_user)
 ):
     """List all funnel leads (admin only)."""
     leads = db.query(Lead).filter(

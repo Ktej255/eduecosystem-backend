@@ -30,7 +30,8 @@ from app.schemas.graphotherapy import (
     DayCompleteResponse,
     GraphoBookResponse,
     GraphoBookCreate,
-    GraphoSubmissionResponse
+    GraphoSubmissionResponse,
+    OverviewResponse
 )
 
 router = APIRouter()
@@ -97,7 +98,7 @@ def is_day_unlocked_by_completion(completion, current_date: date = None) -> bool
 
 @router.get("/overview", response_model=OverviewResponse)
 def get_graphotherapy_overview(
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """Get overview of graphotherapy progress including all levels"""
@@ -157,7 +158,7 @@ def get_graphotherapy_overview(
 @router.get("/level/{level_id}", response_model=LevelDetailResponse)
 def get_level_detail(
     level_id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """Get detailed view of a specific level with all days"""
@@ -232,7 +233,7 @@ def get_level_detail(
 def get_day_detail(
     level_id: int,
     day_number: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """Get details for a specific day"""
@@ -298,7 +299,7 @@ async def complete_day(
     file: UploadFile = File(...),
     started_at: str = Form(None),
     duration_seconds: int = Form(None),
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """Complete a day by uploading practice image"""
@@ -458,7 +459,7 @@ async def upload_reference_book(
     level: int = Form(...),
     total_days: int = Form(30),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_superuser)
 ):
     """
@@ -501,7 +502,7 @@ async def upload_reference_book(
 def get_all_books(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_superuser)
 ):
     """Admin: List all reference books"""
@@ -513,7 +514,7 @@ def get_all_submissions(
     skip: int = 0,
     limit: int = 100,
     status: str = None,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_superuser)
 ):
     """Admin: List student submissions"""
@@ -528,7 +529,7 @@ def get_all_submissions(
 @router.post("/admin/submissions/{submission_id}/analyze", response_model=GraphoSubmissionResponse)
 def analyze_submission(
     submission_id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_superuser)
 ):
     """
@@ -648,7 +649,7 @@ from app.schemas.graphotherapy import (
 @router.post("/transform/compare", response_model=TransformationComparisonResponse)
 def compare_transformation(
     request: TransformationComparisonRequest,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -681,18 +682,75 @@ def compare_transformation(
     baseline_url = get_image_for_day(request.baseline_day)
     current_url = get_image_for_day(request.current_day)
 
-    # --- Mock AI Comparison Logic ---
-    import random
+    # --- Real AI Comparison Logic ---
+    from app.services.gemini_service import gemini_service
+    import json
     
-    # Base score on streak consistency (real logic would use visual analysis)
-    base_score = min(100, progress.total_streak * 2 + 50)
+    # Define Prompt
+    COMPARISON_PROMPT = """
+    Act as a Master Graphologist. Compare these two handwriting samples.
+    Image 1 is the 'Baseline' (Day 1). Image 2 is the 'Current' (Day 21) progress.
+
+    Analyze the neurological transformation based on:
+    1. Slant Consistency (Is it more stable?)
+    2. Letter Connectedness (Fluidity of thought)
+    3. Baseline Adherence (Emotional stability)
+    4. Pressure (Energy levels)
+
+    Return ONLY a valid JSON object with this structure:
+    {
+        "transformation_score": <integer 0-100>,
+        "qualitative_feedback": "<string, a short encouraging paragraph about the specific improvements>",
+        "metrics": [
+            {"name": "Slant Stability", "baseline_value": "Variable", "current_value": "Stable", "status": "Improved/Stable/Needs Work", "change_percentage": 20},
+            {"name": "Letter Connectedness", "baseline_value": "Disconnected", "current_value": "Fluid", "status": "Improved/Stable/Needs Work", "change_percentage": 15},
+            {"name": "Baseline Adherence", "baseline_value": "Wavy", "current_value": "Straight", "status": "Improved/Stable/Needs Work", "change_percentage": 10},
+            {"name": "Pressure", "baseline_value": "Heavy", "current_value": "Balanced", "status": "Improved/Stable/Needs Work", "change_percentage": 5}
+        ]
+    }
+    """
+
+    try:
+        # Resolve paths
+        def resolve_path(url):
+            if not url: return None
+            rel = url.lstrip("/")
+            # Check standard upload dir
+            if os.path.exists(rel): return os.path.abspath(rel)
+            # Check if it is a full path or absolute
+            if os.path.exists(url): return url
+            # Fallback
+            return None
+
+        path1 = resolve_path(baseline_url)
+        path2 = resolve_path(current_url)
+
+        if not path1 or not path2:
+             # Fallback if images missing (e.g. legacy data)
+             analysis_result = {
+                 "transformation_score": 0,
+                 "qualitative_feedback": "Images for comparison could not be located.",
+                 "metrics": []
+             }
+        else:
+             response_text = gemini_service.compare_images(path1, path2, COMPARISON_PROMPT)
+             clean_json = response_text.replace("```json", "").replace("```", "").strip()
+             analysis_result = json.loads(clean_json)
+
+    except Exception as e:
+        print(f"Comparison Failed: {e}")
+        analysis_result = {
+             "transformation_score": 0,
+             "qualitative_feedback": f"AI Comparison failed: {str(e)}",
+             "metrics": []
+        }
     
     metrics = [
         ComparisonMetric(
             name=m["name"], 
-            baseline_value=m["baseline_value"], 
-            current_value=m["current_value"],
-            change_percentage=m.get("change_percentage"), # Added change_percentage
+            baseline_value=str(m["baseline_value"]), 
+            current_value=str(m["current_value"]),
+            change_percentage=m.get("change_percentage", 0),
             status=m["status"]
         ) for m in analysis_result.get("metrics", [])
     ]
@@ -709,7 +767,7 @@ def compare_transformation(
 
 @router.get("/predict/next-steps", response_model=NextStepRecommendation)
 def predict_next_steps(
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -781,7 +839,7 @@ import uuid
 @router.get("/community/leaderboard", response_model=List[LeaderboardEntry])
 def get_leaderboard(
     limit: int = 10,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -810,7 +868,7 @@ def get_leaderboard(
 
 @router.post("/share/transformation", response_model=ShareResponse)
 def share_transformation(
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -829,7 +887,7 @@ def share_transformation(
 @router.post("/purchase", response_model=PurchaseResponse)
 def purchase_level(
     request: PurchaseRequest,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """

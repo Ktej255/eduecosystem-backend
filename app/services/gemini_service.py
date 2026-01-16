@@ -31,7 +31,7 @@ class GeminiService:
         self.llama_key = settings.LLAMA_API_KEY
         
         self.base_url = settings.OPENROUTER_BASE_URL
-        self.default_model = "gemini-1.5-flash" # Safe default for Google
+        self.default_model = "gemini-2.5-flash" # Updated for 2026
 
     def _get_execution_plan(self, user: Any = None, is_complex: bool = False) -> List[Tuple[str, str, str]]:
         """
@@ -45,11 +45,11 @@ class GeminiService:
         # Primary: Google Direct (Fast, Free/Paid)
         if is_premium and self.paid_key:
              # Paid Pro -> Free Flash
-             plan.append(("google", self.paid_key, "gemini-1.5-pro"))
-             plan.append(("google", self.free_key, "gemini-1.5-flash"))
+             plan.append(("google", self.paid_key, "gemini-2.5-pro"))
+             plan.append(("google", self.free_key, "gemini-2.5-flash"))
         else:
              # Free Flash
-             plan.append(("google", self.free_key, "gemini-1.5-flash"))
+             plan.append(("google", self.free_key, "gemini-2.5-flash"))
              
         # Fallbacks (OpenRouter)
         if self.gemma_key:
@@ -172,22 +172,72 @@ class GeminiService:
         
         # Load Image once
         try:
+             print(f"DEBUG: Processing image at {image_path}")
              img = PIL.Image.open(image_path)
         except Exception as e:
+             print(f"DEBUG: Image Load Error: {e}")
              return f"Error loading image: {e}"
+
+        print(f"DEBUG: Google Plan length: {len(google_plan)}")
+        for provider, api_key, model in google_plan:
+            try:
+                if not api_key: 
+                    print(f"DEBUG: Missing API Key for {model}")
+                    continue
+                MASKED_KEY = api_key[:4] + "..." + api_key[-4:]
+                print(f"DEBUG: Calling Google {model} with key {MASKED_KEY}")
+                
+                genai.configure(api_key=api_key)
+                m = genai.GenerativeModel(model)
+                response = m.generate_content([prompt, img])
+                print("DEBUG: Google Response Received")
+                return response.text
+            except Exception as e:
+                last_error = str(e)
+                print(f"DEBUG: Google Error: {e}")
+                
+                # Check for key validity issues
+                if "API key not valid" in last_error or "API key was reported as leaked" in last_error or "403" in last_error:
+                    return f"API_ERROR: {last_error}"
+                
+                continue
+                
+        return f"Image Analysis Error: {last_error}"
+
+    def compare_images(self, image_path1: str, image_path2: str, prompt: str, user: Any = None, temperature: float = 0.4) -> str:
+        """Compare two images using Gemini Vision"""
+        import PIL.Image
+        
+        plan = self._get_execution_plan(user, is_complex=True)
+        # Filter for Google only
+        google_plan = [p for p in plan if p[0] == "google"]
+        
+        last_error = ""
+        
+        # Load Images
+        try:
+             print(f"DEBUG: Comparing images: {image_path1} vs {image_path2}")
+             img1 = PIL.Image.open(image_path1)
+             img2 = PIL.Image.open(image_path2)
+        except Exception as e:
+             print(f"DEBUG: Image Load Error: {e}")
+             return f"Error loading images: {e}"
 
         for provider, api_key, model in google_plan:
             try:
                 if not api_key: continue
+                
                 genai.configure(api_key=api_key)
                 m = genai.GenerativeModel(model)
-                response = m.generate_content([prompt, img])
+                # Pass both images
+                response = m.generate_content([prompt, img1, img2])
                 return response.text
             except Exception as e:
                 last_error = str(e)
+                print(f"DEBUG: Google Compare Error: {e}")
                 continue
                 
-        return f"Image Analysis Error: {last_error}"
+        return f"Image Comparison Error: {last_error}"
 
     def chat(self, messages: List[Dict[str, str]], user: Any = None, system_prompt: Optional[str] = None, temperature: float = 0.7) -> str:
         """Multi-turn chat"""

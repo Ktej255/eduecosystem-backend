@@ -4,6 +4,14 @@ from datetime import datetime
 import enum
 from app.db.base_class import Base
 
+# Level configuration constants
+GRAPHOTHERAPY_LEVELS = {
+    1: {"days": 30, "name": "Foundations of Flow", "price": 0}, # Free
+    2: {"days": 30, "name": "Neuro-Linguistic Integration", "price": 5000}, # Paid
+    3: {"days": 30, "name": "Mastery of Subconscious", "price": 5000}, # Paid
+    4: {"days": 30, "name": "Architect of Reality", "price": 5000} # Paid
+}
+
 class VerificationStatus(str, enum.Enum):
     PENDING = "pending"
     VERIFIED = "verified"
@@ -43,7 +51,7 @@ class GraphoSubmission(Base):
     __tablename__ = "grapho_submissions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id")) 
+    user_id = Column(Integer, ForeignKey("users.id")) 
     book_id = Column(Integer, ForeignKey("grapho_books.id"))
     day = Column(Integer)
     image_url = Column(String, nullable=False)
@@ -64,7 +72,7 @@ class GraphotherapyProgress(Base):
     __tablename__ = "graphotherapy_progress"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), unique=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
     current_level = Column(Integer, default=1)
     current_day = Column(Integer, default=1)
     total_streak = Column(Integer, default=0)
@@ -73,11 +81,13 @@ class GraphotherapyProgress(Base):
     # Simple JSON to store completions if not using relational table before
     completed_days = Column(JSON, default={}) 
 
+    user = relationship("User", back_populates="graphotherapy_progress")
+
 class GraphotherapyDayCompletion(Base):
     __tablename__ = "graphotherapy_day_completions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     level = Column(Integer)
     day = Column(Integer)
     completed_at = Column(DateTime, default=datetime.utcnow)

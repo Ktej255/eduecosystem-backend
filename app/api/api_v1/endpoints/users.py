@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.crud import user as crud_user
 from app.models.user import User
-from app.schemas.user import User, UserCreate
+from app.schemas.user import User, UserCreate, UserUpdate
 
 router = APIRouter()
 
@@ -51,6 +51,20 @@ def read_user_me(
     Get current user.
     """
     return current_user
+
+
+@router.put("/me", response_model=User)
+def update_user_me(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_in: UserUpdate,
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Update own user.
+    """
+    user = crud_user.update(db, db_obj=current_user, obj_in=user_in)
+    return user
 
 
 @router.get("/", response_model=list[User])

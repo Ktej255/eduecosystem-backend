@@ -68,6 +68,17 @@ async def upload_handwriting(
     # Run OCR / Analysis
     ocr_result = analyze_handwriting(file_location, user=current_user)
 
+    # Check for AI Service Errors
+    if "features" in ocr_result and "error" in ocr_result["features"]:
+        error_msg = ocr_result["features"]["error"]
+        if "API_ERROR" in error_msg:
+             # Strip technical prefix for cleaner message if needed, or keep it
+             # But definitely inform the user it's an API Key issue if that's the cause
+             if "leaked" in error_msg:
+                 raise HTTPException(status_code=400, detail="Your AI API Key is blocked/leaked. Please generate a new one.")
+             raise HTTPException(status_code=400, detail=f"AI Service Error: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
+
     # Create Submission Record
     submission_in = SubmissionCreate(
         image_url=file_location,

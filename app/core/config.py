@@ -160,7 +160,7 @@ class Settings(BaseSettings):
 
     # AI Configuration
     # Free Tier Gemini Key (15 RPM)
-    FREE_GEMINI_API_KEY: str = os.getenv("FREE_GEMINI_API_KEY", "")
+    FREE_GEMINI_API_KEY: str = os.getenv("FREE_GEMINI_API_KEY", os.getenv("GEMINI_API_KEY", ""))
     
     # Paid/Premium Gemini Key (Higher limits)
     PAID_GEMINI_API_KEY: str = os.getenv("PAID_GEMINI_API_KEY", "")

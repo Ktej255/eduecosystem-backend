@@ -14,7 +14,7 @@ from app.models.ai_features import ContentDifficultyAnalysis
 
 logger = logging.getLogger(__name__)
 
-# AI analysis integration is handled via gemini_service if needed.
+from app.services.gemini_service import gemini_service
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
@@ -185,32 +185,36 @@ class DifficultyAnalyzerService:
     @staticmethod
     def _get_ai_suggestions(text: str, target_level: str, metrics: Dict) -> Dict:
         """
-        Get AI-powered simplification suggestions.
+        Get AI-powered simplification suggestions using Gemini.
         """
-        # For now, return basic suggestions based on metrics
-        # In production, could call GPT for detailed analysis
-        suggestions = []
-        difficult_terms = []
+        try:
+            prompt = f"""
+            Analyze this text for difficulty and provide simplification suggestions.
+            Target Audience: {target_level}
+            Readability Metrics: {metrics}
+            Text Sample: "{text[:1000]}..."
 
-        # Extract long/complex words
-        words = text.split()
-        for word in words:
-            if len(word) > 12:
-                difficult_terms.append(word)
-
-        if metrics["avg_sentence_length"] > 25:
-            suggestions.append("Consider breaking long sentences into shorter ones")
-
-        if metrics["vocabulary_complexity"] > 40:
-            suggestions.append("Simplify vocabulary where possible")
-
-        if metrics["flesch_kincaid_grade"] > 12:
-            suggestions.append("Content may be too advanced for general audience")
-
-        return {
-            "suggestions": suggestions[:5],  # Limit to top 5
-            "difficult_terms": list(set(difficult_terms))[:10],  # Unique, limit to 10
-        }
+            Return JSON with two keys:
+            1. "suggestions": List of 3-5 specific actionable suggestions to improve clarity for the target audience.
+            2. "difficult_terms": List of complex or jargon words found in the text that should be defined or simplified.
+            """
+            
+            response = gemini_service.generate_text(prompt, temperature=0.3, json_mode=True)
+            import json
+            clean_json = response.replace("```json", "").replace("```", "").strip()
+            data = json.loads(clean_json)
+            
+            return {
+                "suggestions": data.get("suggestions", []),
+                "difficult_terms": data.get("difficult_terms", [])
+            }
+        except Exception as e:
+            logger.error(f"AI Suggestion Error: {e}")
+            # Minimal fallback if AI fails entirely
+            return {
+                "suggestions": ["Could not generate specific AI suggestions at this time."],
+                "difficult_terms": []
+            }
 
     @staticmethod
     def _determine_level(metrics: Dict) -> str:

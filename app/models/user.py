@@ -200,3 +200,7 @@ class User(Base):
         "Attendance", back_populates="user", cascade="all, delete-orphan"
     )
 
+    # Revision Portal Preferences
+    revision_level = Column(String, nullable=True)  # beginner, intermediate, advanced
+    revision_exam_id = Column(String, nullable=True)  # e.g., 'upsc-cse'
+
