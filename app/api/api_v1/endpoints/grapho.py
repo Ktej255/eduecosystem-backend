@@ -1,10 +1,12 @@
-from typing import Any, List
+from typing import Any, List, Dict, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from app.api import deps
 from app.crud import submission as crud_submission
 from app.schemas.submission import Submission, SubmissionCreate
+from app.schemas.handwriting import HandwritingAnalysisResponse, HandwritingFeatures # Updated imports
 from app.services.ocr import analyze_handwriting
 from app.models.user import User
 import shutil
@@ -15,6 +17,19 @@ router = APIRouter()
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+# --- Response Schemas (Moved to app/schemas/handwriting.py) ---
+# Keeping them here for compatibility if needed or redirecting
+from app.schemas.handwriting import HandwritingFeatures, HandwritingAnalysis as HandwritingAnalysisSchema
+
+class HandwritingAnalysisResponse(BaseModel):
+    submission_id: int
+    extracted_text: str
+    features: HandwritingFeatures
+    analysis: str
+    coins_earned: int
+    message: str
 
 
 @router.get("/", response_model=List[Submission])
@@ -33,13 +48,13 @@ def read_submissions(
     return jsonable_encoder(submissions)
 
 
-@router.post("/upload")
+@router.post("/upload", response_model=HandwritingAnalysisResponse)
 async def upload_handwriting(
     *,
     db: Session = Depends(deps.get_db),
     file: UploadFile = File(...),
     current_user: User = Depends(deps.get_current_active_user),
-) -> Any:
+) -> HandwritingAnalysisResponse:
     """
     Upload handwriting sample and get AI analysis.
     """
@@ -68,15 +83,18 @@ async def upload_handwriting(
     # Run OCR / Analysis
     ocr_result = analyze_handwriting(file_location, user=current_user)
 
-    # Check for AI Service Errors
-    if "features" in ocr_result and "error" in ocr_result["features"]:
-        error_msg = ocr_result["features"]["error"]
+    # Check for AI Service Errors in features dictionary
+    features_dict = ocr_result.get("features", {})
+    if features_dict.get("error"):
+        error_msg = features_dict["error"]
+        
+        # Specific handling for API Key issues
         if "API_ERROR" in error_msg:
-             # Strip technical prefix for cleaner message if needed, or keep it
-             # But definitely inform the user it's an API Key issue if that's the cause
-             if "leaked" in error_msg:
-                 raise HTTPException(status_code=400, detail="Your AI API Key is blocked/leaked. Please generate a new one.")
+             if "leaked" in error_msg or "not valid" in error_msg:
+                 raise HTTPException(status_code=400, detail="AI Service configuration error. Please contact support.")
              raise HTTPException(status_code=400, detail=f"AI Service Error: {error_msg}")
+             
+        # General analysis error
         raise HTTPException(status_code=400, detail=error_msg)
 
     # Create Submission Record
@@ -94,11 +112,11 @@ async def upload_handwriting(
     current_user.coins += 50
     db.commit()
 
-    return {
-        "submission_id": submission.id,
-        "extracted_text": ocr_result.get("extracted_text", ""),
-        "features": ocr_result.get("features", {}),
-        "analysis": ocr_result.get("analysis", ""),
-        "coins_earned": 50,
-        "message": "Handwriting analyzed successfully!",
-    }
+    return HandwritingAnalysisResponse(
+        submission_id=submission.id,
+        extracted_text=ocr_result.get("extracted_text", ""),
+        features=HandwritingFeatures(**features_dict),
+        analysis=ocr_result.get("analysis", ""),
+        coins_earned=50,
+        message="Handwriting analyzed successfully!",
+    )

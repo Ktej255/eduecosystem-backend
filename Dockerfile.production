@@ -17,6 +17,10 @@ RUN pip install --no-cache-dir gunicorn uvicorn[standard] psycopg2-binary redis 
 # Copy application code
 COPY . .
 
+# Ensure start.sh is executable and has correct line endings
+RUN chmod +x start.sh && \
+    sed -i 's/\r$//' start.sh || true
+
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser
 RUN chown -R appuser:appuser /app
@@ -24,11 +28,6 @@ USER appuser
 
 # Expose port
 EXPOSE 8000
-
-# Command to run the application
-# Copy invoke script
-COPY start.sh .
-RUN chmod +x start.sh
 
 # Command to run the application
 CMD ["./start.sh"]

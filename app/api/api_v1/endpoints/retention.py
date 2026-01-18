@@ -84,6 +84,36 @@ class DashboardData(BaseModel):
     average_retention: float
 
 
+class CycleSessionSubmission(BaseModel):
+    """Data from a completed 25-minute cycle"""
+    topic_id: int
+    cycle_type: str = "beginner_25m"
+    duration_minutes: int = 25
+    recall_score: float = 0.0
+    mcq_score: float = 0.0
+    verbal_transcript: Optional[str] = None
+    week_id: Optional[int] = None
+    day_id: Optional[int] = None
+
+
+# ============ TREE SCHEMAS ============
+
+class TreeLeafSchema(BaseModel):
+    id: str
+    topicId: str
+    topicName: str
+    subjectId: str
+    retentionScore: float
+    lastReviewed: Optional[datetime]
+    status: str
+
+class TreeBranchSchema(BaseModel):
+    id: str
+    subjectId: str
+    subjectName: str
+    leaves: List[TreeLeafSchema]
+
+
 # ============ ENDPOINTS ============
 
 @router.post("/submit-encoding", response_model=EncodingResponse)
@@ -408,6 +438,92 @@ async def get_decay_curve(
     }
 
 
+@router.get("/tree", response_model=List[TreeBranchSchema])
+async def get_knowledge_tree(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Get hierarchical data for 3D Knowledge Tree.
+    Joins UserTopicLog -> Lesson -> Module -> Course to group topics by Subject (Course).
+    """
+    from app.models.retention import UserTopicLog
+    from app.models.lesson import Lesson
+    from app.models.module import Module
+    from app.models.course import Course
+    from app.utils.fsrs import calculate_retrievability, get_retention_status
+    
+    # query = (
+    #     db.query(UserTopicLog, Course)
+    #     .join(Lesson, UserTopicLog.topic_id == Lesson.id)
+    #     .join(Module, Lesson.module_id == Module.id)
+    #     .join(Course, Module.course_id == Course.id)
+    #     .filter(UserTopicLog.user_id == current_user.id)
+    # )
+    
+    # Fetch all logs for user
+    logs = db.query(UserTopicLog).filter(UserTopicLog.user_id == current_user.id).all()
+    
+    # Manual grouping to avoid complex join issues if data is sparse/inconsistent
+    # In a perfect world, we'd use the join above. 
+    # For now, let's fetch related objects carefully.
+    
+    branches = {}  # course_id -> { info, leaves }
+    
+    now = datetime.now(timezone.utc)
+    
+    for log in logs:
+        # Resolve Hierarchy
+        # TODO: Optimize with eager loading or join
+        lesson = db.query(Lesson).filter(Lesson.id == log.topic_id).first()
+        if not lesson:
+            continue
+            
+        module = db.query(Module).filter(Module.id == lesson.module_id).first()
+        if not module:
+            continue
+            
+        course = db.query(Course).filter(Course.id == module.course_id).first()
+        if not course:
+            continue
+            
+        # Determine Status
+        days_elapsed = 0
+        if log.last_review_date:
+            days_elapsed = (now - log.last_review_date).total_seconds() / 86400
+            
+        current_r = calculate_retrievability(log.stability, days_elapsed)
+        retention_score = current_r * 100
+        
+        status = "healthy"
+        if retention_score > 90:
+            status = "blooming"
+        elif retention_score < 50:
+            status = "withered"
+            
+        # Add to Branch
+        repo_key = str(course.id)
+        if repo_key not in branches:
+            branches[repo_key] = {
+                "id": f"branch-{course.id}",
+                "subjectId": str(course.id),
+                "subjectName": course.title,
+                "leaves": []
+            }
+            
+        branches[repo_key]["leaves"].append(TreeLeafSchema(
+            id=f"leaf-{log.id}",
+            topicId=str(log.topic_id),
+            topicName=lesson.title,
+            subjectId=str(course.id),
+            retentionScore=round(retention_score, 1),
+            lastReviewed=log.last_review_date,
+            status=status
+        ))
+        
+    return list(branches.values())
+
+
 # ============ EXPERIENCE ENDPOINT ============
 
 @router.post("/experience", response_model=ExperienceResponse)
@@ -461,6 +577,106 @@ async def analyze_experience(
             spiritual_state="Introspection",
             consciousness_score=75
         )
+
+
+# ============ CYCLE PERSISTENCE ============
+
+@router.post("/cycle", response_model=Dict)
+async def submit_cycle_session(
+    submission: CycleSessionSubmission,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Save specific revision cycle data and update FSRS retention.
+    """
+    from app.models.retention import UserTopicLog, RevisionCycle, RetentionReview
+    from app.utils.fsrs import calculate_initial_stability, calculate_next_interval, update_stability_on_grade
+    
+    # 1. Save detailed cycle record
+    cycle = RevisionCycle(
+        user_id=current_user.id,
+        topic_id=submission.topic_id,
+        cycle_type=submission.cycle_type,
+        duration_minutes=submission.duration_minutes,
+        recall_score=submission.recall_score,
+        mcq_score=submission.mcq_score,
+        total_score=(submission.recall_score + submission.mcq_score) / 2,
+        verbal_transcript=submission.verbal_transcript
+    )
+    db.add(cycle)
+    
+    # 2. Update FSRS Logic (Memory Stability)
+    # Calculate a grade (1-4) based on the total score
+    total_score_percent = (submission.recall_score + submission.mcq_score) / 2
+    grade = 1
+    if total_score_percent > 90: grade = 4
+    elif total_score_percent > 75: grade = 3
+    elif total_score_percent > 50: grade = 2
+    
+    # Find existing topic log
+    topic_log = db.query(UserTopicLog).filter(
+        UserTopicLog.user_id == current_user.id,
+        UserTopicLog.topic_id == submission.topic_id
+    ).first()
+    
+    now = datetime.now(timezone.utc)
+    
+    if topic_log:
+        # Update existing Record using FSRS
+        old_stability = topic_log.stability
+        days_elapsed = 0
+        if topic_log.last_review_date:
+            days_elapsed = (now - topic_log.last_review_date).total_seconds() / 86400
+            
+        new_stability, new_difficulty = update_stability_on_grade(
+            topic_log.stability,
+            topic_log.difficulty,
+            grade,
+            days_elapsed
+        )
+        
+        topic_log.stability = new_stability
+        topic_log.difficulty = new_difficulty
+        topic_log.last_recall_grade = grade
+        topic_log.last_review_date = now
+        topic_log.total_reviews += 1
+        
+        cycle.user_topic_log_id = topic_log.id
+        
+        # Log Review for Analytics
+        review = RetentionReview(
+            topic_log_id=topic_log.id,
+            user_id=current_user.id,
+            review_type="cycle_session",
+            grade=grade,
+            score=total_score_percent / 100,
+            stability_before=old_stability,
+            stability_after=new_stability,
+            user_input=f"Cycle: {submission.cycle_type}"
+        )
+        db.add(review)
+        
+    else:
+        # First time learning this topic
+        initial_s = calculate_initial_stability(total_score_percent / 100)
+        topic_log = UserTopicLog(
+            user_id=current_user.id,
+            topic_id=submission.topic_id,
+            topic_type="video", # Default
+            topic_name=f"Topic {submission.topic_id}",
+            stability=initial_s,
+            retrievability=1.0,
+            status="learned",
+            last_review_date=now,
+            next_due_date=now + timedelta(days=calculate_next_interval(initial_s))
+        )
+        db.add(topic_log)
+        db.flush() # Get ID
+        cycle.user_topic_log_id = topic_log.id
+
+    db.commit()
+    return {"success": True, "cycle_id": cycle.id, "new_stability": topic_log.stability}
 
 
 # ============ HELPERS ============

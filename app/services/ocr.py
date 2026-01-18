@@ -1,7 +1,10 @@
 import random
 import os
-from typing import Any
+import json
+import re
+from typing import Any, Optional
 from app.services.gemini_service import gemini_service
+from app.schemas.handwriting import HandwritingAnalysis, HandwritingFeatures
 
 # Initialize reader lazily
 reader = None
@@ -14,17 +17,39 @@ def get_reader():
         reader = easyocr.Reader(["en"], gpu=False)
     return reader
 
+def parse_ai_json(text: str) -> dict:
+    """
+    Robustly extract and parse JSON from AI response, 
+    handling markdown blocks and potential surrounding text.
+    """
+    try:
+         # Find the first occurrences of { and last }
+         start_index = text.find('{')
+         end_index = text.rfind('}')
+         
+         if start_index != -1 and end_index != -1 and end_index > start_index:
+             json_str = text[start_index:end_index+1]
+             return json.loads(json_str)
+         
+         # Fallback: clean markdown
+         clean = text.replace("```json", "").replace("```", "").strip()
+         return json.loads(clean)
+    except Exception as e:
+        # If standard parsing fails, try to find any JSON-like block
+        print(f"JSON Parsing Error: {e}")
+        return {}
 
 def analyze_handwriting(image_path: str, user: Any = None) -> dict:
     """
     Analyze handwriting using EasyOCR for text extraction
-    and Gemini AI for personality analysis.
+    and Gemini AI for personality analysis. Returns a dictionary 
+    compatible with HandwritingAnalysis schema.
     """
     if not os.path.exists(image_path):
-        return {"error": "File not found"}
+        return {"extracted_text": "", "features": {"error": "File not found"}, "analysis": "Error"}
 
     try:
-        # Extract text using EasyOCR
+        # Extract text using EasyOCR (Legacy text backup)
         r = get_reader()
         result = r.readtext(image_path, detail=0)
         extracted_text = " ".join(result)
@@ -36,96 +61,74 @@ def analyze_handwriting(image_path: str, user: Any = None) -> dict:
         print(f"OCR Error: {e}")
         extracted_text = "[Error processing image]"
 
-    # Use Gemini Vision API for personality analysis
+    # Use Gemini Vision API for personality analysis with structured JSON output
     analysis_prompt = """Analyze this handwriting sample image for graphology/personality insights.
+You are an expert Graphologist. Please return strictly JSON in the following format:
 
-Please analyze the following characteristics:
-1. Baseline (straight, ascending, descending, wavy)
-2. Slant (vertical, right, left, variable)
-3. Pressure (heavy, light, medium)
-4. Size (large, small, medium)
-5. Spacing (wide, narrow, balanced)
+{
+    "extracted_text": "The full transcription of the handwritten text",
+    "features": {
+        "baseline": "straight/ascending/descending/wavy",
+        "slant": "vertical/right/left/variable",
+        "pressure": "heavy/light/medium",
+        "size": "large/small/medium",
+        "spacing": "wide/narrow/balanced",
+        "confidence_score": 0.0 to 1.0,
+        "personality_traits": ["trait1", "trait2", "trait3"]
+    },
+    "analysis_paragraph": "A detailed 4-5 sentence personality analysis based on the specific traits seen above"
+}
 
-Based on these characteristics, provide:
-- Personality traits indicated by the handwriting
-- Confidence score (0.0-1.0) for the analysis
-- A detailed personality analysis paragraph
-
-Format the response as:
-Baseline: [value]
-Slant: [value]
-Pressure: [value]
-Size: [value]
-Spacing: [value]
-Confidence: [0.0-1.0]
-
-Personality Traits: [list traits]
-
-Analysis: [detailed paragraph about personality based on handwriting]
+Be accurate to the visible strokes. If certain features are hard to see, use 'variable' and a lower confidence score.
 """
 
     try:
-        # Use Gemini Vision to analyze the handwriting with tiered logic
-        gemini_analysis = gemini_service.analyze_image(
-            image_path, analysis_prompt, user=user, temperature=0.4
+        # Use Gemini Vision to analyze the handwriting
+        gemini_response = gemini_service.analyze_image(
+            image_path, analysis_prompt, user=user, temperature=0.3
         )
 
-        # Parse Gemini response
-        features = {}
-        traits = []
-        analysis_text = gemini_analysis
-
-        # Simple parsing of structured response
-        lines = gemini_analysis.split("\n")
-        for line in lines:
-            if ":" in line:
-                key_val = line.split(":", 1)
-                key = key_val[0].strip().lower()
-                val = key_val[1].strip()
-
-                if key == "baseline":
-                    features["baseline"] = val
-                elif key == "slant":
-                    features["slant"] = val
-                elif key == "pressure":
-                    features["pressure"] = val
-                elif key == "size":
-                    features["size"] = val
-                elif key == "spacing":
-                    features["spacing"] = val
-                elif key == "confidence":
-                    try:
-                        features["confidence_score"] = float(val)
-                    except:
-                        features["confidence_score"] = 0.75
-                elif key == "personality traits":
-                    traits = [t.strip() for t in val.split(",")]
-
-        if "API_ERROR:" in gemini_analysis:
-             features = {
-                "confidence_score": 0.0,
-                "error": gemini_analysis
+        # Check for API-level errors
+        if "API_ERROR:" in gemini_response:
+            return {
+                "extracted_text": extracted_text,
+                "features": {"error": gemini_response, "confidence_score": 0.0},
+                "analysis": gemini_response
             }
-             analysis_text = gemini_analysis
-        # If parsing failed, use fallback mock features
-        elif not features:
-            # Return error state instead of mocks
-            features = {
-                "confidence_score": 0.0,
-                "error": "Could not extract features from AI response"
+
+        # Parse JSON output
+        parsed_data = parse_ai_json(gemini_response)
+        
+        if not parsed_data:
+            # Re-attempt parsing or return failure
+            return {
+                "extracted_text": extracted_text,
+                "features": {"error": "Could not parse AI response as JSON", "confidence_score": 0.0},
+                "analysis": f"AI raw response: {gemini_response[:200]}"
             }
-            analysis_text = f"AI Analysis failed to generate structured data. Raw response: {gemini_analysis[:100]}..."
+
+        # Map to HandwritingAnalysis structure
+        features_data = parsed_data.get("features", {})
+        
+        # Ensure we return a flat dict that matches the caller's expectations
+        return {
+            "extracted_text": parsed_data.get("extracted_text", extracted_text),
+            "features": {
+                "baseline": features_data.get("baseline"),
+                "slant": features_data.get("slant"),
+                "pressure": features_data.get("pressure"),
+                "size": features_data.get("size"),
+                "spacing": features_data.get("spacing"),
+                "confidence_score": features_data.get("confidence_score", 0.0),
+                "personality_traits": features_data.get("personality_traits", []),
+            },
+            "analysis": parsed_data.get("analysis_paragraph", "Analysis summary unavailable.")
+        }
 
     except Exception as e:
         print(f"Gemini Analysis Error: {e}")
-        features = {
-            "confidence_score": 0.0,
-            "error": str(e)
+        return {
+            "extracted_text": extracted_text,
+            "features": {"error": str(e), "confidence_score": 0.0},
+            "analysis": "AI Analysis unavailable due to technical error."
         }
-        analysis_text = "AI Analysis unavailable."
-
-    return {
-        "extracted_text": extracted_text,
-        "features": features,
-        "analysis": analysis_text,
-    }

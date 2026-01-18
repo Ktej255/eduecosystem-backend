@@ -330,3 +330,41 @@ async def send_reaction(
         data={"reaction": reaction_in.reaction_type, "user_id": current_user.id},
     )
     return {"status": "success"}
+# Hand Raise
+@router.post("/{live_class_id}/hand-raise", response_model=Any)
+async def raise_hand(
+    live_class_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Raise/Lower hand in a live class
+    """
+    # Simple broadcast for now, could be persisted in DB if needed
+    await realtime_service.send_live_class_update(
+        class_id=live_class_id,
+        update_type="hand_raised",
+        data={
+            "user_id": current_user.id,
+            "user_name": current_user.full_name,
+            "timestamp": datetime.utcnow().isoformat()
+        },
+    )
+    return {"status": "success"}
+
+@router.post("/{live_class_id}/hand-lower", response_model=Any)
+async def lower_hand(
+    live_class_id: int,
+    user_id: int = Query(...), # Allows instructor to lower hand or user themselves
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Lower hand in a live class
+    """
+    await realtime_service.send_live_class_update(
+        class_id=live_class_id,
+        update_type="hand_lowered",
+        data={"user_id": user_id},
+    )
+    return {"status": "success"}

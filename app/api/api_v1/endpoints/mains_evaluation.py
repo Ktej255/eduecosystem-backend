@@ -3,7 +3,7 @@ Mains Answer Evaluation API Endpoint
 Uses GeminiService for AI-powered UPSC Mains answer evaluation.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from app.services.gemini_service import gemini_service
@@ -99,3 +99,22 @@ IMPORTANT: Return ONLY valid JSON in this exact format, no other text:
     except Exception as e:
         logger.error(f"Mains evaluation error: {e}")
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+
+@router.post("/evaluate-image")
+async def evaluate_mains_image(
+    file: UploadFile = File(...),
+    question: str = Form(...),
+):
+    """
+    Evaluate a handwritten Mains answer (Image) using Gemini Vision.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image.")
+
+    try:
+        contents = await file.read()
+        result = gemini_service.evaluate_mains_answer(contents, question)
+        return result
+    except Exception as e:
+        logger.error(f"Image evaluation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Image analysis failed: {str(e)}")

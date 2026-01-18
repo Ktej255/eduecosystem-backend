@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 from app.models.permissions import user_roles
@@ -147,6 +147,8 @@ class User(Base):
     # coin_transactions = relationship("CoinTransaction", foreign_keys="CoinTransaction.user_id", back_populates="user", cascade="all, delete-orphan")
 
     # Two-Factor Authentication
+    totp_secret = Column(String, nullable=True) # Secret key for TOTP
+    
     two_factor_auth = relationship(
         "TwoFactorAuth",
         back_populates="user",
@@ -160,7 +162,7 @@ class User(Base):
     @property
     def is_2fa_enabled(self) -> bool:
         """Check if user has Two-Factor Authentication enabled"""
-        return self.two_factor_auth is not None and self.two_factor_auth.is_enabled
+        return self.totp_secret is not None
 
     # AI Avatars
     ai_avatars = relationship("AIAvatar", back_populates="user", cascade="all, delete-orphan")
@@ -203,4 +205,8 @@ class User(Base):
     # Revision Portal Preferences
     revision_level = Column(String, nullable=True)  # beginner, intermediate, advanced
     revision_exam_id = Column(String, nullable=True)  # e.g., 'upsc-cse'
+
+    # Push Notifications
+    push_subscription = Column(JSON, nullable=True)
+
 

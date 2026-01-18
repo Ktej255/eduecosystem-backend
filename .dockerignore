@@ -39,7 +39,7 @@ test_*.txt
 .idea/
 
 # Ignore alembic versions (keep only the main structure)
-alembic/versions/
+# alembic/versions/
 
 # Ignore data directory
 data/

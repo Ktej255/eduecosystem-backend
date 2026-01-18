@@ -351,5 +351,165 @@ Focus on main concepts, facts, and key details. Be fair but accurate."""
                 "feedback": "We couldn't analyze your recall. Please try again."
             }
 
+    def evaluate_mains_answer(self, image_bytes: bytes, question: str) -> Dict[str, Any]:
+        """Evaluates a handwritten mains answer using Vision API."""
+        import PIL.Image
+        import io
+        import json
+        
+        try:
+            img = PIL.Image.open(io.BytesIO(image_bytes))
+        except Exception as e:
+            return {"error": f"Invalid image: {e}", "scores": {"total": 0}}
+
+        prompt = f"""You are a strict UPSC Examiner. Evaluate this handwritten answer for the following question:
+QUESTION: "{question}"
+
+Evaluate on these parameters (score 0-10, be strict):
+1. Introduction (Relevance, conciseness)
+2. Body (Content depth, multidimensional coverage, keywords)
+3. Structure (Flow, subheadings, diagrams/maps usage)
+4. Conclusion (Way forward, balanced view)
+
+Return JSON ONLY in this exact format:
+{{
+    "scores": {{
+        "introduction": 0,
+        "body": 0,
+        "structure": 0,
+        "conclusion": 0,
+        "total": 0
+    }},
+    "feedback": {{
+        "strengths": ["point 1", "point 2"],
+        "weaknesses": ["point 1", "point 2"],
+        "improvements": ["specific advice 1", "specific advice 2"]
+    }},
+    "model_answer_summary": "Brief summary of what the ideal answer should have covered."
+}}"""
+
+        # Reuse Google Plan logic for Vision
+        genai.configure(api_key=self.free_key)
+        model = genai.GenerativeModel("gemini-1.5-flash") # Vision capable and fast
+        
+        try:
+            response = model.generate_content([prompt, img])
+            text = response.text
+            clean = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean)
+        except Exception as e:
+            print(f"Mains Eval Error: {e}")
+            return {
+                "scores": {"total": 0},
+                "feedback": {"error": str(e)},
+                "model_answer_summary": "Evaluation failed."
+            }
+
+    def analyze_audio(self, audio_base64: str, context: str = "General Speaking Practice") -> Dict[str, Any]:
+        """
+        Analyze audio for pronunciation, tone, confidence and content using Gemini 1.5 Flash.
+        Returns a structured assessment.
+        """
+        import base64
+        import json
+        
+        prompt = f"""You are an expert Voice Coach and AI Tutor. 
+        Context: {context}
+        
+        Analyze the attached audio recording. 
+        1. Transcribe what was said.
+        2. Evaluate Pronunciation (Clarity, enunciation).
+        3. Evaluate Tone (Confidence, emotion, pace).
+        4. Provide specific, constructive feedback.
+        
+        Return JSON ONLY in this format:
+        {{
+            "transcription": "text",
+            "metrics": {{
+                "pronunciation_score": 0-10,
+                "confidence_score": 0-10,
+                "clarity_score": 0-10
+            }},
+            "feedback": {{
+                "strengths": ["point 1", "point 2"],
+                "improvements": ["tip 1", "tip 2"]
+            }},
+            "overall_assessment": "Short summary sentence."
+        }}
+        """
+        
+        try:
+            # Re-use free key for Flash model
+            genai.configure(api_key=self.free_key)
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            
+            # Decode audio
+            audio_bytes = base64.b64decode(audio_base64)
+            audio_part = {
+                "mime_type": "audio/webm",
+                "data": audio_bytes
+            }
+            
+            response = model.generate_content([prompt, audio_part])
+            text = response.text
+            clean = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean)
+            
+        except Exception as e:
+            print(f"Audio Analysis Error: {e}")
+            return {
+                "transcription": "[Error analyzing audio]",
+                "metrics": {
+                    "pronunciation_score": 0,
+                    "confidence_score": 0,
+                    "clarity_score": 0
+                },
+                "feedback": {
+                    "strengths": [],
+                    "improvements": ["System error occurred during analysis."]
+                },
+                "overall_assessment": f"Error: {str(e)}"
+            }
+
+    def analyze_handwriting_traits(self, image_base64: str) -> Dict[str, Any]:
+        """
+        Quick vision analysis for AR overlay. Returns concise traits.
+        """
+        import base64
+        import json
+        
+        prompt = """Analyze this handwriting sample for graphology traits. 
+        Return strictly JSON with:
+        {
+            "traits": [
+                {"name": "Trait Name", "description": "Short description", "type": "positive/negative/neutral"}
+            ],
+            "overlay_coords": [
+                 {"x": 10, "y": 20, "label": "High Goals"} 
+            ] (Simulate where these traits appear on the page roughly)
+        }
+        Keep descriptions very short (max 5 words). Max 5 key traits.
+        """
+        
+        try:
+             # Re-use free key for Flash model
+            genai.configure(api_key=self.free_key)
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            
+            # Decode audio
+            image_bytes = base64.b64decode(image_base64)
+            image_part = {
+                "mime_type": "image/jpeg",
+                "data": image_bytes
+            }
+            
+            response = model.generate_content([prompt, image_part])
+            text = response.text
+            clean = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean)
+        except Exception as e:
+            print(f"Grapho Vision Error: {e}")
+            return {"traits": [], "overlay_coords": []}
+
 # Global instance
 gemini_service = GeminiService()

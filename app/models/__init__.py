@@ -101,6 +101,8 @@ from app.models.coupon import Coupon, CouponUsage
 from app.models.cart import ShoppingCart, CartItem
 
 # Orders
+from app.models.nudge import StudentNudgeWorkflow, NudgeHistory
+from app.models.development import DailySummary
 from app.models.order import Order, OrderItem, OrderStatus
 
 # Invoices
@@ -113,6 +115,7 @@ from app.models.analytics import (
     PlatformAnalytics,
     AnalyticsEvent,
 )
+from app.models.sentiment import BatchSentiment
 
 # Translation/i18n
 from app.models.translation import (
@@ -168,6 +171,7 @@ from app.models.sso import (
 
 # Two-Factor Authentication
 from app.models.two_factor import TwoFactorAuth, TwoFactorBackupCode
+from app.models.security import GhostLoginAlert
 
 # Gamification
 from app.models.achievement import UserAchievement, Achievement
@@ -223,3 +227,10 @@ from app.models.meditation import (
 
 # Attendance
 from app.models.attendance import Attendance
+
+# Development History and Daily Reports (Admin Portal)
+from app.models.development_history import (
+    DevelopmentLog,
+    DailyDevReport,
+    AIPlanningSession,
+)

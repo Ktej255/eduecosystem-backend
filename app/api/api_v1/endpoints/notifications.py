@@ -1,90 +1,64 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-
-from app.api import deps
+from typing import Any, Dict
+from app.api.deps import get_db, get_current_user
 from app.models.user import User
-from app.schemas.notification import Notification, NotificationList, UnreadCount
-from app.services.notification_service import notification_service
+from pywebpush import webpush, WebPushException
+import json
+import os
 
 router = APIRouter()
 
+# VAPID Keys
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "jjuOWI_7reH1j3TPE1wV24UP70rVcE1W22M2DfK5gEY")
+VAPID_CLAIMS = {
+    "sub": "mailto:admin@eduecosystem.com"
+}
 
-@router.get("/", response_model=NotificationList)
-def get_notifications(
-    skip: int = 0,
-    limit: int = 20,
-    unread_only: bool = False,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Get notifications for current user"""
-    notifications = notification_service.get_user_notifications(
-        db, current_user.id, skip, limit, unread_only
-    )
+@router.post("/subscribe", response_model=Dict[str, str])
+def subscribe_notifications(
+    subscription: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Save the user's WebPush subscription object.
+    """
+    current_user.push_subscription = subscription
+    db.add(current_user)
+    db.commit()
+    return {"message": "Subscribed successfully"}
 
-    total = len(notifications)
-    unread_count = notification_service.get_unread_count(db, current_user.id)
+@router.post("/send", response_model=Dict[str, str])
+def send_notification(
+    message: str = Body(..., embed=True),
+    target_user_id: int = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Send a push notification to a specific user (Admin only).
+    """
+    # Create notification record (optional for history)
+    # ...
 
-    return {
-        "notifications": notifications,
-        "total": total,
-        "unread_count": unread_count,
-    }
+    target_user = db.query(User).filter(User.id == target_user_id).first()
+    if not target_user or not target_user.push_subscription:
+        raise HTTPException(status_code=404, detail="User not subscribed to notifications")
 
-
-@router.get("/unread-count", response_model=UnreadCount)
-def get_unread_count(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Get unread notification count"""
-    count = notification_service.get_unread_count(db, current_user.id)
-    return {"count": count}
-
-
-@router.post("/{notification_id}/read", response_model=Notification)
-def mark_notification_as_read(
-    notification_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Mark a notification as read"""
-    notification = notification_service.mark_as_read(
-        db, notification_id, current_user.id
-    )
-
-    if not notification:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found"
+    try:
+        webpush(
+            subscription_info=target_user.push_subscription,
+            data=json.dumps({"title": "Eduecosystem Nudge", "body": message}),
+            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_claims=VAPID_CLAIMS
         )
+    except WebPushException as ex:
+        # Check if expired
+        if ex.response and ex.response.status_code == 410:
+             target_user.push_subscription = None
+             db.commit()
+             raise HTTPException(status_code=410, detail="Subscription expired")
+        raise HTTPException(status_code=500, detail=f"WebPush failed: {ex}")
 
-    return notification
-
-
-@router.post("/read-all")
-def mark_all_as_read(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Mark all notifications as read"""
-    count = notification_service.mark_all_as_read(db, current_user.id)
-    return {"message": f"Marked {count} notifications as read"}
-
-
-@router.delete("/{notification_id}")
-def delete_notification(
-    notification_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Delete a notification"""
-    success = notification_service.delete_notification(
-        db, notification_id, current_user.id
-    )
-
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found"
-        )
-
-    return {"message": "Notification deleted"}
+    return {"message": "Notification sent"}

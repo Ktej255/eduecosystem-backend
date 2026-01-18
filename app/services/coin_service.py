@@ -208,8 +208,12 @@ def check_daily_login_and_streak(db: Session, user: User) -> dict:
     Check for daily login and update streak.
     """
     from datetime import datetime, timedelta
+    from app.services.gamification_service import gamification_service
 
     now = datetime.utcnow()
+    # Record login activity in the granular streaks table
+    gamification_service.record_activity(db, user, "login")
+    
     today = now.date()
 
     # Initialize response

@@ -1,24 +1,15 @@
 from datetime import timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from app.api import deps
-from app.core import security
-from app.core.config import settings
-from app.crud import user as crud_user
-from app.schemas.user import Token, User, UserCreate, UserWithToken
-from app.schemas.msg import Msg
-from app.schemas.new_password import NewPassword
-
+from fastapi import APIRouter, Depends, HTTPException, Request
 # ... imports ...
-
+from app.models.activity_log import ActivityLog
 
 router = APIRouter()
 
 
 @router.post("/access-token")
 def login_access_token(
+    request: Request,
     db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
@@ -29,10 +20,33 @@ def login_access_token(
     )
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not user.is_active:
+    
+    if not user.is_active:
         raise HTTPException(status_code=400, detail="Your account is pending approval. Please wait for admin approval.")
-    elif hasattr(user, 'is_approved') and not user.is_approved:
+    if hasattr(user, 'is_approved') and not user.is_approved:
         raise HTTPException(status_code=400, detail="Your account is pending approval. Please wait for admin approval.")
+    
+    # Log the login attempt
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+    
+    login_log = ActivityLog(
+        user_id=user.id,
+        action="login",
+        ip_address=client_ip,
+        user_agent=user_agent,
+        details=f"Login attempt from {client_ip}"
+    )
+    db.add(login_log)
+    db.commit()
+
+    # Ghost Login Detection (Phase 7 Security)
+    try:
+        from app.services.security_service import security_service
+        security_service.check_ghost_login(db, user, client_ip)
+    except Exception as e:
+        print(f"Ghost login check failed: {e}")
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     # Check for daily login bonus and streak

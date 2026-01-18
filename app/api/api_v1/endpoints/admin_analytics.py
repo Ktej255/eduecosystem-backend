@@ -304,3 +304,68 @@ async def list_all_students(
             for s in student_stats
         ]
     }
+
+
+# ==================== DASHBOARD ACTIVITY SUMMARY ====================
+
+@router.get("/student-activity/summary")
+def get_dashboard_activity_summary(
+    limit: int = Query(50, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_admin)
+):
+    """
+    Get comprehensive student activity summary for the Admin Dashboard.
+    Aggregates:
+    - Study Sessions (Pomodoro)
+    - Drill Sessions (MCQs)
+    - Last Active Timestamps
+    """
+    from app.models.drill import DrillSession
+    from app.models.study_session import StudySession
+    from sqlalchemy import func, desc
+
+    # 1. Get base user list (active students)
+    # Ideally filter by role='student' but for now take all non-admins or all users
+    users = db.query(User).filter(User.role != 'admin').limit(limit).all()
+    
+    activity_data = []
+    
+    for user in users:
+        # Get Study Stats
+        study_stats = db.query(
+            func.count(StudySession.id).label('count'),
+            func.sum(StudySession.duration_seconds).label('total_seconds')
+        ).filter(StudySession.user_id == user.id).first()
+        
+        pomodoros = study_stats.count or 0
+        study_hours = round((study_stats.total_seconds or 0) / 3600, 1)
+        
+        # Get Drill Stats
+        drill_stats = db.query(
+            func.count(DrillSession.id).label('count'),
+            func.max(DrillSession.date).label('last_drill')
+        ).filter(DrillSession.student_id == user.id).first()
+        
+        mcqs_count = (drill_stats.count or 0) * 20 # Assuming 20 q per drill approx, or just count sessions
+        
+        # Determine Last Active
+        # simple heuristic: max of last login, last drill, last study
+        last_active = user.last_login or drill_stats.last_drill
+        
+        # Mock streak for now (would need daily activity log table for real calc)
+        streak = 0 
+        
+        activity_data.append({
+            "id": user.id,
+            "name": user.full_name or "Unknown",
+            "email": user.email,
+            "pomodoros": pomodoros,
+            "studyHours": study_hours,
+            "mcqs": drill_stats.count or 0, # Return sessions count implies activity
+            "streak": streak,
+            "lastActive": str(last_active) if last_active else "Never",
+            "batch": "Batch 1" # Placeholder, ideally from user.batch
+        })
+        
+    return activity_data

@@ -286,14 +286,27 @@ def get_admin_overview(
 ) -> Any:
     """
     Get comprehensive overview for admin dashboard.
-    Includes student stats, batch authorizations, test completions, and activity.
+    Includes student stats, batch authorizations, test completions, and real-time activity.
     """
     from app.models.batch1 import Batch1TestResult
     from app.models.study_session import StudySession
+    from app.models.drill import DrillSession
     
     # User counts
     total_students = db.query(func.count(User.id)).filter(User.role == "student").scalar() or 0
     total_teachers = db.query(func.count(User.id)).filter(User.role.in_(["teacher", "admin"])).scalar() or 0
+    
+    # Live Activity (Active sessions in the last 60 minutes)
+    hour_ago = datetime.utcnow() - timedelta(minutes=60)
+    live_study_count = db.query(func.count(StudySession.id)).filter(
+        StudySession.start_time >= hour_ago,
+        StudySession.end_time.is_(None)
+    ).scalar() or 0
+    
+    live_drill_count = db.query(func.count(DrillSession.id)).filter(
+        DrillSession.created_at >= hour_ago,
+        DrillSession.completed_at.is_(None)
+    ).scalar() or 0
     
     # Batch authorizations
     batch1_count = db.query(func.count(User.id)).filter(User.is_batch1_authorized == True).scalar() or 0
@@ -320,6 +333,10 @@ def get_admin_overview(
             "total_students": total_students,
             "total_teachers": total_teachers,
             "active_today": active_today,
+        },
+        "live": {
+            "studying": live_study_count,
+            "drilling": live_drill_count,
         },
         "batches": {
             "batch1_authorized": batch1_count,

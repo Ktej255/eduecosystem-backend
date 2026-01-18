@@ -112,3 +112,34 @@ class MidnightTestQuestion(Base):
     is_active = Column(Boolean, default=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class RevisionCycle(Base):
+    """Detailed log of a 25-minute revision cycle"""
+    __tablename__ = "revision_cycles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic_id = Column(Integer, nullable=False, index=True)
+    
+    # Session Details
+    cycle_type = Column(String(50), default="beginner_25m") # beginner_25m, intermediate_pdf, advanced_recall
+    duration_minutes = Column(Integer, default=25)
+    started_at = Column(DateTime(timezone=True), default=func.now())
+    completed_at = Column(DateTime(timezone=True), default=func.now())
+    
+    # Performance Metrics
+    recall_score = Column(Float, default=0.0) # 0-100
+    mcq_score = Column(Float, default=0.0)    # 0-100
+    total_score = Column(Float, default=0.0)  # Combined/Weighted
+    
+    # Content
+    verbal_transcript = Column(Text, nullable=True)
+    ai_feedback = Column(Text, nullable=True)
+    
+    # FSRS Link
+    user_topic_log_id = Column(Integer, ForeignKey("user_topic_logs.id"), nullable=True)
+    
+    # Relationships
+    user = relationship("User")
+    topic_log = relationship("UserTopicLog")

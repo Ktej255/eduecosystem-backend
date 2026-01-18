@@ -92,6 +92,14 @@ class PlagiarismCheckResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ReflectionAnalysisRequest(BaseModel):
+    reflection: str
+
+
+class ReflectionAnalysisResponse(BaseModel):
+    insight: str
+
+
 # --- AI Grading Endpoints ---
 
 
@@ -268,18 +276,37 @@ def get_plagiarism_result(
     return check
 
 
-@router.post("/plagiarism-review/{check_id}")
-def review_plagiarism(
-    check_id: int,
-    notes: str,
+@router.post("/analyze-reflection")
+async def analyze_reflection(
+    request: ReflectionAnalysisRequest,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """
-    Mark plagiarism check as reviewed (instructor only).
+    Analyze student reflection and provide AI-driven insights.
     """
-    PlagiarismService.review_plagiarism_check(db, check_id, notes)
-    return {"message": "Review recorded"}
+    try:
+        from app.services.gemini_service import GeminiService
+        
+        # Use Gemini to generate a spiritual/growth-focused insight
+        prompt = f"""
+        Analyze the following student reflection and provide a brief, wise, and encouraging 
+        'Sadhana Insight' (max 2 sentences) that helps them connect their learning to internal growth.
+        
+        Reflection: {request.reflection}
+        
+        Focus on holistic development and wisdom.
+        """
+        insight = await GeminiService.generate_content(prompt)
+        
+        # Log AI Usage (optional, but good for tracking)
+        # from app.models.ai_features import AIUsageLog
+        # ... logic to log usage ...
+        
+        return {"insight": insight}
+    except Exception as e:
+        # Fallback insight in case of AI failure
+        return {"insight": "Your path of awareness is unfolding. Continue your practice with patience and dedication."}
 
 
 # --- Usage Analytics ---
