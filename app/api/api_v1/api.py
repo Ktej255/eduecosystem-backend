@@ -138,6 +138,14 @@ api_router.include_router(branding.router, prefix="/public", tags=["branding"])
 from app.api.api_v1.endpoints import admin_organizations
 api_router.include_router(admin_organizations.router, prefix="/admin", tags=["admin-organizations"])
 
+# Productivity (Daily Briefing, News Quiz)
+from app.api.api_v1.endpoints import productivity
+api_router.include_router(productivity.router, prefix="/productivity", tags=["productivity"])
+
+# Community (Virtual Library, Presence, Leaderboard)
+from app.api.api_v1.endpoints import community
+api_router.include_router(community.router, prefix="/community", tags=["community"])
+
 # Graphotherapy Funnel Leads
 from app.api.api_v1.endpoints import funnel_leads
 api_router.include_router(funnel_leads.router, prefix="/leads", tags=["funnel-leads"])

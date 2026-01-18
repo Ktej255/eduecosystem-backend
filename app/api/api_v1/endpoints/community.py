@@ -40,7 +40,7 @@ def update_presence(
     active_users[current_user.id] = {
         "user_id": current_user.id,
         "name": current_user.full_name or "Student",
-        "avatar": current_user.avatar_url or f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user.email}",
+        "avatar": f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user.email}",
         "status": status,
         "current_subject": subject,
         "last_seen": datetime.utcnow()
