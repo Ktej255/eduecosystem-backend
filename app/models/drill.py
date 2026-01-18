@@ -178,3 +178,7 @@ class CurriculumInsight(Base):
     ai_recommendations = Column(JSON)
     
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# Backward compatibility alias for services that expect DrillResult
+DrillResult = DrillSession

@@ -31,23 +31,6 @@ api_router.include_router(auth_2fa.router, prefix="/2fa", tags=["2fa"])
 # Users
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
-
-# Admin (User Management)
-api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
-
-# AI Chat (for chat widget)
-api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
-
-# Drill System (Admin)
-api_router.include_router(admin_drill.router, prefix="/admin/drill", tags=["admin-drill"])
-
-# Drill System (Student)
-api_router.include_router(drill.router, prefix="/drill", tags=["drill"])
-
-# Daily Action
-api_router.include_router(daily_actions.daily_router, prefix="/daily-actions", tags=["daily-actions"])
-
-# Graphotherapy
 api_router.include_router(graphotherapy.router, prefix="/graphotherapy", tags=["graphotherapy"])
 
 # Meditation (Student)
@@ -93,8 +76,8 @@ from app.api.api_v1.endpoints import marketing_automation
 api_router.include_router(marketing_automation.router, prefix="/marketing-automation", tags=["marketing-automation"])
 
 # Retention System (FSRS-based knowledge decay tracking)
-from app.api.api_v1.endpoints import retention
-api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
+# from app.api.api_v1.endpoints import retention
+# api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
 
 # AI Learning (MCQ Generator, Coaching)
 from app.api.api_v1.endpoints import ai_learning

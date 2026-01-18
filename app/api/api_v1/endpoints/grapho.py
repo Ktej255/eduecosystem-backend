@@ -19,17 +19,7 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-# --- Response Schemas (Moved to app/schemas/handwriting.py) ---
-# Keeping them here for compatibility if needed or redirecting
-from app.schemas.handwriting import HandwritingFeatures, HandwritingAnalysis as HandwritingAnalysisSchema
-
-class HandwritingAnalysisResponse(BaseModel):
-    submission_id: int
-    extracted_text: str
-    features: HandwritingFeatures
-    analysis: str
-    coins_earned: int
-    message: str
+# --- Response Schemas are now in app/schemas/handwriting.py ---
 
 
 @router.get("/", response_model=List[Submission])

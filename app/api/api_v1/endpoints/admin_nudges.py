@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Any, List
+from typing import Any, List, Dict
 
 from app.api import deps
 from app.models.nudge import StudentNudgeWorkflow, NudgeHistory
@@ -8,7 +8,7 @@ from app.models.user import User
 
 router = APIRouter()
 
-@router.get("/workflows", response_model=List[dict])
+@router.get("/workflows", response_model=List[Dict[str, Any]])
 def get_nudge_workflows(
     db: Session = Depends(deps.get_db),
     current_admin: User = Depends(deps.get_admin_user),
@@ -29,12 +29,12 @@ def get_nudge_workflows(
         for w in workflows
     ]
 
-@router.post("/workflows", response_model=dict)
+@router.post("/workflows", response_model=Dict[str, Any])
 def create_nudge_workflow(
     name: str,
     trigger_type: str,
     message_template: str,
-    trigger_config: dict = {},
+    trigger_config: Dict[str, Any] = {},
     action_type: str = "PUSH",
     reward_amount: int = 0,
     db: Session = Depends(deps.get_db),
@@ -54,7 +54,7 @@ def create_nudge_workflow(
     db.refresh(workflow)
     return {"status": "success", "id": workflow.id}
 
-@router.get("/history", response_model=List[dict])
+@router.get("/history", response_model=List[Dict[str, Any]])
 def get_nudge_history(
     limit: int = Query(100),
     db: Session = Depends(deps.get_db),

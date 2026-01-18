@@ -256,11 +256,23 @@ async def process_midnight_test(
     if topic_log.last_review_date:
         days_elapsed = (now - topic_log.last_review_date).total_seconds() / 86400
     
-    # TODO: AI analysis of answer
-    # Placeholder scoring
-    answer_words = len(submission.user_answer.split())
-    score = min(1.0, answer_words / 50)
-    grade = convert_score_to_grade(score)
+    # Real AI analysis of answer using Gemini
+    from app.services.gemini_service import gemini_service
+    
+    # Identify topic info for better prompting
+    from app.models.lesson import Lesson
+    lesson = db.query(Lesson).filter(Lesson.id == submission.topic_id).first()
+    topic_name = lesson.title if lesson else "this topic"
+    
+    # Analyze comprehension via AI
+    ai_result = gemini_service.analyze_comprehension(
+        student_summary=submission.user_answer,
+        key_concepts=[topic_name, "core principles", "practical application"],
+        user=current_user
+    )
+    
+    score = ai_result.get("score", 0.5)
+    grade = ai_result.get("grade", convert_score_to_grade(score))
     
     # Calculate current retrievability before update
     current_r = calculate_retrievability(topic_log.stability, days_elapsed)
@@ -447,75 +459,72 @@ async def get_knowledge_tree(
     Get hierarchical data for 3D Knowledge Tree.
     Joins UserTopicLog -> Lesson -> Module -> Course to group topics by Subject (Course).
     """
-    from app.models.retention import UserTopicLog
-    from app.models.lesson import Lesson
-    from app.models.module import Module
-    from app.models.course import Course
-    from app.utils.fsrs import calculate_retrievability, get_retention_status
+    from sqlalchemy.orm import joinedload
     
-    # query = (
-    #     db.query(UserTopicLog, Course)
-    #     .join(Lesson, UserTopicLog.topic_id == Lesson.id)
-    #     .join(Module, Lesson.module_id == Module.id)
-    #     .join(Course, Module.course_id == Course.id)
-    #     .filter(UserTopicLog.user_id == current_user.id)
-    # )
-    
-    # Fetch all logs for user
-    logs = db.query(UserTopicLog).filter(UserTopicLog.user_id == current_user.id).all()
-    
-    # Manual grouping to avoid complex join issues if data is sparse/inconsistent
-    # In a perfect world, we'd use the join above. 
-    # For now, let's fetch related objects carefully.
+    # Efficiently fetch logs with related hierarchy info
+    logs = (
+        db.query(UserTopicLog)
+        .options(joinedload(UserTopicLog.user)) # Just in case, though not needed here
+        .filter(UserTopicLog.user_id == current_user.id)
+        .all()
+    )
     
     branches = {}  # course_id -> { info, leaves }
-    
     now = datetime.now(timezone.utc)
     
     for log in logs:
-        # Resolve Hierarchy
-        # TODO: Optimize with eager loading or join
-        lesson = db.query(Lesson).filter(Lesson.id == log.topic_id).first()
-        if not lesson:
+        # Resolve Hierarchy using a single join-based helper or manual lookup
+        # Since UserTopicLog.topic_id is a Lesson ID (usually)
+        from app.models.lesson import Lesson
+        from app.models.module import Module
+        from app.models.course import Course
+        
+        # We still need course info. A single join query would be better:
+        data = (
+            db.query(Lesson, Module, Course)
+            .join(Module, Lesson.module_id == Module.id)
+            .join(Course, Module.course_id == Course.id)
+            .filter(Lesson.id == log.topic_id)
+            .first()
+        )
+        
+        if not data:
             continue
             
-        module = db.query(Module).filter(Module.id == lesson.module_id).first()
-        if not module:
-            continue
-            
-        course = db.query(Course).filter(Course.id == module.course_id).first()
-        if not course:
-            continue
+        lesson, module, course = data
             
         # Determine Status
         days_elapsed = 0
         if log.last_review_date:
             days_elapsed = (now - log.last_review_date).total_seconds() / 86400
             
+        # Use existing status if it makes sense, or retrievability
         current_r = calculate_retrievability(log.stability, days_elapsed)
         retention_score = current_r * 100
         
-        status = "healthy"
-        if retention_score > 90:
+        # Garden-themed Status Mapping
+        if log.status == "mastered" or retention_score > 85:
             status = "blooming"
-        elif retention_score < 50:
+        elif log.status == "forgotten" or retention_score < 40:
             status = "withered"
+        else:
+            status = "healthy"
             
         # Add to Branch
-        repo_key = str(course.id)
-        if repo_key not in branches:
-            branches[repo_key] = {
+        course_id = str(course.id)
+        if course_id not in branches:
+            branches[course_id] = {
                 "id": f"branch-{course.id}",
-                "subjectId": str(course.id),
+                "subjectId": course_id,
                 "subjectName": course.title,
                 "leaves": []
             }
             
-        branches[repo_key]["leaves"].append(TreeLeafSchema(
+        branches[course_id]["leaves"].append(TreeLeafSchema(
             id=f"leaf-{log.id}",
             topicId=str(log.topic_id),
             topicName=lesson.title,
-            subjectId=str(course.id),
+            subjectId=course_id,
             retentionScore=round(retention_score, 1),
             lastReviewed=log.last_review_date,
             status=status
@@ -607,8 +616,27 @@ async def submit_cycle_session(
     db.add(cycle)
     
     # 2. Update FSRS Logic (Memory Stability)
+    
+    # NEW: AI Scoring for Verbal Recall if transcript exists
+    actual_recall_score = submission.recall_score
+    if submission.verbal_transcript and len(submission.verbal_transcript.split()) > 5:
+        from app.services.gemini_service import gemini_service
+        # Identify topic name for context
+        from app.models.lesson import Lesson
+        lesson = db.query(Lesson).filter(Lesson.id == submission.topic_id).first()
+        topic_name = lesson.title if lesson else f"Topic {submission.topic_id}"
+        
+        ai_result = gemini_service.analyze_comprehension(
+            student_summary=submission.verbal_transcript,
+            key_concepts=[topic_name, "concepts learned in session"],
+            user=current_user
+        )
+        actual_recall_score = ai_result.get("score", 0.5) * 100
+        cycle.recall_score = actual_recall_score
+        cycle.total_score = (actual_recall_score + submission.mcq_score) / 2
+
     # Calculate a grade (1-4) based on the total score
-    total_score_percent = (submission.recall_score + submission.mcq_score) / 2
+    total_score_percent = cycle.total_score
     grade = 1
     if total_score_percent > 90: grade = 4
     elif total_score_percent > 75: grade = 3

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("", response_model=AIAvatarResponse, status_code=201)
+@router.post("/", response_model=AIAvatarResponse, status_code=201)
 async def create_ai_avatar(
     *,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ async def create_ai_avatar(
         raise HTTPException(status_code=500, detail="Failed to create AI avatar")
 
 
-@router.get("", response_model=List[AIAvatarResponse])
+@router.get("/", response_model=List[AIAvatarResponse])
 def get_user_avatars(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

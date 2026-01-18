@@ -15,3 +15,11 @@ class HandwritingAnalysis(BaseModel):
     extracted_text: str
     features: HandwritingFeatures
     analysis: str
+
+class HandwritingAnalysisResponse(BaseModel):
+    submission_id: int
+    extracted_text: str
+    features: HandwritingFeatures
+    analysis: str
+    coins_earned: int
+    message: str

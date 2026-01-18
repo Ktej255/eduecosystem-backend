@@ -1,4 +1,4 @@
-from typing import Generator, Optional
+from typing import Generator, Optional, Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
@@ -26,7 +26,7 @@ def get_db() -> Generator:
 
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
-) -> User:
+) -> Any:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
@@ -60,7 +60,7 @@ reusable_oauth2_optional = OAuth2PasswordBearer(
 
 def get_current_user_optional(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2_optional)
-) -> Optional[User]:
+) -> Any:
     if not token:
         return None
     try:
@@ -85,7 +85,7 @@ def get_current_user_optional(
 
 def get_current_active_user(
     current_user: User = Depends(get_current_user),
-) -> User:
+) -> Any:
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     if current_user.is_banned:
@@ -95,7 +95,7 @@ def get_current_active_user(
 
 def get_admin_user(
     current_user: User = Depends(get_current_active_user),
-) -> User:
+) -> Any:
     if current_user.role != "admin" and not current_user.is_superuser:
         raise HTTPException(
             status_code=403, detail="Not authorized. Admin access required."
@@ -105,7 +105,7 @@ def get_admin_user(
 
 def get_current_instructor(
     current_user: User = Depends(get_current_active_user),
-) -> User:
+) -> Any:
     if (
         current_user.role != "instructor"
         and current_user.role != "admin"
@@ -119,7 +119,7 @@ def get_current_instructor(
 
 def get_current_active_superuser(
     current_user: User = Depends(get_current_active_user),
-) -> User:
+) -> Any:
     """Get current active superuser. Used for routes that require superuser access."""
     if not current_user.is_superuser:
         raise HTTPException(
@@ -132,7 +132,7 @@ import logging
 from starlette.concurrency import run_in_threadpool
 logger = logging.getLogger(__name__)
 
-async def get_current_user_ws(token: str, db: Session) -> User:
+async def get_current_user_ws(token: str, db: Session) -> Any:
     """
     Get current user from WebSocket token.
     Used for WebSocket endpoint authentication.
@@ -172,3 +172,4 @@ async def get_current_user_ws(token: str, db: Session) -> User:
 
 get_current_admin = get_admin_user
 get_current_superuser = get_current_active_superuser
+get_current_active_admin = get_admin_user  # Alias for backward compatibility

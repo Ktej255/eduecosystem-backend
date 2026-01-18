@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Any, List
+from typing import Any, List, Dict
 
 from app.api import deps
 from app.models.user import User
@@ -9,7 +9,7 @@ from app.models.development import DevelopmentLog
 
 router = APIRouter()
 
-@router.get("/plan", response_model=dict)
+@router.get("/plan", response_model=Dict[str, Any])
 async def get_ai_development_plan(
     lookback: int = Query(15),
     db: Session = Depends(deps.get_db),
@@ -23,7 +23,7 @@ async def get_ai_development_plan(
         raise HTTPException(status_code=500, detail="AI failed to generate plan")
     return plan
 
-@router.post("/log-development", response_model=dict)
+@router.post("/log-development", response_model=Dict[str, Any])
 def log_development_action(
     portal: str,
     feature: str,
@@ -50,7 +50,7 @@ def log_development_action(
     db.refresh(log)
     return {"status": "success", "id": log.id}
 
-@router.get("/history", response_model=List[dict])
+@router.get("/history", response_model=List[Dict[str, Any]])
 def get_development_history(
     limit: int = Query(20),
     db: Session = Depends(deps.get_db),

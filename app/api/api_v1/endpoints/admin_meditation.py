@@ -4,7 +4,7 @@ Manage meditation processes and upload videos
 """
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Any
 from datetime import datetime
 import os
 import uuid
@@ -26,7 +26,7 @@ UPLOAD_DIR = "uploads/meditation"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-def require_admin(current_user: User = Depends(deps.get_current_user)) -> User:
+def require_admin(current_user: User = Depends(deps.get_current_user)) -> Any:
     """Require admin user"""
     if current_user.role not in ["admin", "superadmin"] and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Admin access required")

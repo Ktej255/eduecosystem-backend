@@ -9,7 +9,8 @@ from typing import Optional, List
 from datetime import date, timedelta
 from pydantic import BaseModel
 
-from app.api.deps import get_current_user, get_db
+from app.db.session import get_db
+from typing import Optional, List, Any
 from app.models.user import User
 from app.models.development_history import DevelopmentLog, DailyDevReport, AIPlanningSession
 
@@ -58,7 +59,7 @@ class AIPlanRequest(BaseModel):
 
 # ==================== HELPER ====================
 
-def check_admin(current_user: User):
+def check_admin(current_user: Any):
     """Verify user is admin"""
     if current_user.role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="Admin access required")
