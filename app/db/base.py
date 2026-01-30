@@ -91,5 +91,7 @@ from app.models import (
     ras_planner,
     study_session,
     polity,
+    adaptive_learning,
+    development_history,
 )
 print("DEBUG: Models imported in base.py")

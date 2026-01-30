@@ -1,7 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
-from uuid import UUID
 
 
 # Daily Task Schemas
@@ -20,8 +19,8 @@ class DailyTaskUpdate(BaseModel):
 
 
 class DailyTaskResponse(DailyTaskBase):
-    id: UUID
-    user_id: UUID
+    id: int
+    user_id: int
     date: date
     created_at: datetime
     updated_at: datetime
@@ -52,8 +51,8 @@ class HabitLogResponse(BaseModel):
 
 
 class HabitResponse(HabitBase):
-    id: UUID
-    user_id: UUID
+    id: int
+    user_id: int
     created_at: datetime
     updated_at: datetime
     logs: List[HabitLogResponse] = []
@@ -75,8 +74,8 @@ class DailyReflectionUpdate(BaseModel):
 
 
 class DailyReflectionResponse(DailyReflectionBase):
-    id: UUID
-    user_id: UUID
+    id: int
+    user_id: int
     date: date
     created_at: datetime
     updated_at: datetime

@@ -193,7 +193,7 @@ class TestOrderEndpoints:
     ):
         """Test guest can lookup their orders by email"""
         response = client.post(
-            "/api/v1/guest-orders/lookup", json={"email": test_guest_order.guest_email}
+            "/api/v1/orders/guest/lookup", json={"email": test_guest_order.guest_email}
         )
 
         assert response.status_code == 200

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from app.models.user import User
+from app.core.config import settings
 
 # ============================================================================
 # FIXTURES
@@ -43,40 +44,35 @@ def test_instructor(db: Session, client: TestClient):
         role.permissions.append(perm)
         db.commit()
 
-    response = client.post(
-        "/api/v1/login/access-token",
-        data={"username": "pr_instructor@test.com", "password": "InstructorPass123!"},
-    )
-    if response.status_code == 200:
-        return {
-            "email": "pr_instructor@test.com",
-            "token": response.json()["access_token"],
-            "id": 1,
-        }  # ID mock
+    # Direct DB creation for stability
+    email = "pr_instructor@test.com"
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        from app.core import security
+        user = User(
+            email=email,
+            hashed_password=security.get_password_hash("InstructorPass123!"),
+            full_name="PR Instructor",
+            is_active=True,
+            is_approved=True,
+            role="instructor",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    # Register user
-    client.post(
-        "/api/v1/login/register",
-        json={
-            "email": "pr_instructor@test.com",
-            "password": "InstructorPass123!",
-            "full_name": "PR Instructor",
-            "role": "instructor",
-        },
-    )
-
-    # Assign role object to user
-    user = db.query(User).filter(User.email == "pr_instructor@test.com").first()
-    if user and role not in user.roles:
+    if role not in user.roles:
         user.roles.append(role)
         db.commit()
 
-    login_response = client.post(
-        "/api/v1/login/access-token",
-        data={"username": "pr_instructor@test.com", "password": "InstructorPass123!"},
+    # Create access token manually
+    from app.core import security
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    token = security.create_access_token(
+        user.id, expires_delta=access_token_expires
     )
-    token = login_response.json()["access_token"]
-    return {"email": "pr_instructor@test.com", "token": token}
+    
+    return {"email": email, "token": token, "id": user.id}
 
 
 @pytest.fixture
@@ -106,36 +102,33 @@ def test_student_1(db: Session, client: TestClient):
         role.permissions.append(perm)
         db.commit()
 
-    response = client.post(
-        "/api/v1/login/access-token",
-        data={"username": "reviewer@test.com", "password": "StudentPass123!"},
-    )
-    if response.status_code == 200:
-        return {"email": "reviewer@test.com", "token": response.json()["access_token"]}
+    # Direct DB creation
+    email = "reviewer@test.com"
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        from app.core import security
+        user = User(
+            email=email,
+            hashed_password=security.get_password_hash("StudentPass123!"),
+            full_name="Reviewer Student",
+            is_active=True,
+            is_approved=True,
+            role="student",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    client.post(
-        "/api/v1/login/register",
-        json={
-            "email": "reviewer@test.com",
-            "password": "StudentPass123!",
-            "full_name": "Reviewer Student",
-        },
-    )
-
-    # Assign role
-    user = db.query(User).filter(User.email == "reviewer@test.com").first()
-    if user and role not in user.roles:
+    if role not in user.roles:
         user.roles.append(role)
         db.commit()
-
-    login_response = client.post(
-        "/api/v1/login/access-token",
-        data={"username": "reviewer@test.com", "password": "StudentPass123!"},
+    
+    from app.core import security
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    token = security.create_access_token(
+        user.id, expires_delta=access_token_expires
     )
-    return {
-        "email": "reviewer@test.com",
-        "token": login_response.json()["access_token"],
-    }
+    return {"email": email, "token": token, "id": user.id}
 
 
 @pytest.fixture
@@ -144,39 +137,36 @@ def test_student_2(db: Session, client: TestClient):
     # Reuse student role setup from test_student_1 implicitly or ensure it exists
     # For safety, ensure role exists
     from app.models.permissions import Role
-
+    
     role = db.query(Role).filter(Role.name == "student").first()
+    
+    # Direct DB creation
+    email = "reviewee@test.com"
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        from app.core import security
+        user = User(
+            email=email,
+            hashed_password=security.get_password_hash("StudentPass123!"),
+            full_name="Reviewee Student",
+            is_active=True,
+            is_approved=True,
+            role="student",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    response = client.post(
-        "/api/v1/login/access-token",
-        data={"username": "reviewee@test.com", "password": "StudentPass123!"},
-    )
-    if response.status_code == 200:
-        return {"email": "reviewee@test.com", "token": response.json()["access_token"]}
-
-    client.post(
-        "/api/v1/login/register",
-        json={
-            "email": "reviewee@test.com",
-            "password": "StudentPass123!",
-            "full_name": "Reviewee Student",
-        },
-    )
-
-    # Assign role
-    user = db.query(User).filter(User.email == "reviewee@test.com").first()
     if user and role and role not in user.roles:
         user.roles.append(role)
         db.commit()
 
-    login_response = client.post(
-        "/api/v1/login/access-token",
-        data={"username": "reviewee@test.com", "password": "StudentPass123!"},
+    from app.core import security
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    token = security.create_access_token(
+        user.id, expires_delta=access_token_expires
     )
-    return {
-        "email": "reviewee@test.com",
-        "token": login_response.json()["access_token"],
-    }
+    return {"email": email, "token": token, "id": user.id}
 
 
 @pytest.fixture

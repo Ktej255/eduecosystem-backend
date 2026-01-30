@@ -98,6 +98,8 @@ def test_create_learning_path(client: TestClient, db: Session, creator_user: Use
         "/api/v1/login/access-token",
         data={"username": creator_user.email, "password": "password"},
     )
+    if login_response.status_code != 200:
+        print(f"DEBUG: Login failed. Status: {login_response.status_code}\nResponse: {login_response.text}")
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

@@ -51,11 +51,10 @@ def test_create_team_and_join(
     team_id = r.json()["id"]
 
     # 3. Create another user to join
-    user2 = create_random_user(db)
-    user2_token = authentication_token_from_email(
-        client=client, email=user2.email, db=db
+    user_email = "joiner@example.com"
+    user2_headers = authentication_token_from_email(
+        client=client, email=user_email, db=db
     )
-    user2_headers = {"Authorization": f"Bearer {user2_token}"}
 
     # 4. Join Team
     r = client.post(

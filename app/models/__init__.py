@@ -234,3 +234,11 @@ from app.models.development_history import (
     DailyDevReport,
     AIPlanningSession,
 )
+
+# Daily Actions (Tasks, Habits, Reflections)
+from app.models.daily_action import (
+    DailyTask,
+    Habit,
+    HabitLog,
+    DailyReflection,
+)

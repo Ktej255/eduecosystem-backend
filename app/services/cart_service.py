@@ -206,12 +206,14 @@ class CartService:
     @staticmethod
     def apply_coupon_to_item(db: Session, cart_item: CartItem, coupon_code: str):
         """Apply coupon to a cart item"""
-
+        print(f"DEBUG: Applying coupon {coupon_code} to item {cart_item.id}")
+        
         coupon = (
             db.query(Coupon)
             .filter(Coupon.code == coupon_code, Coupon.is_active == True)
             .first()
         )
+        print(f"DEBUG: Coupon query result: {coupon}")
 
         if not coupon:
             raise HTTPException(status_code=404, detail="Coupon not found or inactive")

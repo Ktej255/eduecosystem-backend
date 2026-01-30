@@ -9,6 +9,8 @@ from datetime import datetime
 
 from app.db.session import Base
 
+print("DEBUG: DevelopmentHistory models loading...")
+
 
 class DevelopmentLog(Base):
     """

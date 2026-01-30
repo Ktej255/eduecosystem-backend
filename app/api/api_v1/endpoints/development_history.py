@@ -9,7 +9,7 @@ from typing import Optional, List
 from datetime import date, timedelta
 from pydantic import BaseModel
 
-from app.db.session import get_db
+from app.api.deps import get_db, get_admin_user
 from typing import Optional, List, Any
 from app.models.user import User
 from app.models.development_history import DevelopmentLog, DailyDevReport, AIPlanningSession
@@ -59,11 +59,7 @@ class AIPlanRequest(BaseModel):
 
 # ==================== HELPER ====================
 
-def check_admin(current_user: Any):
-    """Verify user is admin"""
-    if current_user.role not in ["admin", "superadmin"]:
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return current_user
+
 
 
 # ==================== DEVELOPMENT LOGS ====================
@@ -76,7 +72,7 @@ def get_development_logs(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Get development history logs with optional filters.
@@ -114,7 +110,7 @@ def get_development_logs(
 def create_development_log(
     log_data: DevelopmentLogCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Create a new development history entry.
@@ -146,7 +142,7 @@ def create_development_log(
 def get_development_log(
     log_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Get a specific development log by ID.
@@ -171,7 +167,7 @@ def update_development_log(
     log_id: int,
     log_data: DevelopmentLogCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Update an existing development log.
@@ -197,7 +193,7 @@ def update_development_log(
 def delete_development_log(
     log_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Delete a development log.
@@ -220,7 +216,7 @@ def get_daily_reports(
     limit: int = Query(30, le=100),
     batch: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Get daily development reports.
@@ -259,7 +255,7 @@ def get_daily_reports(
 def create_daily_report(
     report_data: DailyReportCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Create a new daily report.
@@ -291,7 +287,7 @@ def create_daily_report(
 def auto_generate_daily_report(
     target_date: Optional[date] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Auto-generate a daily report based on Development Logs for the specified date.
@@ -378,7 +374,7 @@ def auto_generate_daily_report(
 def generate_ai_plan(
     request: AIPlanRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Generate an AI-powered 7-day development plan based on recent history.
@@ -517,7 +513,7 @@ Consider:
 @router.get("/ai-planning/latest")
 def get_latest_ai_plan(
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Get the most recent AI planning session.
@@ -541,7 +537,7 @@ def get_latest_ai_plan(
 @router.get("/batches")
 def get_available_batches(
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin)
+    current_user: User = Depends(get_admin_user)
 ):
     """
     Get list of all unique batch names for filtering.

@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.crud import user as crud_user
 from app.schemas.user import UserCreate
 from app.models.group import Group
+from datetime import datetime
 
 
 def test_join_wolf_pack(client: TestClient, db):
@@ -197,6 +198,7 @@ def test_group_stats_calculation(client: TestClient, db):
         coins = 100 * (i + 1)
         user.streak_days = streak
         user.coins = coins
+        user.last_login = datetime.utcnow()  # Prevent streak reset on login
         db.commit()
 
         expected_total_coins += coins

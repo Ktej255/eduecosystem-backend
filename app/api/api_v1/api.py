@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.api.api_v1.endpoints import (
     auth,
     users,
@@ -18,7 +19,23 @@ from app.api.api_v1.endpoints import (
     ai,
     pdf_study,
     retention,
+    certificates,
+    categories,
+    courses,
+    notes,
+    announcements,
+    discussions,
+    live_classes,
+    learning_paths,
+    peer_reviews,
+    order,
+    reviews,
+    subscriptions,
+    progress,
+    quizzes,
+    assignments,
 )
+
 
 
 api_router = APIRouter()
@@ -30,8 +47,18 @@ api_router.include_router(auth_2fa.router, prefix="/2fa", tags=["2fa"])
 
 # Users
 api_router.include_router(users.router, prefix="/users", tags=["users"])
+
+# Admin (Stats, Users Management, Logs)
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(retention.router, prefix="/retention", tags=["retention"])
 api_router.include_router(graphotherapy.router, prefix="/graphotherapy", tags=["graphotherapy"])
+
+# Grapho Upload (Handwriting Analysis)
+from app.api.api_v1.endpoints import grapho
+api_router.include_router(grapho.router, prefix="/grapho", tags=["grapho"])
+
+# Daily Actions (Tasks, Habits, Reflection)
+api_router.include_router(daily_actions.daily_router, prefix="/daily-actions", tags=["daily-actions"])
 
 # Meditation (Student)
 api_router.include_router(meditation.router, prefix="/meditation", tags=["meditation"])
@@ -241,3 +268,119 @@ from app.api.api_v1.endpoints import pack_battles
 api_router.include_router(pack_battles.router, prefix="/pack-battles", tags=["pack-battles"])
 
 
+# Adaptive Learning (Dynamic Knowledge Graph & BKT)
+from app.api.api_v1.endpoints import adaptive_learning
+api_router.include_router(adaptive_learning.router, prefix="/adaptive-learning", tags=["adaptive-learning"])
+
+# Anti-Gravity Phase-Wise Roadmap
+from app.api.api_v1.endpoints import antigravity
+api_router.include_router(antigravity.router, prefix="/antigravity", tags=["antigravity"])
+
+# Certificates
+api_router.include_router(certificates.router, prefix="/certificates", tags=["certificates"])
+
+# Courses and Categories
+api_router.include_router(categories.router, prefix="/courses/categories", tags=["categories"])
+api_router.include_router(courses.router, prefix="/courses", tags=["courses"])
+
+# Learning Paths
+from app.api.api_v1.endpoints import learning_paths
+api_router.include_router(learning_paths.router, prefix="/learning-paths", tags=["learning-paths"])
+
+# Student Notes and Bookmarks
+from app.api.api_v1.endpoints import notes
+api_router.include_router(notes.router, prefix="/notes", tags=["notes"])
+
+# Announcements
+from app.api.api_v1.endpoints import announcements
+api_router.include_router(announcements.router, prefix="/announcements", tags=["announcements"])
+
+# Discussions
+from app.api.api_v1.endpoints import discussions
+api_router.include_router(discussions.router, prefix="/discussions", tags=["discussions"])
+
+# Live Classes
+from app.api.api_v1.endpoints import live_classes
+api_router.include_router(live_classes.router, prefix="/live-classes", tags=["live-classes"])
+
+# Orders
+from app.api.api_v1.endpoints import order
+api_router.include_router(order.router, prefix="/orders", tags=["orders"])
+
+# Cart
+from app.api.api_v1.endpoints import cart
+api_router.include_router(cart.router, prefix="/cart", tags=["cart"])
+
+# Groups
+from app.api.api_v1.endpoints import groups
+api_router.include_router(groups.router, prefix="/groups", tags=["groups"])
+
+# Shadow Mode
+from app.api.api_v1.endpoints import shadow_mode
+api_router.include_router(shadow_mode.router, prefix="/shadow-mode", tags=["shadow-mode"])
+
+# Peer Reviews
+from app.api.api_v1.endpoints import peer_reviews
+api_router.include_router(peer_reviews.router, prefix="/peer-reviews", tags=["peer-reviews"])
+
+# Question Banks
+from app.api.api_v1.endpoints import question_banks
+api_router.include_router(question_banks.router, prefix="/question-banks", tags=["question-banks"])
+
+# LMS (comprehensive endpoints)
+from app.api.api_v1.endpoints import lms
+api_router.include_router(lms.router, prefix="/lms", tags=["lms"])
+
+# Collaborative Projects
+from app.api.api_v1.endpoints import collaborative_projects
+api_router.include_router(collaborative_projects.router, prefix="/projects", tags=["collaborative-projects"])
+
+# Certificate Templates
+from app.api.api_v1.endpoints import certificate_templates
+api_router.include_router(certificate_templates.router, prefix="/certificate-templates", tags=["certificate-templates"])
+
+# Tutor (AI)
+from app.api.api_v1.endpoints import tutor
+api_router.include_router(tutor.router, prefix="/tutor", tags=["tutor"])
+
+# Email Notifications
+from app.api.api_v1.endpoints import email_notifications
+api_router.include_router(email_notifications.router, prefix="/email-notifications", tags=["email-notifications"])
+
+# Monitoring
+from app.api.api_v1.endpoints import monitoring
+api_router.include_router(monitoring.router, prefix="/monitoring", tags=["monitoring"])
+
+# Learning Groups
+from app.api.api_v1.endpoints import learning_groups
+api_router.include_router(learning_groups.router, prefix="/learning-groups", tags=["learning-groups"])
+
+# Enterprise SSO
+from app.api.api_v1.endpoints import sso
+api_router.include_router(sso.router, prefix="/sso", tags=["sso"])
+
+
+
+
+# Course Reviews
+api_router.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
+
+# Subscriptions
+api_router.include_router(subscriptions.router, prefix="/subscriptions", tags=["subscriptions"])
+
+# Lesson Progress
+api_router.include_router(progress.router, prefix="/progress", tags=["progress"])
+
+# Quizzes
+api_router.include_router(quizzes.router, prefix="/quizzes", tags=["quizzes"])
+
+# Assignments
+api_router.include_router(assignments.router, prefix="/assignments", tags=["assignments"])
+
+# Modules and Lessons (from courses)
+api_router.include_router(courses.modules_router, prefix="/modules", tags=["modules"])
+api_router.include_router(courses.lessons_router, prefix="/lessons", tags=["lessons"])
+
+# User Activities (Generic Progress Tracking)
+from app.api.api_v1.endpoints import user_activities
+api_router.include_router(user_activities.router, prefix="/user-activities", tags=["user-activities"])

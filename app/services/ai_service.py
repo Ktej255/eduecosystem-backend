@@ -4,7 +4,7 @@ Now wraps GeminiService for unified tiered access and fallback.
 """
 
 import os
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from app.services.gemini_service import gemini_service
 
 class AIService:

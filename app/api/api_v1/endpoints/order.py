@@ -23,7 +23,7 @@ router = APIRouter()
 GUEST_CART_COOKIE = "guest_cart_session"
 
 
-@router.post("/orders", response_model=OrderResponse)
+@router.post("/", response_model=OrderResponse)
 def create_order(
     order_data: OrderCreate,
     request: Request,
@@ -59,7 +59,7 @@ def create_order(
     return OrderService.build_order_response(db, order)
 
 
-@router.get("/orders", response_model=OrderListResponse)
+@router.get("/", response_model=OrderListResponse)
 def get_user_orders(
     page: int = 1,
     page_size: int = 20,
@@ -97,7 +97,7 @@ def get_user_orders(
     )
 
 
-@router.get("/orders/{order_id}", response_model=OrderResponse)
+@router.get("/{order_id}", response_model=OrderResponse)
 def get_order_details(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -125,7 +125,7 @@ def get_order_details(
     return OrderService.build_order_response(db, order)
 
 
-@router.get("/orders/number/{order_number}", response_model=OrderResponse)
+@router.get("/number/{order_number}", response_model=OrderResponse)
 def get_order_by_number(
     order_number: str,
     db: Session = Depends(deps.get_db),
@@ -152,7 +152,7 @@ def get_order_by_number(
     return OrderService.build_order_response(db, order)
 
 
-@router.post("/orders/{order_id}/cancel")
+@router.post("/{order_id}/cancel")
 def cancel_order(
     order_id: int,
     reason: Optional[str] = None,
@@ -181,7 +181,7 @@ def cancel_order(
     }
 
 
-@router.post("/guest-orders/lookup", response_model=OrderListResponse)
+@router.post("/guest/lookup", response_model=OrderListResponse)
 def lookup_guest_orders(
     lookup_data: GuestOrderLookup, db: Session = Depends(deps.get_db)
 ):
@@ -243,7 +243,7 @@ def lookup_guest_orders(
         )
 
 
-@router.post("/orders/{order_id}/process")
+@router.post("/{order_id}/process")
 def process_order(
     order_id: int,
     payment_id: Optional[int] = None,

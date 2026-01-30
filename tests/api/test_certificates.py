@@ -11,6 +11,7 @@ def create_user_and_course(db):
         email="cert_user@example.com",
         full_name="Cert User",
         hashed_password=get_password_hash("password"),
+        is_active=True,
     )
     db.add(user_in)
     db.commit()
@@ -18,7 +19,7 @@ def create_user_and_course(db):
     # Create a course
     course_in = models.Course(
         title="Test Course",
-        slug="test-course",
+        slug="test-course-cert",
         description="Test",
         instructor_id=user_in.id
     )
@@ -53,6 +54,9 @@ def test_get_my_certificates(client: TestClient, db):
         f"{settings.API_V1_STR}/login/access-token",
         data={"username": user.email, "password": "password"},
     )
+    print(f"DEBUG: Login response status: {login_resp.status_code}")
+    print(f"DEBUG: Login response body: {login_resp.text}")
+    assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     # Call my certificates endpoint

@@ -12,8 +12,12 @@ def create_random_course(db: Session, instructor_id: int = None) -> Course:
     title = random_lower_string()
     description = random_lower_string()
 
+    import re
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    
     db_obj = Course(
         title=title,
+        slug=slug,
         description=description,
         instructor_id=instructor_id,
         is_published=True,

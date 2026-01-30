@@ -2,7 +2,40 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.development_history import DevelopmentLog, DailyDevReport
-from datetime import date
+import pytest
+from datetime import date, timedelta
+from app.models.user import User
+from app.core import security
+
+@pytest.fixture
+def superuser_token_headers(client: TestClient, db: Session) -> dict:
+    from app.db.base import Base
+    print(f"DEBUG: Registered tables in metadata: {list(Base.metadata.tables.keys())}")
+    
+    email = "superuser_dev_history@example.com"
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        user = User(
+            email=email,
+            hashed_password=security.get_password_hash("password"),
+            full_name="Super User Dev History",
+            is_active=True,
+            is_superuser=True,
+            role="admin",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    print(f"DEBUG: Superuser created/found: {user.id}, {user.email}")
+    check_user = db.query(User).filter(User.id == user.id).first()
+    print(f"DEBUG: Check user in DB: {check_user}")
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    token = security.create_access_token(
+        user.id, expires_delta=access_token_expires
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 def test_create_development_log(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -74,6 +107,7 @@ def test_get_ai_plan(
         headers=superuser_token_headers,
         json={"days_to_analyze": 7}
     )
+
     # It might return 200 with plan or 500 if key missing, but we expect at least parsing
     # Since we implemented try-except block in endpoint, it should return 200 with fallback
     assert response.status_code == 200

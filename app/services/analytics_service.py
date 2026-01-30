@@ -4,8 +4,90 @@ from app.models.drill import DrillResult
 from app.models.gamification import Streak
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
+from app.models.shadow_mode import ShadowModeSession
+from app.models.activity_log import ActivityLog
+from app.models.submission import HandwritingSubmission
 
 class AnalyticsService:
+    def get_dashboard_analytics(self, db: Session, user_id: int) -> Dict[str, Any]:
+        """
+        Get comprehensive analytics for user dashboard.
+        """
+        user = db.query(User).get(user_id)
+        if not user:
+            return {}
+
+        # 1. Shadow Mode Stats
+        shadow_sessions = db.query(ShadowModeSession).filter(
+            ShadowModeSession.user_id == user_id,
+            ShadowModeSession.is_active == False
+        ).all()
+        
+        formatted_shadow = {
+            "completed_days": len(shadow_sessions),
+            "total_days": 7,
+            "total_minutes": sum(s.duration_minutes or 0 for s in shadow_sessions),
+            "avg_focus_score": sum(s.focus_score or 0 for s in shadow_sessions) / len(shadow_sessions) if shadow_sessions else 0
+        }
+
+        # 2. Attention Stats
+        attention_logs = db.query(ActivityLog).filter(
+            ActivityLog.user_id == user_id,
+            ActivityLog.action == "attention_check"
+        ).order_by(ActivityLog.timestamp.desc()).limit(10).all()
+        
+        recent_scores = []
+        for log in attention_logs:
+            try:
+                recent_scores.append(float(log.details))
+            except (ValueError, TypeError):
+                pass
+                
+        formatted_attention = {
+            "total_checks": db.query(ActivityLog).filter(
+                ActivityLog.user_id == user_id,
+                ActivityLog.action == "attention_check"
+            ).count(),
+            "average_focus": sum(recent_scores) / len(recent_scores) if recent_scores else 0,
+            "recent_scores": recent_scores
+        }
+
+        # 3. Handwriting Stats
+        formatted_handwriting = {
+            "total_submissions": db.query(HandwritingSubmission).filter(
+                HandwritingSubmission.user_id == user_id
+            ).count()
+        }
+
+        # 5. Insights
+        insights = []
+        if user.streak_days >= 3:
+            insights.append({
+                "title": "On Fire!",
+                "description": f"You're on a {user.streak_days} day streak. Keep it up!",
+                "type": "success"
+            })
+        else:
+             insights.append({
+                "title": "Get Started",
+                "description": "Start your streak today!",
+                "type": "info"
+            })
+
+
+        return {
+            "user": {
+                "coins": user.coins,
+                "streak_days": user.streak_days,
+                "full_name": user.full_name
+            },
+            "shadow_mode": formatted_shadow,
+            "attention": formatted_attention,
+            "handwriting": formatted_handwriting,
+            "weekly_activity": [],
+            "insights": insights
+        }
+
     def assess_student_risk(self, db: Session, student_id: int) -> Dict[str, Any]:
         """
         Calculates a risk score (0-100) for a student.

@@ -33,50 +33,67 @@ def test_category(db: Session):
 @pytest.fixture
 def test_instructor(db: Session, client: TestClient):
     """Create a test instructor user"""
-    response = client.post(
-        "/api/v1/login/register",
-        json={
-            "email": "instructor@test.com",
-            "password": "InstructorPass123!",
-            "full_name": "Test Instructor",
-            "role": "instructor",
-        },
+    from app.core.security import get_password_hash
+    from app.models.user import User
+
+    # Create user directly in DB
+    user = User(
+        email="instructor@test.com",
+        username="instructor_test",
+        hashed_password=get_password_hash("InstructorPass123!"),
+        full_name="Test Instructor",
+        role="instructor",
+        is_active=True,
+        is_verified=True,
     )
-    assert response.status_code in [200, 201]
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     # Login to get token
     login_response = client.post(
         "/api/v1/login/access-token",
         data={"username": "instructor@test.com", "password": "InstructorPass123!"},
     )
+    if login_response.status_code != 200:
+        print(f"DEBUG: Login failed. Status: {login_response.status_code}, Response: {login_response.text}")
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]
 
-    return {"email": "instructor@test.com", "token": token}
+    return {"email": "instructor@test.com", "token": token, "id": user.id}
 
 
 @pytest.fixture
 def test_student(db: Session, client: TestClient):
     """Create a test student user"""
-    response = client.post(
-        "/api/v1/login/register",
-        json={
-            "email": "student@test.com",
-            "password": "StudentPass123!",
-            "full_name": "Test Student",
-        },
+    from app.core.security import get_password_hash
+    from app.models.user import User
+
+    # Create user directly in DB
+    user = User(
+        email="student@test.com",
+        username="student_test",
+        hashed_password=get_password_hash("StudentPass123!"),
+        full_name="Test Student",
+        role="student",
+        is_active=True,
+        is_verified=True,
     )
-    assert response.status_code in [200, 201]
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     # Login to get token
     login_response = client.post(
         "/api/v1/login/access-token",
         data={"username": "student@test.com", "password": "StudentPass123!"},
     )
+    if login_response.status_code != 200:
+        print(f"DEBUG: Login failed. Status: {login_response.status_code}, Response: {login_response.text}")
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]
 
-    return {"email": "student@test.com", "token": token}
+    return {"email": "student@test.com", "token": token, "id": user.id}
 
 
 @pytest.fixture
@@ -299,6 +316,10 @@ def test_add_lesson_to_module(client: TestClient, test_course, test_instructor):
         json=module_data,
         headers={"Authorization": f"Bearer {test_instructor['token']}"},
     )
+    if module_response.status_code not in [200, 201]:
+        print(f"DEBUG: module_response status: {module_response.status_code}")
+        print(f"DEBUG: module_response text: {module_response.text}")
+    assert module_response.status_code in [200, 201]
     module_id = module_response.json()["id"]
 
     # Add lesson to module

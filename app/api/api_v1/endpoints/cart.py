@@ -24,7 +24,7 @@ router = APIRouter()
 GUEST_CART_COOKIE = "guest_cart_session"
 
 
-@router.get("/cart", response_model=CartSummary)
+@router.get("/", response_model=CartSummary)
 def get_cart(
     request: Request,
     response: Response,
@@ -55,7 +55,7 @@ def get_cart(
     return CartService.get_cart_summary(db, cart.id)
 
 
-@router.post("/cart/items", response_model=CartItemResponse)
+@router.post("/items", response_model=CartItemResponse)
 def add_to_cart(
     item_data: CartItemCreate,
     request: Request,
@@ -97,7 +97,7 @@ def add_to_cart(
     return item_response
 
 
-@router.patch("/cart/items/{item_id}", response_model=CartItemResponse)
+@router.patch("/items/{item_id}", response_model=CartItemResponse)
 def update_cart_item(
     item_id: int,
     update_data: CartItemUpdate,
@@ -134,7 +134,7 @@ def update_cart_item(
     return item_response
 
 
-@router.delete("/cart/items/{item_id}")
+@router.delete("/items/{item_id}")
 def remove_from_cart(
     item_id: int,
     db: Session = Depends(deps.get_db),
@@ -160,7 +160,7 @@ def remove_from_cart(
     return {"status": "success", "message": "Item removed from cart"}
 
 
-@router.delete("/cart/clear")
+@router.delete("/clear")
 def clear_cart(
     request: Request,
     db: Session = Depends(deps.get_db),
@@ -183,7 +183,7 @@ def clear_cart(
     return {"status": "success", "message": "Cart cleared"}
 
 
-@router.post("/cart/apply-coupon")
+@router.post("/apply-coupon")
 def apply_coupon(
     coupon_request: ApplyCouponRequest,
     request: Request,
@@ -193,47 +193,53 @@ def apply_coupon(
     """
     Apply a coupon code to cart or specific cart item.
     """
-    # Get cart
-    if current_user:
-        cart = CartService.get_or_create_cart(db, user_id=current_user.id)
-    else:
-        session_id = request.cookies.get(GUEST_CART_COOKIE)
-        if not session_id:
-            raise HTTPException(status_code=404, detail="No cart found")
-        cart = CartService.get_or_create_cart(db, session_id=session_id)
+    try:
+        # Get cart
+        if current_user:
+            cart = CartService.get_or_create_cart(db, user_id=current_user.id)
+        else:
+            session_id = request.cookies.get(GUEST_CART_COOKIE)
+            if not session_id:
+                raise HTTPException(status_code=404, detail="No cart found")
+            cart = CartService.get_or_create_cart(db, session_id=session_id)
 
-    # Get items to apply coupon to
-    if coupon_request.cart_item_id:
-        # Apply to specific item
-        cart_items = (
-            db.query(CartItem)
-            .filter(
-                CartItem.id == coupon_request.cart_item_id, CartItem.cart_id == cart.id
+        # Get items to apply coupon to
+        if coupon_request.cart_item_id:
+            # Apply to specific item
+            cart_items = (
+                db.query(CartItem)
+                .filter(
+                    CartItem.id == coupon_request.cart_item_id, CartItem.cart_id == cart.id
+                )
+                .all()
             )
-            .all()
-        )
 
-        if not cart_items:
-            raise HTTPException(status_code=404, detail="Cart item not found")
-    else:
-        # Apply to all items
-        cart_items = db.query(CartItem).filter(CartItem.cart_id == cart.id).all()
+            if not cart_items:
+                raise HTTPException(status_code=404, detail="Cart item not found")
+        else:
+            # Apply to all items
+            cart_items = db.query(CartItem).filter(CartItem.cart_id == cart.id).all()
 
-    # Apply coupon to each item
-    for cart_item in cart_items:
-        try:
-            CartService.apply_coupon_to_item(db, cart_item, coupon_request.coupon_code)
-        except HTTPException:
-            # If coupon doesn't apply to this item, skip it
-            continue
+        # Apply coupon to each item
+        for cart_item in cart_items:
+            try:
+                CartService.apply_coupon_to_item(db, cart_item, coupon_request.coupon_code)
+            except HTTPException:
+                # If coupon doesn't apply to this item, skip it
+                continue
 
-    db.commit()
+        db.commit()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"DEBUG: Exception in apply_coupon: {e}")
+        raise e
 
     # Return updated cart summary
     return CartService.get_cart_summary(db, cart.id)
 
 
-@router.get("/cart/summary", response_model=CartSummary)
+@router.get("/summary", response_model=CartSummary)
 def get_cart_summary(
     request: Request,
     db: Session = Depends(deps.get_db),
