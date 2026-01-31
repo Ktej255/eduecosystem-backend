@@ -1,8 +1,14 @@
 #!/bin/bash
-set -e
+# Production startup script with timeout protection
+# Prevents container hanging when database is unreachable
 
-echo "Running database migrations..."
-alembic upgrade head || echo "Migration failed or already applied"
+echo "Starting Eduecosystem Backend..."
 
-echo "Starting application..."
-exec uvicorn main:app --host 0.0.0.0 --port 8000
+# Skip migrations on startup to prevent timeout hangs
+# Migrations should be run manually when needed:
+#   docker exec <container> alembic upgrade head
+# Or via a separate migration job
+echo "Skipping automatic migrations (run manually when needed)"
+
+echo "Starting uvicorn server..."
+exec uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-keep-alive 30

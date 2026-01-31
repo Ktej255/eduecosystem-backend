@@ -70,11 +70,13 @@ async def lifespan(app: FastAPI):
     """
     Lifespan context manager for production deployment.
     Initializes essential services only (skips Redis/Sentry for now).
+    IMPORTANT: Keep this lightweight - avoid database operations that could hang.
     """
     logger.info("Starting Eduecosystem Backend (Production Mode)...")
     
-    # Auto-seed meditation processes if table is empty
-    seed_meditation_processes()
+    # Skip meditation seeding on startup to prevent database timeout hangs
+    # This can be run manually via API endpoint if needed
+    # seed_meditation_processes()
     
     yield  # Application runs here
 
