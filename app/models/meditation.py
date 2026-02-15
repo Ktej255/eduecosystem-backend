@@ -8,12 +8,49 @@ from sqlalchemy.sql import func
 from app.db.session import Base
 
 
-# Level configuration
+# Level configuration with pricing
 MEDITATION_LEVELS = {
-    1: {"days": 60, "name": "Foundation", "description": "Building daily meditation habit"},
-    2: {"days": 60, "name": "Intermediate", "description": "Deepening your practice"},
-    3: {"days": 60, "name": "Advanced", "description": "Advanced meditation techniques"},
-    4: {"days": 60, "name": "Mastery", "description": "Complete mastery of meditation"}
+    1: {
+        "days": 60,
+        "name": "Foundation",
+        "description": "Building daily meditation habit",
+        "price": 999,
+        "currency": "INR",
+        "free_processes": 3  # First 3 processes are free
+    },
+    2: {
+        "days": 60,
+        "name": "Intermediate",
+        "description": "Deepening your practice",
+        "price": 1499,
+        "currency": "INR"
+    },
+    3: {
+        "days": 60,
+        "name": "Advanced",
+        "description": "Advanced meditation techniques",
+        "price": 1999,
+        "currency": "INR"
+    },
+    4: {
+        "days": 60,
+        "name": "Mastery",
+        "description": "Complete mastery of meditation",
+        "price": 2499,
+        "currency": "INR"
+    }
+}
+
+# Bundle pricing
+MEDITATION_BUNDLES = {
+    "all_levels": {
+        "name": "Complete Journey",
+        "description": "All 4 levels - Save ₹1,000",
+        "levels": [1, 2, 3, 4],
+        "price": 5999,
+        "currency": "INR",
+        "savings": 1000
+    }
 }
 
 # Process unlock schedule: Every 7 days, 3 new processes are added
@@ -55,6 +92,7 @@ class MeditationProgress(Base):
     current_day = Column(Integer, default=1)
     total_streak = Column(Integer, default=0)
     preferred_session = Column(String(20), default="morning")  # morning/night
+    unlocked_levels = Column(Integer, default=1)  # Max level unlocked by purchase or completion
     last_practice_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -80,6 +118,7 @@ class MeditationDayCompletion(Base):
     # Relationships
     progress = relationship("MeditationProgress", back_populates="day_completions")
     process_completions = relationship("MeditationProcessCompletion", back_populates="day_completion", cascade="all, delete-orphan")
+    experience = relationship("MeditationExperience", back_populates="day_completion", uselist=False, cascade="all, delete-orphan")
 
 
 class MeditationProcessCompletion(Base):
@@ -95,6 +134,45 @@ class MeditationProcessCompletion(Base):
     # Relationships
     day_completion = relationship("MeditationDayCompletion", back_populates="process_completions")
     process = relationship("MeditationProcess")
+
+
+class MeditationExperience(Base):
+    """Records pre and post-session mental state for AI-powered progress tracking"""
+    __tablename__ = "meditation_experiences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    day_completion_id = Column(Integer, ForeignKey("meditation_day_completions.id"), nullable=False)
+    
+    # Pre-session mental state
+    pre_stress_level = Column(Integer, nullable=False)  # 1-10 scale
+    pre_anxiety_level = Column(Integer, nullable=False)  # 1-10 scale
+    pre_focus_level = Column(Integer, nullable=False)  # 1-10 scale
+    pre_emotional_state = Column(String(50), nullable=False)  # Calm/Anxious/Stressed/Overwhelmed/Neutral
+    pre_concerns = Column(Text, nullable=True)
+    pre_recorded_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Post-session mental state
+    post_stress_level = Column(Integer, nullable=True)  # 1-10 scale
+    post_anxiety_level = Column(Integer, nullable=True)  # 1-10 scale
+    post_focus_level = Column(Integer, nullable=True)  # 1-10 scale
+    post_emotional_state = Column(String(50), nullable=True)
+    post_insights = Column(Text, nullable=True)
+    post_effectiveness_rating = Column(Integer, nullable=True)  # 1-5 stars
+    post_recorded_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Calculated improvement metrics (computed when post-session data is saved)
+    stress_improvement = Column(Integer, nullable=True)  # pre - post (positive = improvement)
+    anxiety_improvement = Column(Integer, nullable=True)  # pre - post (positive = improvement)
+    focus_improvement = Column(Integer, nullable=True)  # post - pre (positive = improvement)
+    overall_improvement_score = Column(Float, nullable=True)  # Weighted average of improvements
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="meditation_experiences")
+    day_completion = relationship("MeditationDayCompletion", back_populates="experience")
 
 
 # Keep backward compatibility with old model
@@ -171,3 +249,38 @@ def get_new_processes_for_day(day_number: int) -> tuple:
     end_process = min(end_process, 12)
     
     return (start_process, end_process)
+
+
+class MeditationLevelPurchase(Base):
+    """Track meditation level purchases"""
+    __tablename__ = "meditation_level_purchases"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    level = Column(Integer, nullable=False)  # 1-4
+    
+    # Pricing
+    amount_paid = Column(Float, nullable=False)  # In INR
+    currency = Column(String(3), default="INR")
+    discount_applied = Column(Float, default=0.0)
+    
+    # Payment gateway details
+    payment_gateway = Column(String(50), nullable=False)  # "razorpay"
+    payment_id = Column(String(255), nullable=False, unique=True)
+    order_id = Column(String(255), nullable=True)
+    payment_status = Column(String(50), default="pending")  # pending, completed, failed, refunded
+    
+    # Metadata
+    purchased_at = Column(DateTime(timezone=True), server_default=func.now())
+    payment_method = Column(String(50), nullable=True)  # card, upi, netbanking, wallet
+    receipt_url = Column(String(500), nullable=True)
+    
+    # Additional details
+    razorpay_signature = Column(String(500), nullable=True)
+    notes = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="meditation_purchases")

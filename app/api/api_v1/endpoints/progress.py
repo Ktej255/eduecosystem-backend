@@ -302,3 +302,89 @@ def check_course_completion(
             print(f"Failed to award coins for course completion: {e}")
 
     db.commit()
+
+
+@router.post("/sync", response_model=schemas.UniversalProgress)
+def sync_universal_progress(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    progress_in: schemas.UniversalProgressUpdate,
+) -> Any:
+    """
+    Sync universal progress state from frontend.
+    """
+    from app.models.universal_progress import UniversalProgress
+    
+    progress = db.query(UniversalProgress).filter(UniversalProgress.user_id == current_user.id).first()
+    
+    if not progress:
+        progress = UniversalProgress(
+            user_id=current_user.id,
+            state_blob=progress_in.state_blob
+        )
+        db.add(progress)
+    else:
+        progress.state_blob = progress_in.state_blob
+        progress.last_synced_at = datetime.utcnow()
+    
+    # Extract XP and Streak for the global leaderboard
+    try:
+        if isinstance(progress_in.state_blob, dict):
+            # Support both new nested structure and legacy flattened structure
+            blob = progress_in.state_blob
+            
+            # 1. Try new nested structure: { "stats": { "overallStreak": X, ... }, "progress": { ... } }
+            stats = blob.get("stats", {})
+            xp = stats.get("xp earned") or stats.get("coinsEarned") # Fallback checks
+            streak = stats.get("overallStreak")
+
+            # 2. Try legacy/fallback flattened structure
+            if xp is None:
+                xp = blob.get("totalXP")
+            if streak is None:
+                streak = blob.get("currentStreak")
+            
+            if xp is not None:
+                new_xp = int(xp)
+                xp_diff = new_xp - current_user.xp
+                current_user.xp = new_xp
+                
+                # Update Wolf Pack points if XP increased
+                if xp_diff > 0:
+                    from app.services.pack_service import pack_service
+                    pack_service.sync_points_to_pack(db, current_user.id, xp_diff)
+
+            if streak is not None:
+                current_user.streak_days = int(streak)
+                
+            db.add(current_user)
+            
+            # Phase 8: Trigger Adaptive Unlocking for 36 Skills
+            from app.services.holistic_service import holistic_service
+            holistic_service.check_and_unlock_skills(db, current_user)
+            
+    except Exception as e:
+        print(f"Failed to extract XP/Streak from sync blob: {e}")
+    
+    db.commit()
+    db.refresh(progress)
+    return progress
+
+
+@router.get("/sync", response_model=schemas.UniversalProgress)
+def get_universal_progress(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Get the latest synced universal progress state.
+    """
+    from app.models.universal_progress import UniversalProgress
+    
+    progress = db.query(UniversalProgress).filter(UniversalProgress.user_id == current_user.id).first()
+    if not progress:
+        raise HTTPException(status_code=404, detail="No sync state found")
+    
+    return progress

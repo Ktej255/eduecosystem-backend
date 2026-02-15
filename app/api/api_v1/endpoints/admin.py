@@ -1,4 +1,7 @@
 from typing import Any, Optional, Dict, List
+from pathlib import Path
+import os
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
@@ -495,3 +498,36 @@ def update_user_batch_access(
     db.commit()
 
     return {"message": "User access updated successfully", "user": jsonable_encoder(user)}
+
+
+class ContentSaveRequest(BaseModel):
+    content: str
+    filename: str = "mcq_dump.ts"
+
+
+@router.post("/save-content")
+def save_generated_content(
+    request: ContentSaveRequest,
+    current_admin: User = Depends(deps.get_admin_user),
+) -> Any:
+    """
+    Save generated content to the frontend codebase.
+    """
+    try:
+        # Resolve path relative to backend/app/api/api_v1/endpoints/admin.py
+        # 0:endpoints, 1:api_v1, 2:api, 3:app, 4:backend, 5:Eduecosystem (Root)
+        root_dir = Path(__file__).resolve().parents[5]
+        target_dir = root_dir / "frontend/src/components/batch1/polity/data/generated"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Security check: ensure filename is just a basename
+        safe_filename = os.path.basename(request.filename)
+        target_file = target_dir / safe_filename
+        
+        with open(target_file, "w", encoding="utf-8") as f:
+            f.write(request.content)
+            
+        return {"message": "Content saved successfully", "path": str(target_file)}
+    except Exception as e:
+        print(f"Error saving content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -53,6 +53,7 @@ class MeditationProgressResponse(BaseModel):
     current_day: int
     total_streak: int
     preferred_session: str
+    unlocked_levels: int
     last_practice_date: Optional[datetime] = None
 
     class Config:
@@ -140,3 +141,192 @@ class DayCompleteResponse(BaseModel):
     new_streak: int
     level_completed: bool = False
     next_level_unlocked: bool = False
+
+
+# ============================================================================
+# Experience Recording Schemas (AI Progress Tracking)
+# ============================================================================
+
+class PreSessionExperienceCreate(BaseModel):
+    """Schema for recording pre-session mental state"""
+    level: int
+    day_number: int
+    stress_level: int  # 1-10
+    anxiety_level: int  # 1-10
+    focus_level: int  # 1-10
+    emotional_state: str  # Calm/Anxious/Stressed/Overwhelmed/Neutral
+    concerns: Optional[str] = None
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "level": 1,
+                "day_number": 5,
+                "stress_level": 7,
+                "anxiety_level": 6,
+                "focus_level": 4,
+                "emotional_state": "Stressed",
+                "concerns": "Feeling overwhelmed with upcoming exams"
+            }
+        }
+
+
+class PostSessionExperienceCreate(BaseModel):
+    """Schema for recording post-session experience"""
+    experience_id: int
+    stress_level: int  # 1-10
+    anxiety_level: int  # 1-10
+    focus_level: int  # 1-10
+    emotional_state: str  # Calm/Anxious/Stressed/Overwhelmed/Neutral
+    insights: Optional[str] = None
+    effectiveness_rating: int  # 1-5 stars
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "experience_id": 123,
+                "stress_level": 3,
+                "anxiety_level": 2,
+                "focus_level": 8,
+                "emotional_state": "Calm",
+                "insights": "Feeling much more centered and focused after the session",
+                "effectiveness_rating": 5
+            }
+        }
+
+
+class ExperienceResponse(BaseModel):
+    """Response schema for experience data"""
+    id: int
+    user_id: int
+    day_completion_id: int
+    
+    # Pre-session
+    pre_stress_level: int
+    pre_anxiety_level: int
+    pre_focus_level: int
+    pre_emotional_state: str
+    pre_concerns: Optional[str] = None
+    pre_recorded_at: datetime
+    
+    # Post-session
+    post_stress_level: Optional[int] = None
+    post_anxiety_level: Optional[int] = None
+    post_focus_level: Optional[int] = None
+    post_emotional_state: Optional[str] = None
+    post_insights: Optional[str] = None
+    post_effectiveness_rating: Optional[int] = None
+    post_recorded_at: Optional[datetime] = None
+    
+    # Improvements
+    stress_improvement: Optional[int] = None
+    anxiety_improvement: Optional[int] = None
+    focus_improvement: Optional[int] = None
+    overall_improvement_score: Optional[float] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class AnalyticsResponse(BaseModel):
+    """Overall analytics from all experiences"""
+    total_sessions: int
+    average_stress_improvement: float
+    average_anxiety_improvement: float
+    average_focus_improvement: float
+    overall_wellbeing_score: float  # 0-100
+    trend_direction: str  # "improving", "stable", "declining"
+    best_time_of_day: Optional[str] = None  # "morning" or "night"
+    most_effective_processes: List[int] = []  # Process IDs
+
+
+class GraphDataPoint(BaseModel):
+    """Single data point for graphs"""
+    date: str  # ISO format date
+    stress_level: Optional[int] = None
+    anxiety_level: Optional[int] = None
+    focus_level: Optional[int] = None
+    improvement_score: Optional[float] = None
+
+
+class GraphDataResponse(BaseModel):
+    """Graph data for visualization"""
+    pre_session_data: List[GraphDataPoint]
+    post_session_data: List[GraphDataPoint]
+    improvement_data: List[GraphDataPoint]
+    date_range: str  # e.g., "Last 30 days"
+
+
+# ============================================================================
+# PAYMENT SCHEMAS (Phase 2)
+# ============================================================================
+
+class LevelPricingResponse(BaseModel):
+    """Pricing information for a meditation level"""
+    level: int
+    name: str
+    description: str
+    price: float
+    currency: str
+    free_processes: Optional[int] = None
+
+
+class BundlePricingResponse(BaseModel):
+    """Bundle pricing information"""
+    name: str
+    description: str
+    levels: List[int]
+    price: float
+    currency: str
+    savings: float
+
+
+class PricingResponse(BaseModel):
+    """Complete pricing information"""
+    levels: List[LevelPricingResponse]
+    bundles: List[BundlePricingResponse]
+
+
+class PurchaseInitiateRequest(BaseModel):
+    """Request to initiate a level purchase"""
+    level: int
+
+
+class PurchaseInitiateResponse(BaseModel):
+    """Response with Razorpay order details"""
+    order_id: str
+    amount: float
+    currency: str
+    level: int
+    razorpay_key: str  # Public key for frontend
+
+
+class PaymentVerificationRequest(BaseModel):
+    """Request to verify payment"""
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+
+class PurchaseResponse(BaseModel):
+    """Purchase record response"""
+    id: int
+    user_id: int
+    level: int
+    amount_paid: float
+    currency: str
+    payment_status: str
+    purchased_at: Optional[datetime] = None
+    payment_method: Optional[str] = None
+    receipt_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PurchaseHistoryResponse(BaseModel):
+    """User's purchase history"""
+    purchases: List[PurchaseResponse]
+    total_spent: float
+    levels_owned: List[int]
+

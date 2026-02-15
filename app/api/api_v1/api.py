@@ -34,6 +34,7 @@ from app.api.api_v1.endpoints import (
     progress,
     quizzes,
     assignments,
+    holistic,
 )
 
 
@@ -157,6 +158,9 @@ api_router.include_router(polity.router, prefix="/polity", tags=["polity"])
 from app.api.api_v1.endpoints import attendance
 api_router.include_router(attendance.router, prefix="/attendance", tags=["attendance"])
 
+# Holistic & 36 Skills
+api_router.include_router(holistic.router, prefix="/holistic", tags=["holistic"])
+
 # Public Branding (Multi-Tenancy Phase 6)
 from app.api.api_v1.endpoints import branding
 api_router.include_router(branding.router, prefix="/public", tags=["branding"])
@@ -271,6 +275,10 @@ api_router.include_router(pack_battles.router, prefix="/pack-battles", tags=["pa
 # Adaptive Learning (Dynamic Knowledge Graph & BKT)
 from app.api.api_v1.endpoints import adaptive_learning
 api_router.include_router(adaptive_learning.router, prefix="/adaptive-learning", tags=["adaptive-learning"])
+
+# UPSC Synapse Engine (Cognitive Diagnostics)
+from app.api.api_v1.endpoints import upsc_synapse
+api_router.include_router(upsc_synapse.router, prefix="/synapse", tags=["upsc-synapse"])
 
 # Anti-Gravity Phase-Wise Roadmap
 from app.api.api_v1.endpoints import antigravity

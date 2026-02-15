@@ -466,3 +466,79 @@ def get_student_progress(
             })
     
     return result
+# --- Admin: Question Stats & Bulk Ingest ---
+
+@router.get("/admin/questions/stats")
+def get_question_stats(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Get statistics of questions grouped by subject.
+    """
+    from sqlalchemy import func
+    stats = db.query(
+        UPSCQuestion.subject, 
+        func.count(UPSCQuestion.id)
+    ).group_by(UPSCQuestion.subject).all()
+    
+    total_questions = db.query(UPSCQuestion).count()
+    
+    return {
+        "total": total_questions,
+        "by_subject": {subject: count for subject, count in stats}
+    }
+
+@router.post("/admin/questions/bulk-ingest")
+async def bulk_ingest_questions(
+    *,
+    db: Session = Depends(deps.get_db),
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Bulk ingest questions from JSON/CSV.
+    """
+    import json
+    import csv
+    import io
+
+    content = await file.read()
+    questions_added = 0
+
+    try:
+        if file.filename.endswith('.json'):
+            data = json.loads(content)
+            for item in data:
+                # Basic validation and creation
+                q = UPSCQuestion(
+                    plan_id=item.get("plan_id"),
+                    question_number=item.get("question_number"),
+                    question_text=item.get("question_text"),
+                    subject=item.get("subject"),
+                    created_by_id=current_user.id
+                )
+                db.add(q)
+                questions_added += 1
+        
+        elif file.filename.endswith('.csv'):
+            stream = io.StringIO(content.decode("utf-8"))
+            reader = csv.DictReader(stream)
+            for row in reader:
+                q = UPSCQuestion(
+                    plan_id=row.get("plan_id"),
+                    question_number=row.get("question_number"),
+                    question_text=row.get("question_text"),
+                    subject=row.get("subject"),
+                    created_by_id=current_user.id
+                )
+                db.add(q)
+                questions_added += 1
+        
+        db.commit()
+        return {"message": f"Successfully ingested {questions_added} questions"}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to ingest: {str(e)}")

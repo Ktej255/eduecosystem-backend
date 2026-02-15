@@ -4,7 +4,7 @@ Run this script to set ktej255@gmail.com as the master teacher/admin account
 """
 import asyncio
 from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, engine, Base
 # Import base to register all models
 import app.db.base
 from app.models.user import User
@@ -20,6 +20,10 @@ MASTER_PASSWORD = "Tej@1106"  # Updated password
 
 async def setup_master_account():
     """Set up master teacher account with full permissions"""
+    # Create tables if they don't exist (Bypassing Alembic for immediate hotfix)
+    logger.info("Ensuring all tables exist (create_all)...")
+    Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
     
     try:
@@ -49,9 +53,29 @@ async def setup_master_account():
                 is_verified=True,
                 is_premium=True,
                 coins=10000,
-                streak_days=0
+                streak_days=0,
+                is_ras_authorized=True,
+                is_batch1_authorized=True,
+                is_batch2_authorized=True,
+                subscription_status="active"
             )
             db.add(user)
+        
+        # Unlock UPSC Synapse Profile
+        from app.models.upsc_synapse import UPSCCognitiveProfile
+        
+        profile = db.query(UPSCCognitiveProfile).filter(UPSCCognitiveProfile.user_id == user.id).first()
+        if not profile:
+            logger.info("Creating new UPSC Cognitive Profile...")
+            profile = UPSCCognitiveProfile(user_id=user.id)
+            db.add(profile)
+            
+        profile.is_level2_unlocked = True
+        profile.is_level3_unlocked = True
+        profile.current_level = "level3"
+        profile.wps_score = 100.0
+        
+        logger.info(f"Unlocked all UPSC Levels (2 & 3) for {MASTER_EMAIL}")
         
         db.commit()
         db.refresh(user)

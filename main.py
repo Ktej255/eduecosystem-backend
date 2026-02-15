@@ -10,8 +10,13 @@ import logging
 import os
 import sys
 
+import sys
+print("DEBUG: Loading main.py...", file=sys.stderr)
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
+print("DEBUG: Imports complete. Initializing app...", file=sys.stderr)
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +141,7 @@ print(f"CORS Credentials: {use_credentials}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=all_cors_origins,
+    allow_origin_regex=r"https://eduecosystem-frontend.*\.vercel\.app",
     allow_credentials=use_credentials,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -187,23 +193,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Multi-Tenant Detection Middleware (Phase 6)
-from app.middleware.tenant import TenantMiddleware
-app.add_middleware(TenantMiddleware)
+# from app.middleware.tenant import TenantMiddleware
+# app.add_middleware(TenantMiddleware)
 
 
 # Import and include API router
 try:
-    print("Attempting to import api_router...")
     from app.api.api_v1.api import api_router
-    print(f"api_router imported successfully, routes: {len(api_router.routes)}")
     app.include_router(api_router, prefix=API_V1_STR)
-    print("API router included successfully")
     logger.info("API router included successfully")
+    print(f"DEBUG: API Router included successfully with prefix {API_V1_STR}")
 except Exception as e:
     import traceback
-    print(f"FAILED to include API router: {e}")
-    print(traceback.format_exc())
-    logger.error(f"Failed to include API router: {e}")
+    error_msg = f"CRITICAL: Failed to include API router: {str(e)}"
+    logger.error(error_msg)
+    print(error_msg)
+    traceback.print_exc()
 
 
 

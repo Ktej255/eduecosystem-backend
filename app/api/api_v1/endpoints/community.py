@@ -82,15 +82,20 @@ def get_active_users(
 @router.get("/leaderboard", response_model=List[LeaderboardEntry])
 def get_leaderboard(
     db: Session = Depends(deps.get_db),
+    limit: int = 10
 ) -> Any:
-    """Get top 10 students by XP."""
-    # TODO: Query actual User table for XP
-    # For now, return mock consistent leaderboard + current user
+    """Get top students by XP."""
+    users = db.query(User).order_by(User.xp.desc()).limit(limit).all()
     
-    leaderboard = [
-        {"rank": 1, "user_id": 101, "name": "Sidharth M.", "xp": 15400, "streak": 45, "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sid"},
-        {"rank": 2, "user_id": 102, "name": "Tara S.", "xp": 14200, "streak": 32, "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Tara"},
-        {"rank": 3, "user_id": 103, "name": "Rohan K.", "xp": 12800, "streak": 28, "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan"},
-    ]
+    leaderboard = []
+    for i, user in enumerate(users):
+        leaderboard.append({
+            "rank": i + 1,
+            "user_id": user.id,
+            "name": user.full_name or "Aspirant",
+            "xp": user.xp,
+            "streak": user.streak_days,
+            "avatar": f"https://api.dicebear.com/7.x/avataaars/svg?seed={user.email}"
+        })
     
-    return [LeaderboardEntry(**entry) for entry in leaderboard]
+    return leaderboard

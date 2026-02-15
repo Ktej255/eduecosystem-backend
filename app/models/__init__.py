@@ -195,6 +195,13 @@ from app.models.upsc import (
 from app.models.ras_planner import RASTopicProgress
 from app.models.study_session import StudySession
 
+# UPSC Synapse Engine
+from app.models.upsc_synapse import (
+    UPSCCognitiveProfile,
+    UPSCGapAnalysis,
+    UPSCUnlockTransaction
+)
+
 # Lead Management
 from app.models.lead import Lead
 
@@ -242,3 +249,9 @@ from app.models.daily_action import (
     HabitLog,
     DailyReflection,
 )
+
+# Universal Sync
+from app.models.universal_progress import UniversalProgress
+
+# Holistic & 36 Skills
+from app.models.holistic import Skill, StudentSkillProgress

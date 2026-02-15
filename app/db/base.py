@@ -93,5 +93,6 @@ from app.models import (
     polity,
     adaptive_learning,
     development_history,
+    upsc_synapse,
 )
 print("DEBUG: Models imported in base.py")

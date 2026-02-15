@@ -17,6 +17,7 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     full_name = Column(String, index=True)
     coins = Column(Integer, default=0)
+    xp = Column(Integer, default=0)
     streak_days = Column(Integer, default=0)
     token_version = Column(Integer, default=1)
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
@@ -64,6 +65,9 @@ class User(Base):
     submissions = relationship("HandwritingSubmission", back_populates="owner")
     meditation_sessions = relationship(
         "MeditationSession", back_populates="owner", cascade="all, delete-orphan"
+    )
+    meditation_purchases = relationship(
+        "MeditationLevelPurchase", back_populates="user", cascade="all, delete-orphan"
     )
     activity_logs = relationship(
         "ActivityLog", back_populates="user", cascade="all, delete-orphan"
@@ -182,6 +186,13 @@ class User(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    
+    # Meditation Experiences (AI Progress Tracking)
+    meditation_experiences = relationship(
+        "MeditationExperience",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     # Organization (for Enterprise SSO)
     organization = relationship("Organization", back_populates="users")
@@ -196,6 +207,9 @@ class User(Base):
 
     # Retention System (FSRS-based knowledge decay tracking)
     topic_logs = relationship("UserTopicLog", back_populates="user", cascade="all, delete-orphan")
+
+    # Holistic & 36 Skills
+    skill_progress = relationship("StudentSkillProgress", back_populates="user", cascade="all, delete-orphan")
 
     # Attendance
     attendance_records = relationship(

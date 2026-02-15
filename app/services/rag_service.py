@@ -126,7 +126,7 @@ class RagService:
             self.store.add_document(chunk, {"source": source})
         self.store.embed_documents()
 
-    def chat_with_guru(self, query: str, user_context: Optional[str] = None) -> Dict[str, Any]:
+    def chat_with_guru(self, query: str, user_context: Optional[str] = None, history: List[Dict[str, str]] = []) -> Dict[str, Any]:
         """
         RAG Chat flow:
         1. Search vector store
@@ -144,9 +144,20 @@ class RagService:
         Be encouraging, concise, and use a teaching tone.
         """
 
-        full_prompt = f"""CONTEXT:
+        # Format history
+        history_str = ""
+        if history:
+            history_str = "\nCHAT HISTORY:\n"
+            for msg in history[-5:]: # Limit to last 5 turns to save tokens
+                role = "Student" if msg.get("role") == "user" else "Guru"
+                history_str += f"{role}: {msg.get('content')}\n"
+
+        full_prompt = f"""{system_prompt}
+
+CONTEXT:
 {context_str}
 
+{history_str}
 STUDENT QUESTION:
 {query}
 

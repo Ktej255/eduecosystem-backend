@@ -23,30 +23,80 @@ def get_detailed_analytics(
     current_user: User = Depends(get_current_user)
 ) -> Any:
     """
-    Get detailed analytics charts.
+    Get detailed analytics charts — computed from real progress data.
     """
-    # Skills radar data
-    skills = [
-        {"subject": "History", "A": 75, "fullMark": 100},
-        {"subject": "Geography", "A": 68, "fullMark": 100},
-        {"subject": "Polity", "A": 82, "fullMark": 100},
-        {"subject": "Economics", "A": 70, "fullMark": 100},
-        {"subject": "Science", "A": 65, "fullMark": 100},
-    ]
+    from app.models.universal_progress import UniversalProgress
+    import json
     
-    # Heatmap data (placeholder - would be calculated from activity logs)
-    heatmap = []
+    # Try to load real mastery from the user's synced state blob
+    record = db.query(UniversalProgress).filter(
+        UniversalProgress.user_id == current_user.id
+    ).first()
     
-    # Comparative analysis
+    skills = []
+    if record and record.state_blob:
+        try:
+            blob = json.loads(record.state_blob) if isinstance(record.state_blob, str) else record.state_blob
+            progress = blob.get("progress", blob)
+            mastery = progress.get("subjectMastery", {})
+            
+            subject_map = {
+                "economy": "Economy",
+                "polity": "Polity",
+                "history": "History",
+                "geography": "Geography",
+                "science": "Science",
+                "ethics": "Ethics",
+                "security": "Security",
+                "art_culture": "Art & Culture"
+            }
+            
+            for key, label in subject_map.items():
+                skills.append({
+                    "subject": label,
+                    "A": mastery.get(key, 0),
+                    "fullMark": 100
+                })
+        except Exception:
+            pass
+    
+    # Fallback if no real data
+    if not skills:
+        skills = [
+            {"subject": "History", "A": 0, "fullMark": 100},
+            {"subject": "Geography", "A": 0, "fullMark": 100},
+            {"subject": "Polity", "A": 0, "fullMark": 100},
+            {"subject": "Economy", "A": 0, "fullMark": 100},
+            {"subject": "Science", "A": 0, "fullMark": 100},
+        ]
+    
+    # Compute comparative from all users
+    all_records = db.query(UniversalProgress).limit(100).all()
+    global_scores = []
+    for r in all_records:
+        try:
+            b = json.loads(r.state_blob) if isinstance(r.state_blob, str) else r.state_blob
+            p = b.get("progress", b)
+            m = p.get("subjectMastery", {})
+            vals = [v for v in m.values() if isinstance(v, (int, float))]
+            if vals:
+                global_scores.append(sum(vals) / len(vals))
+        except Exception:
+            pass
+    
+    user_avg = sum(s["A"] for s in skills) / len(skills) if skills else 0
+    global_avg = sum(global_scores) / len(global_scores) if global_scores else 0
+    percentile = sum(1 for s in global_scores if s <= user_avg) / len(global_scores) * 100 if global_scores else 50
+    
     comparative = {
-        "user_focus": 75.5,
-        "global_focus": 72.0,
-        "user_percentile": 68
+        "user_focus": round(user_avg, 1),
+        "global_focus": round(global_avg, 1),
+        "user_percentile": round(percentile)
     }
     
     return {
         "skills": skills,
-        "heatmap": heatmap,
+        "heatmap": [],
         "comparative": comparative
     }
 
@@ -71,3 +121,38 @@ def get_at_risk_students(
         raise HTTPException(status_code=403, detail="Not authorized")
         
     return analytics_service.get_at_risk_students(db, threshold)
+
+from app.schemas.analytics import EventCreate, EventResponse
+
+@router.post("/events", response_model=EventResponse)
+def create_analytics_event(
+    *,
+    db: Session = Depends(get_db),
+    event_in: EventCreate,
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Log a new analytics event (e.g. behavioral signals).
+    """
+    return analytics_service.create_event(db, event_in, current_user.id)
+
+@router.get("/focus-correlation", response_model=List[Dict[str, Any]])
+def get_focus_correlation(
+    days: int = 30,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Get correlation data between meditation focus and lesson completions.
+    """
+    return analytics_service.get_focus_correlation(db, current_user.id, days)
+
+@router.get("/admin-overview", response_model=Dict[str, Any])
+def get_admin_overview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Get aggregated admin/teacher analytics overview stats.
+    """
+    return analytics_service.get_admin_overview(db)

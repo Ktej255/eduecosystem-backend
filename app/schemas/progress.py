@@ -57,3 +57,15 @@ class Certificate(CertificateBase):
     completion_date: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UniversalProgressUpdate(BaseModel):
+    state_blob: dict
+
+
+class UniversalProgress(BaseModel):
+    user_id: int
+    state_blob: dict
+    last_synced_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

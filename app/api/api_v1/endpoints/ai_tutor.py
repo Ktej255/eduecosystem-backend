@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.services.rag_service import rag_service
@@ -10,6 +10,7 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
     context_context: Optional[str] = None # e.g., "lesson_id:123"
+    history: Optional[List[Dict[str, str]]] = [] # e.g., [{"role": "user", "content": "hi"}]
 
 class ChatResponse(BaseModel):
     answer: str
@@ -28,7 +29,7 @@ def chat_with_guru(
     Chat with the AI Tutor (Guru) using RAG context.
     """
     try:
-        response = rag_service.chat_with_guru(request.message, request.context_context)
+        response = rag_service.chat_with_guru(request.message, request.context_context, request.history)
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

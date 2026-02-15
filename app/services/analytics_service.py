@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.models.user import User
 from app.models.drill import DrillResult
 from app.models.gamification import Streak
@@ -7,6 +8,9 @@ from typing import List, Dict, Any
 from app.models.shadow_mode import ShadowModeSession
 from app.models.activity_log import ActivityLog
 from app.models.submission import HandwritingSubmission
+from app.models.meditation import MeditationExperience
+from app.models.lesson_progress import LessonProgress
+from sqlalchemy import func
 
 class AnalyticsService:
     def get_dashboard_analytics(self, db: Session, user_id: int) -> Dict[str, Any]:
@@ -168,5 +172,105 @@ class AnalyticsService:
         # Sort by risk score desc
         at_risk_list.sort(key=lambda x: x["risk_score"], reverse=True)
         return at_risk_list
+
+    def get_focus_correlation(self, db: Session, user_id: int, days: int = 30) -> List[Dict[str, Any]]:
+        """
+        Correlates Meditation Focus Scores with Academic Lesson Completions.
+        Returns a time-series dataset.
+        """
+        start_date = datetime.utcnow() - timedelta(days=days)
+        
+        # 1. Get daily average meditation focus scores
+        meditation_data = db.query(
+            func.date(MeditationExperience.post_recorded_at).label('date'),
+            func.avg(MeditationExperience.post_focus_level).label('avg_focus')
+        ).filter(
+            MeditationExperience.user_id == user_id,
+            MeditationExperience.post_recorded_at >= start_date,
+            MeditationExperience.post_recorded_at.isnot(None)
+        ).group_by(func.date(MeditationExperience.post_recorded_at)).all()
+        
+        # 2. Get daily lesson completions
+        lesson_data = db.query(
+            func.date(LessonProgress.completed_at).label('date'),
+            func.count(LessonProgress.id).label('completions')
+        ).filter(
+            LessonProgress.user_id == user_id,
+            LessonProgress.completed_at >= start_date
+        ).group_by(func.date(LessonProgress.completed_at)).all()
+        
+        # 3. Merge data
+        dataset = {}
+        for d in meditation_data:
+            dataset[str(d.date)] = {"date": str(d.date), "focus_score": float(d.avg_focus), "chapters_completed": 0}
+            
+        for d in lesson_data:
+            date_str = str(d.date)
+            if date_str in dataset:
+                dataset[date_str]["chapters_completed"] = int(d.completions)
+            else:
+                dataset[date_str] = {"date": date_str, "focus_score": 0, "chapters_completed": int(d.completions)}
+                
+        # Sort by date
+        sorted_data = sorted(dataset.values(), key=lambda x: x["date"])
+        return sorted_data
+
+    def create_event(self, db: Session, event_in: Any, user_id: Optional[int] = None) -> Any:
+        """
+        Create a new analytics event.
+        """
+        from app.models.analytics import AnalyticsEvent
+        import json
+
+        db_event = AnalyticsEvent(
+            event_type=event_in.event_type,
+            user_id=user_id or event_in.user_id,
+            course_id=event_in.course_id,
+            event_data=json.dumps(event_in.event_data) if event_in.event_data else None,
+            session_id=event_in.session_id
+        )
+        db.add(db_event)
+        db.commit()
+        db.refresh(db_event)
+        return db_event
+
+    def get_admin_overview(self, db: Session) -> Dict[str, Any]:
+        """
+        Aggregated stats for teacher/admin analytics dashboard.
+        Returns real user counts, active user counts, and behavioral signal totals.
+        """
+        from app.models.analytics import AnalyticsEvent
+
+        total_users = db.query(func.count(User.id)).scalar() or 0
+        
+        day_ago = datetime.utcnow() - timedelta(hours=24)
+        active_24h = db.query(func.count(func.distinct(ActivityLog.user_id))).filter(
+            ActivityLog.timestamp >= day_ago
+        ).scalar() or 0
+
+        # Behavioral signals in last 24h
+        struggle_signals = db.query(func.count(AnalyticsEvent.id)).filter(
+            AnalyticsEvent.event_type == 'struggle_signal',
+            AnalyticsEvent.timestamp >= day_ago
+        ).scalar() or 0
+
+        # Total completions tracked via activity log
+        total_completions = db.query(func.count(ActivityLog.id)).filter(
+            ActivityLog.action.in_(['chapter_complete', 'topic_complete', 'lesson_complete'])
+        ).scalar() or 0
+
+        # Watch time approximation (study sessions * avg 25 min pomodoro)
+        from app.models.study_session import StudySession
+        total_sessions = db.query(func.count(StudySession.id)).scalar() or 0
+        est_watch_hours = round(total_sessions * 25 / 60)
+
+        return {
+            "total_users": total_users,
+            "active_students_24h": active_24h,
+            "struggle_signals_24h": struggle_signals,
+            "total_completions": total_completions,
+            "est_watch_hours": est_watch_hours,
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 analytics_service = AnalyticsService()

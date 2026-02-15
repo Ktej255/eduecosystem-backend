@@ -2,7 +2,7 @@
 Meditation Session System - Student API Endpoints
 Progressive Process System with Video Explanations
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta, date
@@ -15,6 +15,7 @@ from app.models.meditation import (
     MeditationProgress,
     MeditationDayCompletion,
     MeditationProcessCompletion,
+    MeditationExperience,
     MEDITATION_LEVELS,
     get_processes_for_day,
     get_new_processes_for_day,
@@ -30,6 +31,13 @@ from app.schemas.meditation import (
     ProcessCompleteResponse,
     DayCompleteRequest,
     DayCompleteResponse,
+    # Experience recording schemas
+    PreSessionExperienceCreate,
+    PostSessionExperienceCreate,
+    ExperienceResponse,
+    AnalyticsResponse,
+    GraphDataPoint,
+    GraphDataResponse,
 )
 
 router = APIRouter()
@@ -110,7 +118,7 @@ def get_meditation_overview(
         completed_days = len(completion_map.get(level_num, set()))
         total_days = level_config["days"]
         
-        is_unlocked = level_num == 1 or (
+        is_unlocked = level_num <= progress.unlocked_levels or (
             level_num - 1 in completion_map and 
             len(completion_map[level_num - 1]) >= MEDITATION_LEVELS[level_num - 1]["days"]
         )
@@ -405,3 +413,491 @@ def complete_day(
         level_completed=level_completed,
         next_level_unlocked=next_level_unlocked
     )
+
+
+# ============================================================================
+# Experience Recording Endpoints (AI Progress Tracking)
+# ============================================================================
+
+@router.post("/experience/pre-session", response_model=ExperienceResponse)
+def record_pre_session_experience(
+    request: PreSessionExperienceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Record mental state before meditation session"""
+    progress = get_or_create_progress(db, current_user.id)
+    
+    # Get or create day completion for this session
+    day_completion = db.query(MeditationDayCompletion).filter(
+        MeditationDayCompletion.progress_id == progress.id,
+        MeditationDayCompletion.level == request.level,
+        MeditationDayCompletion.day_number == request.day_number
+    ).first()
+    
+    if not day_completion:
+        day_completion = MeditationDayCompletion(
+            progress_id=progress.id,
+            level=request.level,
+            day_number=request.day_number,
+            session_type="morning"
+        )
+        db.add(day_completion)
+        db.commit()
+        db.refresh(day_completion)
+    
+    # Create experience record
+    experience = MeditationExperience(
+        user_id=current_user.id,
+        day_completion_id=day_completion.id,
+        pre_stress_level=request.stress_level,
+        pre_anxiety_level=request.anxiety_level,
+        pre_focus_level=request.focus_level,
+        pre_emotional_state=request.emotional_state,
+        pre_concerns=request.concerns
+    )
+    
+    db.add(experience)
+    db.commit()
+    db.refresh(experience)
+    
+    return experience
+
+
+@router.post("/experience/post-session", response_model=ExperienceResponse)
+def record_post_session_experience(
+    request: PostSessionExperienceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Record experience after meditation session and calculate improvements"""
+    # Get the experience record
+    experience = db.query(MeditationExperience).filter(
+        MeditationExperience.id == request.experience_id,
+        MeditationExperience.user_id == current_user.id
+    ).first()
+    
+    if not experience:
+        raise HTTPException(status_code=404, detail="Experience record not found")
+    
+    # Update post-session data
+    experience.post_stress_level = request.stress_level
+    experience.post_anxiety_level = request.anxiety_level
+    experience.post_focus_level = request.focus_level
+    experience.post_emotional_state = request.emotional_state
+    experience.post_insights = request.insights
+    experience.post_effectiveness_rating = request.effectiveness_rating
+    experience.post_recorded_at = datetime.now()
+    
+    # Calculate improvements
+    experience.stress_improvement = experience.pre_stress_level - request.stress_level
+    experience.anxiety_improvement = experience.pre_anxiety_level - request.anxiety_level
+    experience.focus_improvement = request.focus_level - experience.pre_focus_level
+    
+    # Calculate overall improvement score (weighted average)
+    # Stress and anxiety reduction are positive, focus increase is positive
+    # Scale: 0-100
+    stress_pct = (experience.stress_improvement / 10) * 100
+    anxiety_pct = (experience.anxiety_improvement / 10) * 100
+    focus_pct = (experience.focus_improvement / 10) * 100
+    
+    experience.overall_improvement_score = (stress_pct + anxiety_pct + focus_pct) / 3
+    
+    db.commit()
+    db.refresh(experience)
+    
+    return experience
+
+
+@router.get("/experience/analytics", response_model=AnalyticsResponse)
+def get_experience_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get overall analytics from all recorded experiences"""
+    # Get all completed experiences (with post-session data)
+    experiences = db.query(MeditationExperience).filter(
+        MeditationExperience.user_id == current_user.id,
+        MeditationExperience.post_recorded_at.isnot(None)
+    ).all()
+    
+    if not experiences:
+        return AnalyticsResponse(
+            total_sessions=0,
+            average_stress_improvement=0.0,
+            average_anxiety_improvement=0.0,
+            average_focus_improvement=0.0,
+            overall_wellbeing_score=50.0,
+            trend_direction="stable",
+            best_time_of_day=None,
+            most_effective_processes=[]
+        )
+    
+    # Calculate averages
+    total_sessions = len(experiences)
+    avg_stress = sum(e.stress_improvement or 0 for e in experiences) / total_sessions
+    avg_anxiety = sum(e.anxiety_improvement or 0 for e in experiences) / total_sessions
+    avg_focus = sum(e.focus_improvement or 0 for e in experiences) / total_sessions
+    
+    # Calculate overall wellbeing score (0-100)
+    # Based on average improvements scaled to percentage
+    wellbeing_score = ((avg_stress + avg_anxiety + avg_focus) / 30) * 100
+    wellbeing_score = max(0, min(100, 50 + wellbeing_score))  # Baseline 50, adjust based on improvements
+    
+    # Determine trend (compare last 5 vs previous 5)
+    trend = "stable"
+    if total_sessions >= 10:
+        recent_scores = [e.overall_improvement_score for e in experiences[-5:]]
+        previous_scores = [e.overall_improvement_score for e in experiences[-10:-5]]
+        recent_avg = sum(recent_scores) / 5
+        previous_avg = sum(previous_scores) / 5
+        
+        if recent_avg > previous_avg + 5:
+            trend = "improving"
+        elif recent_avg < previous_avg - 5:
+            trend = "declining"
+    
+    # Determine best time of day (based on session type from day_completion)
+    morning_scores = []
+    night_scores = []
+    for exp in experiences:
+        if exp.day_completion.session_type == "morning":
+            morning_scores.append(exp.overall_improvement_score or 0)
+        else:
+            night_scores.append(exp.overall_improvement_score or 0)
+    
+    best_time = None
+    if morning_scores and night_scores:
+        avg_morning = sum(morning_scores) / len(morning_scores)
+        avg_night = sum(night_scores) / len(night_scores)
+        best_time = "morning" if avg_morning > avg_night else "night"
+    elif morning_scores:
+        best_time = "morning"
+    elif night_scores:
+        best_time = "night"
+    
+    return AnalyticsResponse(
+        total_sessions=total_sessions,
+        average_stress_improvement=round(avg_stress, 2),
+        average_anxiety_improvement=round(avg_anxiety, 2),
+        average_focus_improvement=round(avg_focus, 2),
+        overall_wellbeing_score=round(wellbeing_score, 2),
+        trend_direction=trend,
+        best_time_of_day=best_time,
+        most_effective_processes=[]  # TODO: Implement process effectiveness ranking
+    )
+
+
+@router.get("/experience/graphs", response_model=GraphDataResponse)
+def get_experience_graphs(
+    days: int = 30,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get graph data for visualization"""
+    # Calculate date range
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+    
+    # Get experiences in date range
+    experiences = db.query(MeditationExperience).filter(
+        MeditationExperience.user_id == current_user.id,
+        MeditationExperience.pre_recorded_at >= start_date,
+        MeditationExperience.post_recorded_at.isnot(None)
+    ).order_by(MeditationExperience.pre_recorded_at).all()
+    
+    # Build data points
+    pre_session_data = []
+    post_session_data = []
+    improvement_data = []
+    
+    for exp in experiences:
+        date_str = exp.pre_recorded_at.date().isoformat()
+        
+        pre_session_data.append(GraphDataPoint(
+            date=date_str,
+            stress_level=exp.pre_stress_level,
+            anxiety_level=exp.pre_anxiety_level,
+            focus_level=exp.pre_focus_level
+        ))
+        
+        post_session_data.append(GraphDataPoint(
+            date=date_str,
+            stress_level=exp.post_stress_level,
+            anxiety_level=exp.post_anxiety_level,
+            focus_level=exp.post_focus_level
+        ))
+        
+        improvement_data.append(GraphDataPoint(
+            date=date_str,
+            improvement_score=exp.overall_improvement_score
+        ))
+    
+    return GraphDataResponse(
+        pre_session_data=pre_session_data,
+        post_session_data=post_session_data,
+        improvement_data=improvement_data,
+        date_range=f"Last {days} days"
+    )
+
+
+# ============================================================================
+# PAYMENT ENDPOINTS (Phase 2)
+# ============================================================================
+
+from app.models.meditation import MeditationLevelPurchase, MEDITATION_BUNDLES
+from app.schemas.meditation import (
+    PricingResponse,
+    LevelPricingResponse,
+    BundlePricingResponse,
+    PurchaseInitiateRequest,
+    PurchaseInitiateResponse,
+    PaymentVerificationRequest,
+    PurchaseResponse,
+    PurchaseHistoryResponse,
+)
+from app.services.razorpay_service import razorpay_service
+from app.core.config import settings
+
+
+@router.get("/levels/pricing", response_model=PricingResponse)
+def get_level_pricing():
+    """Get pricing for all meditation levels and bundles"""
+    
+    # Build level pricing
+    levels = []
+    for level_id, level_data in MEDITATION_LEVELS.items():
+        levels.append(LevelPricingResponse(
+            level=level_id,
+            name=level_data["name"],
+            description=level_data["description"],
+            price=level_data["price"],
+            currency=level_data["currency"],
+            free_processes=level_data.get("free_processes")
+        ))
+    
+    # Build bundle pricing
+    bundles = []
+    for bundle_id, bundle_data in MEDITATION_BUNDLES.items():
+        bundles.append(BundlePricingResponse(
+            name=bundle_data["name"],
+            description=bundle_data["description"],
+            levels=bundle_data["levels"],
+            price=bundle_data["price"],
+            currency=bundle_data["currency"],
+            savings=bundle_data["savings"]
+        ))
+    
+    return PricingResponse(levels=levels, bundles=bundles)
+
+
+@router.post("/level/{level_id}/purchase/initiate", response_model=PurchaseInitiateResponse)
+def initiate_level_purchase(
+    level_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Initiate purchase for a meditation level"""
+    
+    # Validate level
+    if level_id not in MEDITATION_LEVELS:
+        raise HTTPException(status_code=400, detail="Invalid level")
+    
+    # Check if already purchased
+    existing_purchase = db.query(MeditationLevelPurchase).filter(
+        MeditationLevelPurchase.user_id == current_user.id,
+        MeditationLevelPurchase.level == level_id,
+        MeditationLevelPurchase.payment_status == "completed"
+    ).first()
+    
+    if existing_purchase:
+        raise HTTPException(status_code=400, detail="Level already purchased")
+    
+    # Get pricing
+    level_data = MEDITATION_LEVELS[level_id]
+    amount = level_data["price"]
+    currency = level_data["currency"]
+    
+    # Create Razorpay order
+    receipt = f"level_{level_id}_user_{current_user.id}_{datetime.now().timestamp()}"
+    notes = {
+        "level": level_id,
+        "user_id": current_user.id,
+        "user_email": current_user.email
+    }
+    
+    razorpay_order = razorpay_service.create_order(
+        amount=amount,
+        currency=currency,
+        receipt=receipt,
+        notes=notes
+    )
+    
+    # Create pending purchase record
+    purchase = MeditationLevelPurchase(
+        user_id=current_user.id,
+        level=level_id,
+        amount_paid=amount,
+        currency=currency,
+        payment_gateway="razorpay",
+        payment_id="",  # Will be updated on verification
+        order_id=razorpay_order["id"],
+        payment_status="pending"
+    )
+    db.add(purchase)
+    db.commit()
+    
+    return PurchaseInitiateResponse(
+        order_id=razorpay_order["id"],
+        amount=amount,
+        currency=currency,
+        level=level_id,
+        razorpay_key=settings.RAZORPAY_KEY_ID
+    )
+
+
+@router.post("/level/{level_id}/purchase/verify", response_model=PurchaseResponse)
+def verify_level_purchase(
+    level_id: int,
+    payment_data: PaymentVerificationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Verify payment and unlock level"""
+    
+    # Verify signature
+    is_valid = razorpay_service.verify_payment_signature(
+        razorpay_order_id=payment_data.razorpay_order_id,
+        razorpay_payment_id=payment_data.razorpay_payment_id,
+        razorpay_signature=payment_data.razorpay_signature
+    )
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid payment signature")
+    
+    # Find purchase record
+    purchase = db.query(MeditationLevelPurchase).filter(
+        MeditationLevelPurchase.user_id == current_user.id,
+        MeditationLevelPurchase.order_id == payment_data.razorpay_order_id,
+        MeditationLevelPurchase.level == level_id
+    ).first()
+    
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Purchase record not found")
+    
+    # Fetch payment details from Razorpay
+    payment_details = razorpay_service.fetch_payment(payment_data.razorpay_payment_id)
+    
+    # Update purchase record
+    purchase.payment_id = payment_data.razorpay_payment_id
+    purchase.razorpay_signature = payment_data.razorpay_signature
+    purchase.payment_status = "completed"
+    purchase.payment_method = payment_details.get("method") if payment_details else None
+    purchase.purchased_at = datetime.now()
+    
+    # Unlock level for user (update progress)
+    progress = get_or_create_progress(db, current_user.id)
+    if progress.unlocked_levels < level_id:
+        progress.unlocked_levels = max(progress.unlocked_levels, level_id)
+    
+    db.commit()
+    db.refresh(purchase)
+    
+    return purchase
+
+
+@router.get("/purchases", response_model=PurchaseHistoryResponse)
+def get_user_purchases(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get user's purchase history"""
+    
+    purchases = db.query(MeditationLevelPurchase).filter(
+        MeditationLevelPurchase.user_id == current_user.id
+    ).order_by(MeditationLevelPurchase.purchased_at.desc()).all()
+    
+    # Calculate total spent
+    total_spent = sum(
+        p.amount_paid for p in purchases 
+        if p.payment_status == "completed"
+    )
+    
+    # Get owned levels
+    levels_owned = [
+        p.level for p in purchases 
+        if p.payment_status == "completed"
+    ]
+    levels_owned = list(set(levels_owned))  # Remove duplicates
+    levels_owned.sort()
+    
+    return PurchaseHistoryResponse(
+        purchases=purchases,
+        total_spent=total_spent,
+        levels_owned=levels_owned
+    )
+
+
+@router.post("/webhook/payment")
+async def payment_webhook(request: Request, db: Session = Depends(get_db)):
+    """Handle Razorpay payment webhooks"""
+    
+    # Get raw body and signature
+    body = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature")
+    
+    if not signature:
+        raise HTTPException(status_code=400, detail="Missing signature")
+    
+    # Verify webhook signature
+    is_valid = razorpay_service.verify_webhook_signature(
+        payload=body.decode(),
+        signature=signature
+    )
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid webhook signature")
+    
+    # Process webhook event
+    import json
+    event_data = json.loads(body)
+    event_type = event_data.get("event")
+    
+    if event_type == "payment.captured":
+        payment = event_data.get("payload", {}).get("payment", {}).get("entity", {})
+        order_id = payment.get("order_id")
+        payment_id = payment.get("id")
+        
+        # Update purchase record
+        purchase = db.query(MeditationLevelPurchase).filter(
+            MeditationLevelPurchase.order_id == order_id
+        ).first()
+        
+        if purchase:
+            purchase.payment_id = payment_id
+            purchase.payment_status = "completed"
+            purchase.payment_method = payment.get("method")
+            purchase.purchased_at = datetime.now()
+            
+            # Unlock level
+            progress = get_or_create_progress(db, purchase.user_id)
+            if progress.unlocked_levels < purchase.level:
+                progress.unlocked_levels = purchase.level
+            
+            db.commit()
+    
+    elif event_type == "payment.failed":
+        payment = event_data.get("payload", {}).get("payment", {}).get("entity", {})
+        order_id = payment.get("order_id")
+        
+        # Update purchase record
+        purchase = db.query(MeditationLevelPurchase).filter(
+            MeditationLevelPurchase.order_id == order_id
+        ).first()
+        
+        if purchase:
+            purchase.payment_status = "failed"
+            db.commit()
+    
+    return {"status": "ok"}
+
