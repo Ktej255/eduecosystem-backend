@@ -4,7 +4,7 @@ from app.models.user import User
 from app.models.drill import DrillResult
 from app.models.gamification import Streak
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.models.shadow_mode import ShadowModeSession
 from app.models.activity_log import ActivityLog
 from app.models.submission import HandwritingSubmission

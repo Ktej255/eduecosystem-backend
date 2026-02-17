@@ -219,7 +219,7 @@ def read_root():
     return {
         "message": "Welcome to Eduecosystem Backend API",
         "status": "running",
-        "version": "1.0.2",
+        "version": "1.0.3",
         "docs": "/docs"
     }
 

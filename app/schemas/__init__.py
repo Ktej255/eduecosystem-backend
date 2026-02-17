@@ -17,7 +17,14 @@ from .course import (
     CourseReviewCreate,
 )
 from .course_payment import CoursePayment, CoursePaymentCreate, CoursePaymentUpdate
-from .progress import LessonProgress, LessonProgressUpdate, CourseProgress, Certificate
+from .progress import (
+    LessonProgress,
+    LessonProgressUpdate,
+    CourseProgress,
+    Certificate,
+    UniversalProgress,
+    UniversalProgressUpdate,
+)
 from .coupon import (
     Coupon,
     CouponCreate,
