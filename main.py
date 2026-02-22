@@ -2,7 +2,7 @@
 Full FastAPI application for Eduecosystem Backend.
 Restored with database connectivity, auth, and all API routes.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
@@ -10,13 +10,11 @@ import logging
 import os
 import sys
 
-import sys
-print("DEBUG: Loading main.py...", file=sys.stderr)
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
-
-print("DEBUG: Imports complete. Initializing app...", file=sys.stderr)
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from app.middleware.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -115,19 +113,12 @@ else:
         lifespan=lifespan,
     )
 
-# Set all CORS enabled origins - CRITICAL: Hardcode to ensure AI features work
-# Must include Vercel frontend for CORS to work properly
-HARDCODED_CORS_ORIGINS = [
-    "https://eduecosystem-frontend.vercel.app",
-    "https://eduecosystem-frontend-ktej255.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-]
+# Rate Limiting setup
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Merge with any additional origins from settings
-all_cors_origins = list(set(HARDCODED_CORS_ORIGINS + (BACKEND_CORS_ORIGINS if BACKEND_CORS_ORIGINS else [])))
+# CORS Origins — single source of truth from settings + any extras
+all_cors_origins = list(set(BACKEND_CORS_ORIGINS if BACKEND_CORS_ORIGINS else []))
 
 # Remove wildcard if specific origins are also present (wildcard with credentials fails)
 if "*" in all_cors_origins and len(all_cors_origins) > 1:
@@ -135,15 +126,14 @@ if "*" in all_cors_origins and len(all_cors_origins) > 1:
 
 use_credentials = "*" not in all_cors_origins
 
-print(f"CORS Origins configured: {all_cors_origins}")
-print(f"CORS Credentials: {use_credentials}")
+logger.info(f"CORS Origins configured: {all_cors_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=all_cors_origins,
-    allow_origin_regex=r"https://eduecosystem-frontend.*\.vercel\.app",
-    allow_credentials=use_credentials,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
@@ -201,16 +191,16 @@ app.add_middleware(SecurityHeadersMiddleware)
 try:
     from app.api.api_v1.api import api_router
     app.include_router(api_router, prefix=API_V1_STR)
-    logger.info("API router included successfully")
-    print(f"DEBUG: API Router included successfully with prefix {API_V1_STR}")
+    logger.info(f"API router included successfully with prefix {API_V1_STR}")
 except Exception as e:
     import traceback
-    error_msg = f"CRITICAL: Failed to include API router: {str(e)}"
-    logger.error(error_msg)
-    print(error_msg)
+    logger.critical(f"Failed to include API router: {str(e)}")
     traceback.print_exc()
 
 
+
+# Application version — single source of truth
+APP_VERSION = settings.APP_VERSION
 
 # Root endpoint
 @app.get("/")
@@ -219,7 +209,7 @@ def read_root():
     return {
         "message": "Welcome to Eduecosystem Backend API",
         "status": "running",
-        "version": "1.0.3",
+        "version": APP_VERSION,
         "docs": "/docs"
     }
 
@@ -228,7 +218,9 @@ def read_root():
 @app.get("/health")
 def health_check():
     """Simple health check for App Runner."""
-    return {"status": "ok", "message": "Backend is healthy"}
+    return {"status": "ok", "message": "Backend is healthy", "version": APP_VERSION}
+
+# /debug-cors endpoint REMOVED for security — exposed internal configuration
 
 
 # Detailed health check with database connectivity
@@ -296,9 +288,89 @@ def api_status():
     """API status endpoint."""
     return {
         "api_version": "v1",
+        "app_version": APP_VERSION,
         "status": "operational",
         "environment": os.getenv("ENVIRONMENT", "production")
     }
+
+
+# ONE-TIME MIGRATION: Add missing columns to production database
+# SECURITY: Requires superuser authentication
+try:
+    from app.api.deps import get_current_superuser
+except ImportError:
+    # Fallback if deps module isn't available
+    get_current_superuser = None
+
+
+@app.post("/admin/migrate-db")
+def migrate_database(current_user=Depends(get_current_superuser) if get_current_superuser else None):
+    """
+    One-time database migration to add missing columns.
+    Safe to run multiple times (uses IF NOT EXISTS / DO NOTHING logic).
+    REQUIRES: Superuser bearer token.
+    """
+    if current_user is None and get_current_superuser is not None:
+        return JSONResponse(status_code=401, content={"detail": "Authentication required"})
+
+    from sqlalchemy import text
+    from app.db.session import SessionLocal
+
+    db = SessionLocal()
+    results = []
+
+    # All columns that might be missing from the users table
+    migrations = [
+        ("xp", "ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INTEGER DEFAULT 0"),
+        ("streak_days", "ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_days INTEGER DEFAULT 0"),
+        ("coins", "ALTER TABLE users ADD COLUMN IF NOT EXISTS coins INTEGER DEFAULT 0"),
+        ("token_version", "ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER DEFAULT 1"),
+        ("is_approved", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT TRUE"),
+        ("is_banned", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN DEFAULT FALSE"),
+        ("email_notifications", "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN DEFAULT TRUE"),
+        ("is_premium", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE"),
+        ("stripe_customer_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR NULL"),
+        ("subscription_status", "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR DEFAULT 'free'"),
+        ("graphotherapy_enrollment_date", "ALTER TABLE users ADD COLUMN IF NOT EXISTS graphotherapy_enrollment_date TIMESTAMP NULL"),
+        ("is_graphotherapy_exclusive", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_graphotherapy_exclusive BOOLEAN DEFAULT FALSE"),
+        ("organization_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INTEGER NULL"),
+        ("is_sso_user", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_sso_user BOOLEAN DEFAULT FALSE"),
+        ("sso_external_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_external_id VARCHAR NULL"),
+        ("is_verified", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE"),
+        ("is_ras_authorized", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_ras_authorized BOOLEAN DEFAULT FALSE"),
+        ("is_batch1_authorized", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_batch1_authorized BOOLEAN DEFAULT FALSE"),
+        ("is_batch2_authorized", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_batch2_authorized BOOLEAN DEFAULT FALSE"),
+        ("totp_secret", "ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR NULL"),
+        ("revision_level", "ALTER TABLE users ADD COLUMN IF NOT EXISTS revision_level VARCHAR NULL"),
+        ("revision_exam_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS revision_exam_id VARCHAR NULL"),
+        ("push_subscription", "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_subscription JSON NULL"),
+        ("last_login", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP NULL"),
+        ("role", "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR DEFAULT 'student'"),
+        ("group_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS group_id INTEGER NULL"),
+        ("username", "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR NULL"),
+        ("created_at", "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()"),
+    ]
+
+    try:
+        for col_name, sql in migrations:
+            try:
+                db.execute(text(sql))
+                results.append({"column": col_name, "status": "applied"})
+            except Exception as e:
+                results.append({"column": col_name, "status": f"skipped: {str(e)}"})
+
+        db.commit()
+        db.close()
+
+        return {
+            "status": "migration_complete",
+            "version": APP_VERSION,
+            "results": results
+        }
+    except Exception as e:
+        db.rollback()
+        db.close()
+        return {"status": "migration_failed", "error": str(e)}
 
 
 

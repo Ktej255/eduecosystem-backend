@@ -3,7 +3,7 @@ from sqlalchemy import func
 from app.models.user import User
 from app.models.drill import DrillResult
 from app.models.gamification import Streak
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from app.models.shadow_mode import ShadowModeSession
 from app.models.activity_log import ActivityLog
@@ -126,7 +126,7 @@ class AnalyticsService:
         ).first()
 
         if streak:
-            days_since_active = (datetime.utcnow() - streak.last_activity_date).days
+            days_since_active = (datetime.now(timezone.utc) - streak.last_activity_date).days
             if days_since_active > 7:
                 risk_score += 30
                 reasons.append(f"Inactive for {days_since_active} days")
@@ -135,7 +135,7 @@ class AnalyticsService:
         else:
             # Check user creation date
             user = db.query(User).get(student_id)
-            if user and (datetime.utcnow() - user.created_at).days > 7:
+            if user and (datetime.now(timezone.utc) - user.created_at).days > 7:
                  risk_score += 30
                  reasons.append("No recorded activity")
 
@@ -178,7 +178,7 @@ class AnalyticsService:
         Correlates Meditation Focus Scores with Academic Lesson Completions.
         Returns a time-series dataset.
         """
-        start_date = datetime.utcnow() - timedelta(days=days)
+        start_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         # 1. Get daily average meditation focus scores
         meditation_data = db.query(
@@ -243,7 +243,7 @@ class AnalyticsService:
 
         total_users = db.query(func.count(User.id)).scalar() or 0
         
-        day_ago = datetime.utcnow() - timedelta(hours=24)
+        day_ago = datetime.now(timezone.utc) - timedelta(hours=24)
         active_24h = db.query(func.count(func.distinct(ActivityLog.user_id))).filter(
             ActivityLog.timestamp >= day_ago
         ).scalar() or 0
@@ -270,7 +270,7 @@ class AnalyticsService:
             "struggle_signals_24h": struggle_signals,
             "total_completions": total_completions,
             "est_watch_hours": est_watch_hours,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
 analytics_service = AnalyticsService()

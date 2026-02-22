@@ -6,7 +6,7 @@ Tracks all student interactions with the drill system
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.drill import StudentActivity
 from app.models.user import User
@@ -47,7 +47,7 @@ class ActivityTrackingService:
             session_id=session_id,
             activity_type=activity_type,
             activity_data=activity_data or {},
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         
         db.add(activity)

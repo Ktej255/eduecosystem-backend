@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Response
 from sqlalchemy.orm import Session
 from typing import Any
 import pyotp
@@ -8,6 +8,7 @@ import base64
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
+from app.middleware.rate_limit import limiter, RATE_LIMITS
 
 router = APIRouter()
 
@@ -81,7 +82,9 @@ def disable_2fa(
     return {"success": True, "message": "2FA disabled successfully"}
 
 @router.post("/verify-login")
+@limiter.limit(RATE_LIMITS["auth"])
 def verify_2fa_login(
+    response: Response,
     code: str = Body(..., embed=True),
     email: str = Body(..., embed=True),
     db: Session = Depends(get_db)
@@ -100,10 +103,24 @@ def verify_2fa_login(
     totp = pyotp.TOTP(user.totp_secret)
     if totp.verify(code):
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = security.create_access_token(
+            user.id, expires_delta=access_token_expires, token_version=user.token_version
+        )
+        
+        # Set httpOnly cookie
+        import os
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            max_age=int(access_token_expires.total_seconds()),
+            expires=int(access_token_expires.total_seconds()),
+            samesite="lax",
+            secure=os.getenv("ENVIRONMENT") == "production",
+        )
+        
         return {
-            "access_token": security.create_access_token(
-                user.id, expires_delta=access_token_expires, token_version=user.token_version
-            ),
+            "access_token": access_token,
             "token_type": "bearer",
             "require_2fa": False
         }

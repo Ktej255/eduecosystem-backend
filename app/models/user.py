@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime, J
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 from app.models.permissions import user_roles
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class User(Base):
@@ -10,7 +10,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)  # Track account creation
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))  # Track account creation
     username = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)

@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -11,12 +11,15 @@ from app.core.config import settings
 from app.schemas.user import UserCreate
 from app.crud import user as crud_user
 from app.models.activity_log import ActivityLog
+from app.middleware.rate_limit import limiter, RATE_LIMITS
 
 router = APIRouter()
 
 
 @router.post("/access-token")
+@limiter.limit(RATE_LIMITS["auth"])
 def login_access_token(
+    response: Response,
     request: Request,
     db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
@@ -77,20 +80,35 @@ def login_access_token(
             "require_2fa": True,
         }
 
+    access_token = security.create_access_token(
+        user.id, expires_delta=access_token_expires, token_version=user.token_version
+    )
+
+    # Set httpOnly cookie
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=int(access_token_expires.total_seconds()),
+        expires=int(access_token_expires.total_seconds()),
+        samesite="lax",
+        secure=os.getenv("ENVIRONMENT") == "production",
+    )
+
     return {
-        "access_token": security.create_access_token(
-            user.id, expires_delta=access_token_expires, token_version=user.token_version
-        ),
+        "access_token": access_token,
         "token_type": "bearer",
         "require_2fa": False,
     }
 
 
 @router.post("/register")
+@limiter.limit(RATE_LIMITS["auth"])
 def register(
     *,
     db: Session = Depends(deps.get_db),
     user_in: UserCreate,
+    response: Response,
 ) -> Any:
     """
     Register a new user with role-based approval workflow.
@@ -163,6 +181,17 @@ def register(
             user.id, expires_delta=access_token_expires
         )
         
+        # Set httpOnly cookie
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            max_age=int(access_token_expires.total_seconds()),
+            expires=int(access_token_expires.total_seconds()),
+            samesite="lax",
+            secure=os.getenv("ENVIRONMENT") == "production",
+        )
+        
         return {
             "id": user.id,
             "email": user.email,
@@ -193,6 +222,7 @@ def register(
 from app.schemas.password_recovery import PasswordRecovery
 
 @router.post("/password-recovery")
+@limiter.limit(RATE_LIMITS["auth"])
 def recover_password(
     body: PasswordRecovery,
     db: Session = Depends(deps.get_db)
@@ -234,6 +264,7 @@ def recover_password(
 
 
 @router.post("/reset-password/")
+@limiter.limit(RATE_LIMITS["auth"])
 def reset_password(
     token: str,
     new_password: str,
