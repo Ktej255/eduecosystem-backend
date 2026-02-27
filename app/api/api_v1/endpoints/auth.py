@@ -106,6 +106,7 @@ def login_access_token(
 @limiter.limit(RATE_LIMITS["auth"])
 def register(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     user_in: UserCreate,
     response: Response,
@@ -224,6 +225,7 @@ from app.schemas.password_recovery import PasswordRecovery
 @router.post("/password-recovery")
 @limiter.limit(RATE_LIMITS["auth"])
 def recover_password(
+    request: Request,
     body: PasswordRecovery,
     db: Session = Depends(deps.get_db)
 ) -> Any:
@@ -266,6 +268,7 @@ def recover_password(
 @router.post("/reset-password/")
 @limiter.limit(RATE_LIMITS["auth"])
 def reset_password(
+    request: Request,
     token: str,
     new_password: str,
     db: Session = Depends(deps.get_db),
