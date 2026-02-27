@@ -37,3 +37,5 @@ from .digital_product import DigitalProduct, DigitalProductCreate, DigitalProduc
 from .enquiry import Enquiry, EnquiryCreate, EnquiryUpdate
 from .asset import Asset, AssetCreate, AssetUpdate
 from .attendance import Attendance, AttendanceCreate
+from .student_report import StudentReport, StudentReportCreate, StudentReportUpdate
+from .app_config import AppConfig, AppConfigCreate, AppConfigUpdate
