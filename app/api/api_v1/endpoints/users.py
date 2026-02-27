@@ -76,6 +76,8 @@ def read_users(
     current_user: User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
+    Retrieve users.
+    """
     users = crud_user.get_multi(db, skip=skip, limit=limit, role=role)
     return users
 
