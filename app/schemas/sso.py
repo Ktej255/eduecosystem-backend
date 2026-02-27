@@ -5,7 +5,7 @@ Pydantic schemas for SSO models including organizations, configurations,
 sessions, and audit logs.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum

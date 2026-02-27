@@ -6,7 +6,7 @@ Pydantic models for payment validation and serialization
 from enum import Enum
 from typing import Optional, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class PaymentGateway(str, Enum):
     CASHFREE = "cashfree"
