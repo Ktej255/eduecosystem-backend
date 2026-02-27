@@ -3,81 +3,44 @@ Course Payment Schemas
 Pydantic models for payment validation and serialization
 """
 
-from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict
+from enum import Enum
+from typing import Optional, Dict, Any
 from datetime import datetime
+from pydantic import BaseModel, Field
 
+class PaymentGateway(str, Enum):
+    CASHFREE = "cashfree"
+
+class PaymentStatus(str, Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 class CoursePaymentBase(BaseModel):
-    """Base schema for course payments"""
-
-    amount: float = Field(..., ge=0, description="Payment amount")
-    currency: str = Field(default="INR", max_length=3)
-    payment_provider: str = Field(
-        ..., description="Payment gateway: stripe, razorpay, instamojo"
-    )
-    payment_method: Optional[str] = Field(
-        None, description="Payment method used (card, paypal, etc)"
-    )
-
-
-class CoursePaymentCreate(CoursePaymentBase):
-    """Schema for creating a new payment record"""
-
     course_id: int
-    status: str = Field(default="pending", description="Payment status")
-
-    # Optional provider-specific fields
-    stripe_checkout_session_id: Optional[str] = None
-    razorpay_order_id: Optional[str] = None
-    instamojo_payment_request_id: Optional[str] = None
-
+    amount: float = Field(..., gt=0)
+    currency: str = Field(default="INR")
+    gateway: PaymentGateway = Field(
+        ..., description="Standardized payment gateway: cashfree"
+    )
+    
+class CoursePaymentCreate(CoursePaymentBase):
+    user_id: int
+    offer_applied: bool = False
+    bundle_deal: bool = False
 
 class CoursePaymentUpdate(BaseModel):
-    """Schema for updating payment status"""
-
-    status: Optional[str] = Field(
-        None, description="pending, succeeded, failed, refunded"
-    )
-
-    # Provider-specific IDs
-    stripe_payment_intent_id: Optional[str] = None
-    stripe_customer_id: Optional[str] = None
-    razorpay_payment_id: Optional[str] = None
-    razorpay_signature: Optional[str] = None
-    instamojo_payment_id: Optional[str] = None
-
-    # Failure/refund details
-    failure_reason: Optional[str] = None
-    refund_reason: Optional[str] = None
-    refunded_at: Optional[datetime] = None
-    succeeded_at: Optional[datetime] = None
-
-    # Enrollment link
-    enrollment_id: Optional[int] = None
-
+    status: Optional[PaymentStatus] = None
+    cashfree_order_id: Optional[str] = None
+    cashfree_payment_id: Optional[str] = None
+    invoice_url: Optional[str] = None
+    error_message: Optional[str] = None
+    payment_metadata: Optional[Dict[str, Any]] = None
 
 class CoursePaymentInDBBase(CoursePaymentBase):
-    """Base schema for payment in database"""
-
     id: int
     user_id: int
-    course_id: int
-    status: str
-    enrollment_id: Optional[int] = None
-
-    # Provider-specific fields
-    stripe_payment_intent_id: Optional[str] = None
-    stripe_checkout_session_id: Optional[str] = None
-    stripe_customer_id: Optional[str] = None
-    razorpay_order_id: Optional[str] = None
-    razorpay_payment_id: Optional[str] = None
-    razorpay_signature: Optional[str] = None
-    instamojo_payment_request_id: Optional[str] = None
-    instamojo_payment_id: Optional[str] = None
-
-    # Metadata
-    failure_reason: Optional[str] = None
     refund_reason: Optional[str] = None
     refunded_at: Optional[datetime] = None
     succeeded_at: Optional[datetime] = None

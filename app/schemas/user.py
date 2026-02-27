@@ -72,3 +72,11 @@ class UserWithToken(User):
     access_token: str
     token_type: str
 
+class PushSubscriptionKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+class PushSubscriptionCreate(BaseModel):
+    endpoint: str
+    keys: PushSubscriptionKeys
+

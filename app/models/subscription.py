@@ -64,10 +64,8 @@ class SubscriptionPlan(Base):
     # Ordering
     display_order = Column(Integer, default=0)
 
-    # Stripe integration
-    stripe_price_id_monthly = Column(String(100))
-    stripe_price_id_yearly = Column(String(100))
-    stripe_product_id = Column(String(100))
+    # Cashfree integration
+    cashfree_plan_id = Column(String(100))
 
     # Analytics
     total_subscriptions = Column(Integer, default=0)
@@ -111,10 +109,10 @@ class UserSubscription(Base):
     cancelled_at = Column(DateTime(timezone=True))
     ended_at = Column(DateTime(timezone=True))
 
-    # Stripe integration
-    stripe_subscription_id = Column(String(100), unique=True, index=True)
-    stripe_customer_id = Column(String(100))
-    stripe_latest_invoice = Column(String(100))
+    # Cashfree integration
+    cashfree_subscription_id = Column(String(100), unique=True, index=True)
+    cashfree_customer_id = Column(String(100))
+    cashfree_latest_invoice = Column(String(100))
 
     # Pricing snapshot (for historical accuracy)
     price_paid = Column(Numeric(10, 2), nullable=False)
@@ -161,9 +159,9 @@ class SubscriptionInvoice(Base):
         String(20), nullable=False
     )  # draft, open, paid, void, uncollectible
 
-    # Stripe
-    stripe_invoice_id = Column(String(100), unique=True)
-    stripe_payment_intent = Column(String(100))
+    # Cashfree
+    cashfree_invoice_id = Column(String(100), unique=True)
+    cashfree_payment_id = Column(String(100))
 
     # Dates
     invoice_date = Column(DateTime(timezone=True), server_default=func.now())

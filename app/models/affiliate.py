@@ -62,7 +62,7 @@ class AffiliatePartner(Base):
 
     # Payout information
     minimum_payout = Column(Numeric(10, 2), default=Decimal("50.00"))
-    payout_method = Column(String(20))  # paypal, stripe, bank_transfer
+    payout_method = Column(String(20))  # cashfree, bank_transfer
     payout_email = Column(String(255))
 
     # Tracking
@@ -237,8 +237,8 @@ class AffiliatePayout(Base):
         String(20), nullable=False, default="pending"
     )  # pending, processing, completed, failed
 
-    # Stripe/PayPal tracking
-    stripe_transfer_id = Column(String(100))
+    # Cashfree tracking
+    cashfree_transfer_id = Column(String(100))
     paypal_transaction_id = Column(String(100))
     transaction_id = Column(String(100))
 

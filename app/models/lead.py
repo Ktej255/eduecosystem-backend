@@ -34,6 +34,8 @@ class Lead(Base):
     # Details
     notes = Column(Text, nullable=True)
     last_activity = Column(DateTime(timezone=True), default=func.now())
+    drip_day_sent = Column(Integer, default=0) # Tracks which day of the drip sequence has been emailed
+    
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

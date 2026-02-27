@@ -392,3 +392,11 @@ api_router.include_router(courses.lessons_router, prefix="/lessons", tags=["less
 # User Activities (Generic Progress Tracking)
 from app.api.api_v1.endpoints import user_activities
 api_router.include_router(user_activities.router, prefix="/user-activities", tags=["user-activities"])
+
+# Generic Deep Reports Store (Batch 1, Saturday Tests, Streaks)
+from app.api.api_v1.endpoints import student_report
+api_router.include_router(student_report.router, prefix="/student-reports", tags=["student-reports"])
+
+# App Config
+from app.api.api_v1.endpoints import app_config
+api_router.include_router(app_config.router, prefix="/app-config", tags=["app-config"])

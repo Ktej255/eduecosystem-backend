@@ -151,18 +151,10 @@ class Settings(BaseSettings):
         "CELERY_RESULT_BACKEND", "redis://localhost:6379/2"
     )
 
-    # Stripe Configuration
-    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "sk_test_placeholder")
-    STRIPE_PUBLISHABLE_KEY: str = os.getenv(
-        "STRIPE_PUBLISHABLE_KEY", "pk_test_placeholder"
-    )
-    STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_placeholder")
-    PREMIUM_PRICE_ID: str = os.getenv("PREMIUM_PRICE_ID", "price_placeholder")
-
-    # Razorpay Configuration (for Indian payments)
-    RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "rzp_test_placeholder")
-    RAZORPAY_KEY_SECRET: str = os.getenv("RAZORPAY_KEY_SECRET", "placeholder_secret")
-    RAZORPAY_WEBHOOK_SECRET: str = os.getenv("RAZORPAY_WEBHOOK_SECRET", "webhook_placeholder")
+    # Cashfree Configuration (for payments)
+    CASHFREE_APP_ID: str = os.getenv("CASHFREE_APP_ID", "app_id_placeholder")
+    CASHFREE_SECRET_KEY: str = os.getenv("CASHFREE_SECRET_KEY", "secret_key_placeholder")
+    CASHFREE_WEBHOOK_SECRET: str = os.getenv("CASHFREE_WEBHOOK_SECRET", "webhook_placeholder")
 
     # File Storage Configuration
     STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # Options: local, s3

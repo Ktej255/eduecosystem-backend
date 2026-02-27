@@ -32,7 +32,7 @@ class User(Base):
 
     # Subscription fields
     is_premium = Column(Boolean, default=False)
-    stripe_customer_id = Column(String, nullable=True)
+    cashfree_customer_id = Column(String, nullable=True)
     subscription_status = Column(
         String, default="free"
     )  # free, active, past_due, canceled
@@ -74,6 +74,9 @@ class User(Base):
     )
     rewards = relationship(
         "UserReward", back_populates="user", cascade="all, delete-orphan"
+    )
+    student_reports = relationship(
+        "StudentReport", back_populates="user", cascade="all, delete-orphan"
     )
 
     # LMS Relationships

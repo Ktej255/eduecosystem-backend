@@ -4,8 +4,8 @@ from app.core.email import send_email
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.crud import user as crud_user
-from app.models.user import User
-from app.schemas.user import User, UserCreate, UserUpdate
+from app.schemas.user import User, UserCreate, UserUpdate, PushSubscriptionCreate
+from app.models.push_subscription import PushSubscription
 
 router = APIRouter()
 
@@ -76,7 +76,58 @@ def read_users(
     current_user: User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
-    Retrieve users.
-    """
     users = crud_user.get_multi(db, skip=skip, limit=limit, role=role)
     return users
+
+@router.post("/me/push-subscription", status_code=201)
+def subscribe_to_push_notifications(
+    *,
+    db: Session = Depends(deps.get_db),
+    sub_in: PushSubscriptionCreate,
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Store a new Web Push subscription for the current user.
+    """
+    # Check if already exists
+    existing = db.query(PushSubscription).filter(PushSubscription.endpoint == sub_in.endpoint).first()
+    
+    if existing:
+        # Reassign to current user if somehow it changed, or update keys
+        existing.user_id = current_user.id
+        existing.p256dh = sub_in.keys.p256dh
+        existing.auth = sub_in.keys.auth
+        db.commit()
+        return {"status": "updated"}
+        
+    subscription = PushSubscription(
+        user_id=current_user.id,
+        endpoint=sub_in.endpoint,
+        p256dh=sub_in.keys.p256dh,
+        auth=sub_in.keys.auth
+    )
+    
+    db.add(subscription)
+    db.commit()
+    return {"status": "created"}
+
+@router.delete("/me/push-subscription", status_code=200)
+def unsubscribe_from_push_notifications(
+    *,
+    db: Session = Depends(deps.get_db),
+    endpoint: str,
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Remove a Web Push subscription.
+    """
+    existing = db.query(PushSubscription).filter(
+        PushSubscription.endpoint == endpoint,
+        PushSubscription.user_id == current_user.id
+    ).first()
+    
+    if existing:
+        db.delete(existing)
+        db.commit()
+    
+    return {"status": "deleted"}

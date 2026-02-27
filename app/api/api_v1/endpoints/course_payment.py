@@ -1,11 +1,9 @@
 """
 Multi-Gateway Payment Integration for Courses
-Supports: Stripe, Razorpay, Instamojo
+Supports: Cashfree (Migrated), Instamojo
 Currency: INR
 """
 
-import stripe
-import razorpay
 import requests
 import os
 import hmac
@@ -23,14 +21,9 @@ from app.models.course import Course
 from app.models.enrollment import Enrollment
 from app.models.course_payment import CoursePayment
 from app.crud import course as crud_course
+from app.services.cashfree_service import cashfree_service
 
 # Initialize payment providers
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-
-razorpay_client = razorpay.Client(
-    auth=(os.getenv("RAZORPAY_KEY_ID", ""), os.getenv("RAZORPAY_KEY_SECRET", ""))
-)
 
 INSTAMOJO_API_KEY = os.getenv("INSTAMOJO_API_KEY", "")
 INSTAMOJO_AUTH_TOKEN = os.getenv("INSTAMOJO_AUTH_TOKEN", "")
@@ -50,7 +43,7 @@ router = APIRouter()
 
 class CreatePaymentRequest(BaseModel):
     course_id: int
-    payment_provider: str  # stripe, razorpay, instamojo
+    payment_provider: str  # cashfree, instamojo
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None
 
@@ -59,15 +52,14 @@ class PaymentResponse(BaseModel):
     payment_id: int
     provider: str
     checkout_url: Optional[str] = None
-    order_id: Optional[str] = None  # For Razorpay
-    razorpay_key: Optional[str] = None  # For frontend
+    order_id: Optional[str] = None
     payment_request_id: Optional[str] = None  # For Instamojo
+    payment_session_id: Optional[str] = None  # For Cashfree
 
-
-class VerifyRazorpayPayment(BaseModel):
-    razorpay_order_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
+class VerifyPayment(BaseModel):
+    order_id: str
+    payment_id: str
+    signature: str
 
 
 class PaymentStatus(BaseModel):
@@ -80,18 +72,17 @@ class PaymentStatus(BaseModel):
 
 
 # ============================================================================
-# STRIPE INTEGRATION
+# CASHFREE INTEGRATION
 # ============================================================================
 
-
-@router.post("/create-stripe-checkout", response_model=PaymentResponse)
-async def create_stripe_checkout(
-    course_id: int,
+@router.post("/create-cashfree-order", response_model=PaymentResponse)
+async def create_cashfree_order(
+    request: CreatePaymentRequest,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
-    """Create Stripe checkout session (INR)"""
-    course = crud_course.course.get(db=db, id=course_id)
+    """Create a Cashfree order (INR)"""
+    course = crud_course.course.get(db=db, id=request.course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
@@ -99,105 +90,36 @@ async def create_stripe_checkout(
         raise HTTPException(status_code=400, detail="Course is free")
 
     try:
-        # Convert INR to paise (smallest currency unit)
-        amount_in_paise = int(course.price * 100)
+        customer_details = {
+            "customer_id": str(current_user.id),
+            "customer_email": current_user.email,
+            "customer_phone": getattr(current_user, "phone", "9999999999") or "9999999999",
+            "customer_name": getattr(current_user, "full_name", current_user.email.split("@")[0]) or "Student"
+        }
 
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[
-                {
-                    "price_data": {
-                        "currency": "inr",
-                        "unit_amount": amount_in_paise,
-                        "product_data": {
-                            "name": course.title,
-                            "description": course.description,
-                            "images": [course.thumbnail_url]
-                            if course.thumbnail_url
-                            else [],
-                        },
-                    },
-                    "quantity": 1,
-                }
-            ],
-            mode="payment",
-            success_url=f"{FRONTEND_URL}/lms/courses/{course_id}/success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{FRONTEND_URL}/lms/courses/{course_id}",
-            customer_email=current_user.email,
-            metadata={
-                "user_id": str(current_user.id),
-                "course_id": str(course_id),
-            },
-        )
-
-        # Create payment record
-        payment = CoursePayment(
-            user_id=current_user.id,
-            course_id=course_id,
-            amount=course.price,
-            currency="INR",
-            status="pending",
-            payment_provider="stripe",
-            stripe_checkout_session_id=session.id,
-        )
-        db.add(payment)
-        db.commit()
-        db.refresh(payment)
-
-        return PaymentResponse(
-            payment_id=payment.id, provider="stripe", checkout_url=session.url
-        )
-
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-# ============================================================================
-# RAZORPAY INTEGRATION
-# ============================================================================
-
-
-@router.post("/create-razorpay-order", response_model=PaymentResponse)
-async def create_razorpay_order(
-    course_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Create Razorpay order (INR)"""
-    course = crud_course.course.get(db=db, id=course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-
-    if course.price <= 0:
-        raise HTTPException(status_code=400, detail="Course is free")
-
-    try:
-        # Convert INR to paise
-        amount_in_paise = int(course.price * 100)
-
-        # Create Razorpay order
-        order = razorpay_client.order.create(
-            {
-                "amount": amount_in_paise,
-                "currency": "INR",
-                "receipt": f"course_{course_id}_user_{current_user.id}",
-                "notes": {
-                    "course_id": str(course_id),
-                    "user_id": str(current_user.id),
-                    "course_title": course.title,
-                },
+        # Use the unified Cashfree service
+        cashfree_order = cashfree_service.create_order(
+            order_amount=course.price,
+            order_currency="INR",
+            customer_details=customer_details,
+            order_note=f"Enrollment: {course.title}",
+            order_meta={
+                "return_url": request.success_url or f"{FRONTEND_URL}/lms/courses/{course.id}/success",
+                "notify_url": f"{os.getenv('BASE_URL')}/api/v1/course-payments/cashfree-webhook"
             }
         )
 
         # Create payment record
         payment = CoursePayment(
             user_id=current_user.id,
-            course_id=course_id,
+            course_id=course.id,
             amount=course.price,
             currency="INR",
             status="pending",
-            payment_provider="razorpay",
-            razorpay_order_id=order["id"],
+            payment_provider="cashfree",
+            cashfree_order_id=cashfree_order.get("order_id"), # Storing standard ID in a placeholder if needed, otherwise rely on order_id natively
+            # You might need to add cashfree_order_id to CoursePayment model if it doesn't exist,
+            # or map it to a generic order_id column.
         )
         db.add(payment)
         db.commit()
@@ -205,78 +127,74 @@ async def create_razorpay_order(
 
         return PaymentResponse(
             payment_id=payment.id,
-            provider="razorpay",
-            order_id=order["id"],
-            razorpay_key=os.getenv("RAZORPAY_KEY_ID", ""),
+            provider="cashfree",
+            order_id=cashfree_order.get("order_id"),
+            payment_session_id=cashfree_order.get("payment_session_id")
         )
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.post("/cashfree-webhook")
+async def cashfree_webhook(request: Request, db: Session = Depends(deps.get_db)):
+    """Server-to-Server Webhook handler for Cashfree"""
+    try:
+        raw_body = await request.body()
+        signature = request.headers.get("x-webhook-signature")
+        timestamp = request.headers.get("x-webhook-timestamp")
 
-@router.post("/verify-razorpay-payment")
-async def verify_razorpay_payment(
-    data: VerifyRazorpayPayment,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    """Verify Razorpay payment signature"""
+        if not signature or not timestamp:
+            raise HTTPException(status_code=400, detail="Missing Cashfree headers")
 
-    # Find payment record
-    payment = (
-        db.query(CoursePayment)
-        .filter(
-            CoursePayment.razorpay_order_id == data.razorpay_order_id,
-            CoursePayment.user_id == current_user.id,
-        )
-        .first()
-    )
+        # Verify signature
+        if not cashfree_service.verify_webhook_signature(signature, timestamp, raw_body.decode("utf-8")):
+            raise HTTPException(status_code=400, detail="Invalid signature")
 
-    if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        # Parse Event
+        event = await request.json()
+        
+        if event.get("type") == "PAYMENT_SUCCESS_WEBHOOK":
+            order = event.get("data", {}).get("order", {})
+            order_id = order.get("order_id")
+            
+            # Find payment record
+            payment = db.query(CoursePayment).filter(CoursePayment.cashfree_order_id == order_id).first()
+            
+            if payment and payment.status != "succeeded":
+                # Mark as succeeded
+                payment.status = "succeeded"
+                payment.cashfree_payment_id = event.get("data", {}).get("payment", {}).get("cf_payment_id")
+                payment.succeeded_at = datetime.utcnow()
+                
+                # Create enrollment to unlock access
+                enrollment = Enrollment(
+                    user_id=payment.user_id,
+                    course_id=payment.course_id,
+                    status="active",
+                    payment_id=payment.cashfree_payment_id,
+                    price_paid=payment.amount,
+                    progress_percentage=0,
+                )
+                db.add(enrollment)
+                db.flush()
+                
+                payment.enrollment_id = enrollment.id
+                
+                # Update course enrollment count
+                course = db.query(Course).filter(Course.id == payment.course_id).first()
+                if course:
+                    course.total_enrollments = (course.total_enrollments or 0) + 1
+                    
+                db.commit()
+                print(f"WEBHOOK SUCCESS: Confirmed unlocked bundle for Order ID {order_id}")
+            else:
+                print(f"WEBHOOK INFO: Payment {order_id} already processed or not found.")
+            
+        return {"status": "OK"}
 
-    # Verify signature
-    generated_signature = hmac.new(
-        os.getenv("RAZORPAY_KEY_SECRET", "").encode(),
-        f"{data.razorpay_order_id}|{data.razorpay_payment_id}".encode(),
-        hashlib.sha256,
-    ).hexdigest()
-
-    if generated_signature != data.razorpay_signature:
-        payment.status = "failed"
-        payment.failure_reason = "Invalid signature"
-        db.commit()
-        raise HTTPException(status_code=400, detail="Invalid payment signature")
-
-    # Update payment
-    payment.status = "succeeded"
-    payment.razorpay_payment_id = data.razorpay_payment_id
-    payment.razorpay_signature = data.razorpay_signature
-    payment.succeeded_at = datetime.utcnow()
-
-    # Create enrollment
-    enrollment = Enrollment(
-        user_id=payment.user_id,
-        course_id=payment.course_id,
-        status="active",
-        payment_id=data.razorpay_payment_id,
-        price_paid=payment.amount,
-        progress_percentage=0,
-    )
-    db.add(enrollment)
-    db.flush()
-
-    payment.enrollment_id = enrollment.id
-
-    # Update course enrollment count
-    course = db.query(Course).filter(Course.id == payment.course_id).first()
-    if course:
-        course.total_enrollments += 1
-
-    db.commit()
-
-    return {"status": "success", "enrollment_id": enrollment.id}
-
+    except Exception as e:
+        print(f"Webhook processing error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 # ============================================================================
 # INSTAMOJO INTEGRATION
@@ -425,64 +343,7 @@ async def verify_instamojo_payment(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# ============================================================================
-# WEBHOOK HANDLERS (Stripe)
-# ============================================================================
 
-
-@router.post("/stripe-webhook")
-async def stripe_webhook(request: Request, db: Session = Depends(deps.get_db)):
-    """Handle Stripe webhook events"""
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
-
-    # Handle the event
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-
-        # Get payment record
-        payment = (
-            db.query(CoursePayment)
-            .filter(CoursePayment.stripe_checkout_session_id == session.id)
-            .first()
-        )
-
-        if payment and payment.status != "succeeded":
-            payment.status = "succeeded"
-            payment.stripe_payment_intent_id = session.payment_intent
-            payment.succeeded_at = datetime.utcnow()
-
-            # Create enrollment
-            enrollment = Enrollment(
-                user_id=payment.user_id,
-                course_id=payment.course_id,
-                status="active",
-                payment_id=session.payment_intent,
-                price_paid=payment.amount,
-                progress_percentage=0,
-            )
-            db.add(enrollment)
-            db.flush()
-
-            payment.enrollment_id = enrollment.id
-
-            # Update course enrollment count
-            course = db.query(Course).filter(Course.id == payment.course_id).first()
-            if course:
-                course.total_enrollments += 1
-
-            db.commit()
-
-    return {"status": "success"}
 
 
 # ============================================================================

@@ -656,9 +656,7 @@ from app.schemas.meditation import (
     PurchaseResponse,
     PurchaseHistoryResponse,
 )
-from app.services.razorpay_service import razorpay_service
 from app.core.config import settings
-
 
 @router.get("/levels/pricing", response_model=PricingResponse)
 def get_level_pricing():
@@ -690,121 +688,15 @@ def get_level_pricing():
     
     return PricingResponse(levels=levels, bundles=bundles)
 
+@router.post("/level/{level_id}/purchase/initiate")
+def initiate_level_purchase():
+    """Placeholder for Cashfree meditation purchase"""
+    raise HTTPException(status_code=501, detail="Pending Cashfree migration")
 
-@router.post("/level/{level_id}/purchase/initiate", response_model=PurchaseInitiateResponse)
-def initiate_level_purchase(
-    level_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
-):
-    """Initiate purchase for a meditation level"""
-    
-    # Validate level
-    if level_id not in MEDITATION_LEVELS:
-        raise HTTPException(status_code=400, detail="Invalid level")
-    
-    # Check if already purchased
-    existing_purchase = db.query(MeditationLevelPurchase).filter(
-        MeditationLevelPurchase.user_id == current_user.id,
-        MeditationLevelPurchase.level == level_id,
-        MeditationLevelPurchase.payment_status == "completed"
-    ).first()
-    
-    if existing_purchase:
-        raise HTTPException(status_code=400, detail="Level already purchased")
-    
-    # Get pricing
-    level_data = MEDITATION_LEVELS[level_id]
-    amount = level_data["price"]
-    currency = level_data["currency"]
-    
-    # Create Razorpay order
-    receipt = f"level_{level_id}_user_{current_user.id}_{datetime.now().timestamp()}"
-    notes = {
-        "level": level_id,
-        "user_id": current_user.id,
-        "user_email": current_user.email
-    }
-    
-    razorpay_order = razorpay_service.create_order(
-        amount=amount,
-        currency=currency,
-        receipt=receipt,
-        notes=notes
-    )
-    
-    # Create pending purchase record
-    purchase = MeditationLevelPurchase(
-        user_id=current_user.id,
-        level=level_id,
-        amount_paid=amount,
-        currency=currency,
-        payment_gateway="razorpay",
-        payment_id="",  # Will be updated on verification
-        order_id=razorpay_order["id"],
-        payment_status="pending"
-    )
-    db.add(purchase)
-    db.commit()
-    
-    return PurchaseInitiateResponse(
-        order_id=razorpay_order["id"],
-        amount=amount,
-        currency=currency,
-        level=level_id,
-        razorpay_key=settings.RAZORPAY_KEY_ID
-    )
-
-
-@router.post("/level/{level_id}/purchase/verify", response_model=PurchaseResponse)
-def verify_level_purchase(
-    level_id: int,
-    payment_data: PaymentVerificationRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
-):
-    """Verify payment and unlock level"""
-    
-    # Verify signature
-    is_valid = razorpay_service.verify_payment_signature(
-        razorpay_order_id=payment_data.razorpay_order_id,
-        razorpay_payment_id=payment_data.razorpay_payment_id,
-        razorpay_signature=payment_data.razorpay_signature
-    )
-    
-    if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid payment signature")
-    
-    # Find purchase record
-    purchase = db.query(MeditationLevelPurchase).filter(
-        MeditationLevelPurchase.user_id == current_user.id,
-        MeditationLevelPurchase.order_id == payment_data.razorpay_order_id,
-        MeditationLevelPurchase.level == level_id
-    ).first()
-    
-    if not purchase:
-        raise HTTPException(status_code=404, detail="Purchase record not found")
-    
-    # Fetch payment details from Razorpay
-    payment_details = razorpay_service.fetch_payment(payment_data.razorpay_payment_id)
-    
-    # Update purchase record
-    purchase.payment_id = payment_data.razorpay_payment_id
-    purchase.razorpay_signature = payment_data.razorpay_signature
-    purchase.payment_status = "completed"
-    purchase.payment_method = payment_details.get("method") if payment_details else None
-    purchase.purchased_at = datetime.now()
-    
-    # Unlock level for user (update progress)
-    progress = get_or_create_progress(db, current_user.id)
-    if progress.unlocked_levels < level_id:
-        progress.unlocked_levels = max(progress.unlocked_levels, level_id)
-    
-    db.commit()
-    db.refresh(purchase)
-    
-    return purchase
-
+@router.post("/level/{level_id}/purchase/verify")
+def verify_level_purchase():
+    """Placeholder for Cashfree meditation verification"""
+    raise HTTPException(status_code=501, detail="Pending Cashfree migration")
 
 @router.get("/purchases", response_model=PurchaseHistoryResponse)
 def get_user_purchases(
@@ -836,68 +728,4 @@ def get_user_purchases(
         total_spent=total_spent,
         levels_owned=levels_owned
     )
-
-
-@router.post("/webhook/payment")
-async def payment_webhook(request: Request, db: Session = Depends(get_db)):
-    """Handle Razorpay payment webhooks"""
-    
-    # Get raw body and signature
-    body = await request.body()
-    signature = request.headers.get("X-Razorpay-Signature")
-    
-    if not signature:
-        raise HTTPException(status_code=400, detail="Missing signature")
-    
-    # Verify webhook signature
-    is_valid = razorpay_service.verify_webhook_signature(
-        payload=body.decode(),
-        signature=signature
-    )
-    
-    if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid webhook signature")
-    
-    # Process webhook event
-    import json
-    event_data = json.loads(body)
-    event_type = event_data.get("event")
-    
-    if event_type == "payment.captured":
-        payment = event_data.get("payload", {}).get("payment", {}).get("entity", {})
-        order_id = payment.get("order_id")
-        payment_id = payment.get("id")
-        
-        # Update purchase record
-        purchase = db.query(MeditationLevelPurchase).filter(
-            MeditationLevelPurchase.order_id == order_id
-        ).first()
-        
-        if purchase:
-            purchase.payment_id = payment_id
-            purchase.payment_status = "completed"
-            purchase.payment_method = payment.get("method")
-            purchase.purchased_at = datetime.now()
-            
-            # Unlock level
-            progress = get_or_create_progress(db, purchase.user_id)
-            if progress.unlocked_levels < purchase.level:
-                progress.unlocked_levels = purchase.level
-            
-            db.commit()
-    
-    elif event_type == "payment.failed":
-        payment = event_data.get("payload", {}).get("payment", {}).get("entity", {})
-        order_id = payment.get("order_id")
-        
-        # Update purchase record
-        purchase = db.query(MeditationLevelPurchase).filter(
-            MeditationLevelPurchase.order_id == order_id
-        ).first()
-        
-        if purchase:
-            purchase.payment_status = "failed"
-            db.commit()
-    
-    return {"status": "ok"}
 

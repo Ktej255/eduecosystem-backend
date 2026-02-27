@@ -81,11 +81,11 @@ class InstructorPayout(Base):
     )  # pending, processing, completed, failed
 
     # Payment method
-    payment_method = Column(String(20), nullable=False)  # stripe, paypal, bank_transfer
+    payment_method = Column(String(20), nullable=False)  # cashfree, bank_transfer
     payment_details = Column(Text)  # Encrypted JSON with account details
 
     # Transaction tracking
-    stripe_transfer_id = Column(String(100))
+    cashfree_transfer_id = Column(String(100))
     transaction_id = Column(String(100))
 
     # Dates

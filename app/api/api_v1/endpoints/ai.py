@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.user import User
 from app.services.gemini_service import gemini_service
+from app.services.rag_service import rag_service
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -55,6 +56,16 @@ UPSC-Specific Guidelines:
     # Add any additional context provided
     if request.context:
         system_prompt += f"\n\nCurrent context: {request.context}"
+
+    # Query RAG Service for course material context
+    rag_context = ""
+    try:
+        relevant_docs = rag_service.store.search(request.message, k=3)
+        if relevant_docs:
+            rag_context = "\n".join([f"- {d['text']}" for d in relevant_docs])
+            system_prompt += f"\n\nCourse Material Context (Use this to ground your answer):\n{rag_context}\n"
+    except Exception as e:
+        print(f"RAG Error: {e}")
 
     # Prepare conversation messages
     messages = [{"role": "user", "content": request.message}]

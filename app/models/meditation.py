@@ -265,7 +265,7 @@ class MeditationLevelPurchase(Base):
     discount_applied = Column(Float, default=0.0)
     
     # Payment gateway details
-    payment_gateway = Column(String(50), nullable=False)  # "razorpay"
+    payment_gateway = Column(String(50), nullable=False)  # "cashfree"
     payment_id = Column(String(255), nullable=False, unique=True)
     order_id = Column(String(255), nullable=True)
     payment_status = Column(String(50), default="pending")  # pending, completed, failed, refunded
@@ -276,7 +276,7 @@ class MeditationLevelPurchase(Base):
     receipt_url = Column(String(500), nullable=True)
     
     # Additional details
-    razorpay_signature = Column(String(500), nullable=True)
+    cashfree_signature = Column(String(500), nullable=True)
     notes = Column(Text, nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())

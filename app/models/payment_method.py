@@ -23,10 +23,7 @@ from app.db.session import Base
 class PaymentGateway(str, enum.Enum):
     """Payment gateway enumeration"""
 
-    STRIPE = "stripe"
-    PAYPAL = "paypal"
-    RAZORPAY = "razorpay"
-    INSTAMOJO = "instamojo"
+    CASHFREE = "cashfree"
 
 
 class PaymentMethodType(str, enum.Enum):
@@ -58,7 +55,7 @@ class PaymentMethod(Base):
 
     # Gateway-specific token/ID (encrypted in production)
     gateway_token = Column(String(255), nullable=False)
-    gateway_customer_id = Column(String(255), nullable=True)  # Stripe customer ID, etc.
+    gateway_customer_id = Column(String(255), nullable=True)  # Cashfree customer ID
 
     # Display information
     display_name = Column(String(100), nullable=True)  # e.g., "Visa ending in 4242"

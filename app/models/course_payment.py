@@ -31,24 +31,13 @@ class CoursePayment(Base):
     currency = Column(String, default="INR")  # Changed default to INR
     status = Column(String, nullable=False)  # pending, succeeded, failed, refunded
 
-    # Payment provider
-    payment_provider = Column(String, nullable=False)  # stripe, razorpay, instamojo
-
-    # Stripe details
-    stripe_payment_intent_id = Column(String, unique=True, index=True, nullable=True)
-    stripe_checkout_session_id = Column(String, unique=True, index=True, nullable=True)
-    stripe_customer_id = Column(String, index=True, nullable=True)
-
-    # Razorpay details
-    razorpay_order_id = Column(String, unique=True, index=True, nullable=True)
-    razorpay_payment_id = Column(String, unique=True, index=True, nullable=True)
-    razorpay_signature = Column(String, nullable=True)
-
-    # Instamojo details
-    instamojo_payment_request_id = Column(
-        String, unique=True, index=True, nullable=True
-    )
-    instamojo_payment_id = Column(String, unique=True, index=True, nullable=True)
+    # Payment provider (Now strictly Cashfree)
+    gateway = Column(String, default="cashfree", nullable=False)
+    
+    # Cashfree tracking details
+    cashfree_order_id = Column(String, unique=True, index=True, nullable=True)
+    cashfree_payment_id = Column(String, unique=True, index=True, nullable=True)
+    invoice_url = Column(String, nullable=True)
 
     # Metadata
     payment_method = Column(String)  # card, paypal, etc.

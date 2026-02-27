@@ -9,6 +9,7 @@ from app.api import deps
 from app.models.lead import Lead
 from app.schemas.lead import LeadCreate, LeadUpdate, Lead as LeadSchema, BulkReassignRequest
 from app.models.user import User
+from app.services.drip_service import process_email_drips
 
 router = APIRouter()
 
@@ -164,3 +165,17 @@ def verify_lead(
     db.commit()
     db.refresh(lead)
     return lead
+
+@router.post("/trigger-drip", status_code=200)
+async def trigger_email_drip(
+    *,
+    db: Session = Depends(deps.get_db),
+    # In a production environment, this should be protected by a cron secret token or IP whitelist
+) -> Any:
+    """
+    Trigger the daily email drip sequence for leads.
+    Intended to be called by an automated cron job scheduler.
+    """
+    result = await process_email_drips(db)
+    return result
+
