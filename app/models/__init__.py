@@ -14,6 +14,11 @@ from app.models.course_payment import CoursePayment
 from app.models.certificate import Certificate
 from app.models.category import Category, Tag
 from app.models.assignment import Assignment, Submission
+from app.models.lms import (
+    Assignment as LMSAssignment,
+    StudentSubmission,
+    AIEvaluationLog,
+)
 from app.models.discussion import (
     DiscussionCategory,
     DiscussionThread,

@@ -59,8 +59,7 @@ class AIPlanRequest(BaseModel):
 
 # ==================== HELPER ====================
 
-
-
+from app.services.git_sync_service import git_sync_service
 
 # ==================== DEVELOPMENT LOGS ====================
 
@@ -136,6 +135,27 @@ def create_development_log(
             "title": log.title
         }
     }
+
+
+@router.post("/development-logs/git-sync")
+def sync_git_commits(
+    limit: int = Query(50, le=200),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Synchronizes local Git commits into the Development logs.
+    """
+    try:
+        added, total = git_sync_service.sync_to_db(db=db, limit=limit)
+        return {
+            "message": f"Successfully synced Git history.",
+            "added_count": added,
+            "total_processed": total
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/development-logs/{log_id}")

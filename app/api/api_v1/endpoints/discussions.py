@@ -19,7 +19,9 @@ from app.schemas.discussion import (
     PostCreate,
     PostUpdate,
     VoteCreate,
+    ThreadVoteCreate,
 )
+from app.services.gemini_service import gemini_service
 
 router = APIRouter()
 
@@ -136,6 +138,9 @@ def list_threads(
             thread.author.full_name if thread.author else "Unknown"
         )
         thread_dict["author_avatar"] = getattr(thread.author, "avatar_url", None)
+        thread_dict["user_vote"] = crud_discussion.vote.get_user_thread_vote(
+            db, thread_id=thread.id, user_id=current_user.id
+        )
 
         # Get last post info
         if thread.posts:
@@ -171,6 +176,9 @@ def search_threads(
             thread.author.full_name if thread.author else "Unknown"
         )
         thread_dict["author_avatar"] = getattr(thread.author, "avatar_url", None)
+        thread_dict["user_vote"] = crud_discussion.vote.get_user_thread_vote(
+            db, thread_id=thread.id, user_id=current_user.id
+        )
         result.append(thread_dict)
 
     return result
@@ -214,6 +222,9 @@ def get_thread(
     posts = crud_discussion.post.get_by_thread(db, thread_id=thread_id)
 
     thread_dict = ThreadWithPosts.from_orm(thread).model_dump()
+    thread_dict["user_vote"] = crud_discussion.vote.get_user_thread_vote(
+        db, thread_id=thread.id, user_id=current_user.id
+    )
     thread_dict["posts"] = []
 
     for post in posts:
@@ -424,3 +435,68 @@ def vote_post(
         raise HTTPException(status_code=404, detail="Post not found")
 
     return post
+
+
+@router.post("/threads/{thread_id}/vote", response_model=Thread)
+def vote_thread(
+    thread_id: int,
+    *,
+    db: Session = Depends(deps.get_db),
+    vote_in: ThreadVoteCreate,
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Vote on a thread (upvote only)"""
+    thread = crud_discussion.vote.vote_thread(
+        db, thread_id=thread_id, user_id=current_user.id, vote_type=vote_in.vote_type
+    )
+
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    return thread
+
+
+@router.post("/threads/{thread_id}/feature", response_model=Thread)
+def feature_thread(
+    thread_id: int,
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_instructor),
+) -> Any:
+    """Toggle 'featured' status for a thread (instructor only)"""
+    thread = crud_discussion.thread.get(db, id=thread_id)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    thread.is_featured = not thread.is_featured
+    db.commit()
+    db.refresh(thread)
+    return thread
+
+
+@router.post("/threads/{thread_id}/ai-draft-reply")
+async def generate_ai_draft_reply(
+    thread_id: int,
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_instructor),
+) -> Any:
+    """Generate an AI-drafted reply for a doubt (instructor only)"""
+    thread = crud_discussion.thread.get(db, id=thread_id)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    prompt = f"""You are an expert teaching assistant. A student has a doubt in a discussion forum.
+    
+THREAD TITLE: {thread.title}
+DOUBT CONTENT: {thread.content}
+
+Draft a professional, helpful, and concise response to this doubt. 
+Address the student's concerns clearly.
+Return ONLY the draft text."""
+
+    try:
+        draft = gemini_service.generate_text(prompt, user=current_user, temperature=0.7)
+        return {"draft": draft}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI Draft failed: {str(e)}")

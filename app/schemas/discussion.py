@@ -78,10 +78,12 @@ class ThreadInDBBase(ThreadBase):
     course_id: int
     user_id: int
     is_pinned: bool
+    is_featured: bool
     is_locked: bool
     is_resolved: bool
     view_count: int
     reply_count: int
+    upvotes: int
     created_at: datetime
     updated_at: Optional[datetime] = None
     last_activity_at: datetime
@@ -92,7 +94,7 @@ class ThreadInDBBase(ThreadBase):
 class Thread(ThreadInDBBase):
     """Full thread schema"""
 
-    pass
+    user_vote: Optional[str] = None  # "upvote" or None
 
 
 class ThreadListItem(ThreadInDBBase):
@@ -102,6 +104,7 @@ class ThreadListItem(ThreadInDBBase):
     author_avatar: Optional[str] = None
     last_post_at: Optional[datetime] = None
     last_post_author: Optional[str] = None
+    user_vote: Optional[str] = None  # "upvote" or None
 
 
 class ThreadWithPosts(Thread):
@@ -176,6 +179,22 @@ class VoteCreate(BaseModel):
 class Vote(BaseModel):
     id: int
     post_id: int
+    user_id: int
+    vote_type: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ThreadVoteCreate(BaseModel):
+    """Schema for voting on a thread"""
+
+    vote_type: str = Field(default="upvote", pattern="^(upvote)$")
+
+
+class ThreadVote(BaseModel):
+    id: int
+    thread_id: int
     user_id: int
     vote_type: str
     created_at: datetime

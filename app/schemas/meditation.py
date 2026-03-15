@@ -293,19 +293,18 @@ class PurchaseInitiateRequest(BaseModel):
 
 
 class PurchaseInitiateResponse(BaseModel):
-    """Response with Razorpay order details"""
+    """Response with Cashfree order details"""
     order_id: str
+    payment_session_id: str
     amount: float
     currency: str
     level: int
-    razorpay_key: str  # Public key for frontend
+    customer_id: str
 
 
 class PaymentVerificationRequest(BaseModel):
-    """Request to verify payment"""
-    razorpay_order_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
+    """Request to verify Cashfree payment"""
+    order_id: str
 
 
 class PurchaseResponse(BaseModel):

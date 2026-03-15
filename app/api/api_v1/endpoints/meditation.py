@@ -4,7 +4,7 @@ Progressive Process System with Video Explanations
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta, date
 
 from app.api import deps
@@ -78,7 +78,7 @@ def calculate_streak(progress: MeditationProgress) -> int:
         return 0
 
 
-def is_day_unlocked(completion, current_date: date = None) -> bool:
+def is_day_unlocked(completion, current_date: Optional[date] = None) -> bool:
     """Check if next day is unlocked (completion must be on previous date)"""
     if completion is None:
         return False
@@ -542,7 +542,7 @@ def get_experience_analytics(
     # Calculate overall wellbeing score (0-100)
     # Based on average improvements scaled to percentage
     wellbeing_score = ((avg_stress + avg_anxiety + avg_focus) / 30) * 100
-    wellbeing_score = max(0, min(100, 50 + wellbeing_score))  # Baseline 50, adjust based on improvements
+    wellbeing_score = float(max(0.0, min(100.0, 50.0 + wellbeing_score)))  # Baseline 50, adjust based on improvements
     
     # Determine trend (compare last 5 vs previous 5)
     trend = "stable"
@@ -578,10 +578,10 @@ def get_experience_analytics(
     
     return AnalyticsResponse(
         total_sessions=total_sessions,
-        average_stress_improvement=round(avg_stress, 2),
-        average_anxiety_improvement=round(avg_anxiety, 2),
-        average_focus_improvement=round(avg_focus, 2),
-        overall_wellbeing_score=round(wellbeing_score, 2),
+        average_stress_improvement=round(float(avg_stress), 2),
+        average_anxiety_improvement=round(float(avg_anxiety), 2),
+        average_focus_improvement=round(float(avg_focus), 2),
+        overall_wellbeing_score=round(float(wellbeing_score), 2),
         trend_direction=trend,
         best_time_of_day=best_time,
         most_effective_processes=[]  # TODO: Implement process effectiveness ranking
@@ -645,7 +645,6 @@ def get_experience_graphs(
 # PAYMENT ENDPOINTS (Phase 2)
 # ============================================================================
 
-from app.models.meditation import MeditationLevelPurchase, MEDITATION_BUNDLES
 from app.schemas.meditation import (
     PricingResponse,
     LevelPricingResponse,
@@ -656,7 +655,20 @@ from app.schemas.meditation import (
     PurchaseResponse,
     PurchaseHistoryResponse,
 )
+import requests
+import uuid
 from app.core.config import settings
+from app.models.meditation import MeditationLevelPurchase, MEDITATION_BUNDLES, MEDITATION_LEVELS
+
+# Cashfree configuration
+CASHFREE_BASE_URL = "https://api.cashfree.com/pg" if settings.ENVIRONMENT == "production" else "https://sandbox.cashfree.com/pg"
+CASHFREE_HEADERS = {
+    "accept": "application/json",
+    "x-client-id": settings.CASHFREE_APP_ID,
+    "x-client-secret": settings.CASHFREE_SECRET_KEY,
+    "x-api-version": "2023-08-01",
+    "content-type": "application/json"
+}
 
 @router.get("/levels/pricing", response_model=PricingResponse)
 def get_level_pricing():
@@ -688,15 +700,179 @@ def get_level_pricing():
     
     return PricingResponse(levels=levels, bundles=bundles)
 
-@router.post("/level/{level_id}/purchase/initiate")
-def initiate_level_purchase():
-    """Placeholder for Cashfree meditation purchase"""
-    raise HTTPException(status_code=501, detail="Pending Cashfree migration")
+@router.post("/level/{level_id}/purchase/initiate", response_model=PurchaseInitiateResponse)
+def initiate_level_purchase(
+    level_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Initiate a meditation level purchase using Cashfree"""
+    if level_id not in MEDITATION_LEVELS:
+        raise HTTPException(status_code=404, detail="Level not found")
+    
+    level_data = MEDITATION_LEVELS[level_id]
+    amount = level_data["price"]
+    
+    # Create unique order ID
+    order_uuid_str = str(uuid.uuid4()).replace('-', '').upper()
+    order_id = f"ORDER_{order_uuid_str[:12]}"
+    
+    # Create Cashfree Order
+    try:
+        payload = {
+            "order_amount": amount,
+            "order_currency": level_data["currency"],
+            "order_id": order_id,
+            "customer_details": {
+                "customer_id": f"USER_{current_user.id}",
+                "customer_phone": "9999999999", # Placeholder
+                "customer_email": current_user.email
+            },
+            "order_meta": {
+                "return_url": f"{settings.BASE_URL}/student/meditation/purchases?order_id={{order_id}}",
+                "notify_url": f"{settings.BASE_URL}/api/v1/meditation/webhook"
+            },
+            "order_note": f"Purchase of {level_data['name']} Meditation Level"
+        }
+        
+        response = requests.post(
+            f"{CASHFREE_BASE_URL}/orders",
+            json=payload,
+            headers=CASHFREE_HEADERS
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Cashfree order creation failed: {response.text}")
+            
+        order_data = response.json()
+        
+        # Save pending purchase record
+        purchase = MeditationLevelPurchase(
+            user_id=current_user.id,
+            level=level_id,
+            amount_paid=amount,
+            currency=level_data["currency"],
+            payment_gateway="cashfree",
+            payment_id="pending_" + order_id,
+            order_id=order_id,
+            payment_status="pending"
+        )
+        db.add(purchase)
+        db.commit()
+        
+        return PurchaseInitiateResponse(
+            order_id=order_id,
+            payment_session_id=order_data.get("payment_session_id"),
+            amount=float(amount),
+            currency=level_data["currency"],
+            level=level_id,
+            customer_id=f"USER_{current_user.id}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Order initiation failed: {str(e)}")
 
-@router.post("/level/{level_id}/purchase/verify")
-def verify_level_purchase():
-    """Placeholder for Cashfree meditation verification"""
-    raise HTTPException(status_code=501, detail="Pending Cashfree migration")
+@router.post("/level/{level_id}/purchase/verify", response_model=PurchaseResponse)
+def verify_level_purchase(
+    level_id: int,
+    request: PaymentVerificationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Verify Cashfree payment and unlock the meditation level"""
+    try:
+        # Fetch order status from Cashfree
+        response = requests.get(
+            f"{CASHFREE_BASE_URL}/orders/{request.order_id}",
+            headers=CASHFREE_HEADERS
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch order status from Cashfree")
+            
+        order_data = response.json()
+        order_status = order_data.get("order_status")
+        
+        # Find the purchase record
+        purchase = db.query(MeditationLevelPurchase).filter(
+            MeditationLevelPurchase.order_id == request.order_id,
+            MeditationLevelPurchase.user_id == current_user.id
+        ).first()
+        
+        if not purchase:
+            raise HTTPException(status_code=404, detail="Purchase record not found")
+        
+        if order_status == "PAID":
+            # Update purchase record
+            purchase.payment_status = "completed"
+            purchase.purchased_at = datetime.now()
+            
+            # Unlock the level in meditation progress
+            progress = get_or_create_progress(db, current_user.id)
+            if purchase.level > progress.unlocked_levels:
+                progress.unlocked_levels = purchase.level
+            
+            db.commit()
+            db.refresh(purchase)
+            return purchase
+        else:
+            purchase.payment_status = "failed"
+            db.commit()
+            raise HTTPException(status_code=400, detail=f"Payment status is {order_status}")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+import hmac
+import hashlib
+import base64
+
+@router.post("/webhook")
+async def meditation_payment_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Webhook for Cashfree payment notifications"""
+    payload_body = await request.body()
+    signature = request.headers.get("x-webhook-signature")
+    timestamp = request.headers.get("x-webhook-timestamp")
+
+    if not signature or not timestamp:
+        raise HTTPException(status_code=400, detail="Missing Webhook Signature")
+
+    # Verify signature
+    data_to_hash = timestamp.encode('utf-8') + payload_body
+    secret = settings.CASHFREE_WEBHOOK_SECRET.encode('utf-8')
+    
+    expected_signature = base64.b64encode(
+        hmac.new(secret, data_to_hash, hashlib.sha256).digest()
+    ).decode('utf-8')
+    
+    if signature != expected_signature:
+        raise HTTPException(status_code=401, detail="Invalid Webhook Signature")
+
+    payload = await request.json()
+    data = payload.get("data", {})
+    order = data.get("order", {})
+    order_id = order.get("order_id")
+    order_status = order.get("order_status")
+    
+    if order_status == "PAID":
+        purchase = db.query(MeditationLevelPurchase).filter(
+            MeditationLevelPurchase.order_id == order_id
+        ).first()
+        
+        if purchase and purchase.payment_status != "completed":
+            purchase.payment_status = "completed"
+            purchase.purchased_at = datetime.now()
+            
+            progress = get_or_create_progress(db, purchase.user_id)
+            if purchase.level > progress.unlocked_levels:
+                progress.unlocked_levels = purchase.level
+            
+            db.commit()
+            
+    return {"status": "ok"}
+
 
 @router.get("/purchases", response_model=PurchaseHistoryResponse)
 def get_user_purchases(

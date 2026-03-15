@@ -65,6 +65,7 @@ class GraphoSubmission(Base):
     duration_seconds = Column(Integer, nullable=True)
 
     book = relationship("GraphoBook", back_populates="submissions")
+    user = relationship("User")
 
 # --- Restored Models (Preserving Existing Logic) ---
 

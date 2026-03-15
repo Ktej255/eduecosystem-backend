@@ -511,5 +511,53 @@ Return JSON ONLY in this exact format:
             print(f"Grapho Vision Error: {e}")
             return {"traits": [], "overlay_coords": []}
 
+    def auto_tag_upsc_topics(self, question_texts: List[str]) -> List[str]:
+        """
+        Takes a list of question texts and returns a list of matching UPSC subject tags.
+        Example tags: "Polity", "History", "Geography", "Economy", "Science & Tech", "Environment", "Current Affairs", "Ethics".
+        """
+        if not question_texts:
+            return []
+            
+        # Group questions for batch processing to save tokens/RPM
+        formatted_questions = ""
+        for i, q in enumerate(question_texts):
+            formatted_questions += f"Q{i+1}: {q[:500]}\n---\n"
+            
+        prompt = f"""You are a UPSC subject expert. Categorize the following questions into one of these core subjects:
+- Polity
+- History
+- Geography
+- Economy
+- Science & Tech
+- Environment
+- Current Affairs
+- Ethics
+
+QUESTIONS:
+{formatted_questions}
+
+Return JSON ONLY in this exact format:
+{{
+    "tags": ["Subject for Q1", "Subject for Q2", ...]
+}}
+Ensure the 'tags' list length matches the input questions length ({len(question_texts)}).
+"""
+
+        try:
+            response = self.generate_text(prompt, is_complex=False, temperature=0.1)
+            import json
+            clean = response.replace("```json", "").replace("```", "").strip()
+            data = json.loads(clean)
+            tags = data.get("tags", [])
+            
+            # Fill in 'General' if AI fails to provide enough tags
+            while len(tags) < len(question_texts):
+                tags.append("General")
+            return tags[:len(question_texts)]
+        except Exception as e:
+            print(f"Auto-tagging error: {e}")
+            return ["General"] * len(question_texts)
+
 # Global instance
 gemini_service = GeminiService()

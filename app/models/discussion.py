@@ -45,12 +45,14 @@ class DiscussionThread(Base):
 
     # Thread status
     is_pinned = Column(Boolean, default=False)
+    is_featured = Column(Boolean, default=False)
     is_locked = Column(Boolean, default=False)
     is_resolved = Column(Boolean, default=False)
 
     # Metrics
     view_count = Column(Integer, default=0)
     reply_count = Column(Integer, default=0)
+    upvotes = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -63,6 +65,29 @@ class DiscussionThread(Base):
     posts = relationship(
         "DiscussionPost", back_populates="thread", cascade="all, delete-orphan"
     )
+    votes = relationship(
+        "ThreadVote", back_populates="thread", cascade="all, delete-orphan"
+    )
+
+
+class ThreadVote(Base):
+    """User votes on discussion threads"""
+
+    __tablename__ = "thread_votes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    thread_id = Column(Integer, ForeignKey("discussion_threads.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    vote_type = Column(String(10), nullable=False)  # "upvote"
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    thread = relationship("DiscussionThread", back_populates="votes")
+    user = relationship("User", backref="thread_votes")
+
+    # Unique constraint: one vote per user per thread
+    __table_args__ = ({"sqlite_autoincrement": True},)
 
 
 class DiscussionPost(Base):

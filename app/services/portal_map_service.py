@@ -20,15 +20,19 @@ class PortalMapService:
         # 1. Admin Portal
         self._add_cluster(nodes, links, "admin", "Admin Portal", "admin", [
             ("dashboard", "Dashboard", "/admin"),
+            ("strategic", "Strategic Overview", "/admin/executive"),
+            ("cohort", "Cohort Intelligence", "/admin/cohort-intelligence"),
+            ("revenue", "Revenue Analysis", "/admin/analytics"),
+            ("at_risk", "At-Risk Monitor", "/admin/performance"),
+            ("journey", "Student Journeys", "/admin/student-journey"),
+            ("teachers", "Teacher Management", "/admin/teachers"),
+            ("content_health", "Content Health", "/admin/content-system"),
+            ("upsc", "UPSC Registry", "/admin/upsc-content"),
+            ("drills", "Assessment Drills", "/admin/drill/analytics"),
+            ("presence", "Attendance", "/admin/attendance"),
+            ("interventions", "Intervention Engine", "/admin/interventions"),
             ("users", "User Management", "/admin/users"),
-            ("analytics", "Analytics", "/admin/analytics"),
-            ("content", "Content Manager", "/admin/content"),
-            ("settings", "Settings", "/admin/settings"),
-            ("dev_history", "Dev History", "/admin/development-history"),
             ("pdr", "Portal Map", "/admin/pdr"),
-            ("daily_reports", "Daily Reports", "/admin/daily-reports"),
-            ("student_activity", "Student Activity", "/admin/student-activity"),
-            ("ai_planning", "AI Planning", "/admin/ai-planning"),
         ])
         
         # 2. Student Portal

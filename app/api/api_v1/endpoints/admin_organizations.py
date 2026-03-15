@@ -8,6 +8,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from app.db.session import get_db
 from app.models.sso import Organization
+from app.models.admin_log import AdminLog
 from app.api import deps
 from app.models.user import User
 
@@ -70,6 +71,18 @@ def create_organization(
     db.add(new_org)
     db.commit()
     db.refresh(new_org)
+
+    # Log action
+    log = AdminLog(
+        admin_id=current_user.id,
+        action="create_organization",
+        target_type="organization",
+        target_id=new_org.id,
+        details=f"Created organization '{new_org.name}' with domain '{new_org.domain}'"
+    )
+    db.add(log)
+    db.commit()
+
     return new_org
 
 
@@ -103,6 +116,18 @@ def update_organization(
     
     db.commit()
     db.refresh(org)
+
+    # Log action
+    log = AdminLog(
+        admin_id=current_user.id,
+        action="update_organization",
+        target_type="organization",
+        target_id=org.id,
+        details=f"Updated organization '{org.name}'. Changed fields: {', '.join(updates.model_dump(exclude_unset=True).keys())}"
+    )
+    db.add(log)
+    db.commit()
+
     return org
 
 
@@ -119,4 +144,16 @@ def delete_organization(
     
     db.delete(org)
     db.commit()
+
+    # Log action
+    log = AdminLog(
+        admin_id=current_user.id,
+        action="delete_organization",
+        target_type="organization",
+        target_id=org_id,
+        details=f"Deleted organization '{org.name}'"
+    )
+    db.add(log)
+    db.commit()
+
     return {"success": True, "message": f"Organization '{org.name}' deleted."}

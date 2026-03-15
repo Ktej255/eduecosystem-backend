@@ -62,7 +62,7 @@ def submit_funnel_lead(
         phone=lead_data.phone,
         notes=lead_data.address,  # Using notes field for address
         source=lead_data.source,
-        status="new"
+        status="NEW"
     )
     db.add(new_lead)
     db.commit()

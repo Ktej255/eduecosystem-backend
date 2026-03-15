@@ -9,6 +9,7 @@ from app.models.discussion import (
     DiscussionThread,
     DiscussionPost,
     PostVote,
+    ThreadVote,
 )
 from app.schemas.discussion import (
     CategoryCreate,
@@ -281,6 +282,46 @@ class CRUDVote:
         vote = (
             db.query(PostVote)
             .filter(PostVote.post_id == post_id, PostVote.user_id == user_id)
+            .first()
+        )
+        return vote.vote_type if vote else None
+
+    def vote_thread(
+        self, db: Session, *, thread_id: int, user_id: int, vote_type: str = "upvote"
+    ) -> Optional[DiscussionThread]:
+        """Vote on a thread (upvote only for now)"""
+        # Check if user already voted
+        existing_vote = (
+            db.query(ThreadVote)
+            .filter(ThreadVote.thread_id == thread_id, ThreadVote.user_id == user_id)
+            .first()
+        )
+
+        thread = db.query(DiscussionThread).filter(DiscussionThread.id == thread_id).first()
+        if not thread:
+            return None
+
+        if existing_vote:
+            # Remove vote if voting again
+            thread.upvotes = max(0, thread.upvotes - 1)
+            db.delete(existing_vote)
+        else:
+            # Create new vote
+            new_vote = ThreadVote(thread_id=thread_id, user_id=user_id, vote_type=vote_type)
+            db.add(new_vote)
+            thread.upvotes += 1
+
+        db.commit()
+        db.refresh(thread)
+        return thread
+
+    def get_user_thread_vote(
+        self, db: Session, *, thread_id: int, user_id: int
+    ) -> Optional[str]:
+        """Get user's vote on a thread"""
+        vote = (
+            db.query(ThreadVote)
+            .filter(ThreadVote.thread_id == thread_id, ThreadVote.user_id == user_id)
             .first()
         )
         return vote.vote_type if vote else None

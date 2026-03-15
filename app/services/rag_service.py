@@ -47,9 +47,9 @@ class SimpleVectorStore:
 
         try:
             # Use Gemini Embeddings
-            # model="models/embedding-001"
+            # model="models/text-embedding-004"
             result = genai.embed_content(
-                model="models/embedding-001",
+                model="models/text-embedding-004",
                 content=texts_to_embed,
                 task_type="retrieval_document"
             )
@@ -67,7 +67,7 @@ class SimpleVectorStore:
         try:
             # Embed query
             result = genai.embed_content(
-                model="models/embedding-001",
+                model="models/text-embedding-004",
                 content=query,
                 task_type="retrieval_query"
             )
@@ -102,7 +102,10 @@ class RagService:
         self.store = SimpleVectorStore()
         # Pre-seed with some dummy context for demo if empty
         # In a real app, this would load from DB on startup
-        self._seed_demo_content()
+        try:
+            self._seed_demo_content()
+        except Exception as e:
+            logger.warning(f"Failed to seed RAG demo content: {e}")
 
     def _seed_demo_content(self):
         """Seeds some UPSC/Graphotherapy content for the demo."""

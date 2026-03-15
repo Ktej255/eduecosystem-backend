@@ -35,6 +35,7 @@ from app.api.api_v1.endpoints import (
     quizzes,
     assignments,
     holistic,
+    payment,
 )
 
 
@@ -97,6 +98,46 @@ api_router.include_router(voice_notes.router, prefix="/voice-notes", tags=["voic
 
 # Advanced User Management
 from app.api.api_v1.endpoints import user_management
+api_router.include_router(user_management.router, prefix="/users", tags=["user-management"])
+
+# New Admin Intelligence Endpoints
+from app.api.api_v1.endpoints import (
+    admin_war_room,
+    admin_student_insights,
+    admin_student_progress,
+    admin_cohort,
+    admin_revenue,
+    admin_at_risk,
+    admin_interventions,
+    admin_marketing,
+    admin_smart_alerts,
+    admin_content_health,
+    admin_system_intelligence,
+    admin_global_search,
+    admin_meditation_analytics
+)
+
+api_router.include_router(admin_war_room.router, prefix="/admin/war-room", tags=["admin-war-room"])
+api_router.include_router(admin_student_insights.router, prefix="/admin/student-insights", tags=["admin-student-insights"])
+api_router.include_router(admin_student_progress.router, prefix="/admin/student-progress", tags=["admin-student-progress"])
+api_router.include_router(admin_cohort.router, prefix="/admin/cohorts", tags=["admin-cohorts"])
+api_router.include_router(admin_revenue.router, prefix="/admin/revenue", tags=["admin-revenue"])
+api_router.include_router(admin_at_risk.router, prefix="/admin/at-risk", tags=["admin-at-risk"])
+api_router.include_router(admin_interventions.router, prefix="/admin/interventions", tags=["admin-interventions"])
+api_router.include_router(admin_marketing.router, prefix="/admin/marketing", tags=["admin-marketing"])
+api_router.include_router(admin_smart_alerts.router, prefix="/admin/smart-alerts", tags=["admin-alerts"])
+api_router.include_router(admin_content_health.router, prefix="/admin/content-health", tags=["admin-content-health"])
+api_router.include_router(admin_system_intelligence.router, prefix="/admin/system", tags=["admin-system"])
+api_router.include_router(admin_global_search.router, prefix="/admin/search", tags=["admin-search"])
+api_router.include_router(admin_meditation_analytics.router, prefix="/admin/meditation-analytics", tags=["admin-meditation-analytics"])
+from app.api.api_v1.endpoints import admin_crm_wellness
+api_router.include_router(admin_crm_wellness.router, prefix="/admin/crm-wellness", tags=["admin-crm-wellness"])
+from app.api.api_v1.endpoints import admin_teacher_scoring
+api_router.include_router(admin_teacher_scoring.router, prefix="/admin/teacher-scoring", tags=["admin-teacher-scoring"])
+from app.api.api_v1.endpoints import admin_student_journey
+api_router.include_router(admin_student_journey.router, prefix="/admin/student-journey", tags=["admin-student-journey"])
+from app.api.api_v1.endpoints import admin_teacher_performance
+api_router.include_router(admin_teacher_performance.router, prefix="/admin/teacher-performance", tags=["admin-teacher-performance"])
 api_router.include_router(user_management.router, prefix="/admin/user-management", tags=["user-management"])
 
 # Marketing Automation
@@ -205,9 +246,15 @@ api_router.include_router(development_history.router, prefix="/admin", tags=["de
 from app.api.api_v1.endpoints import pdr
 api_router.include_router(pdr.router, prefix="/admin", tags=["pdr"])
 
-# Community (Silence Library, Leaderboards)
-from app.api.api_v1.endpoints import community
+# Communities and Learning Groups
+from app.api.api_v1.endpoints import (
+    community,
+    learning_groups,
+    teacher_lms,
+)
 api_router.include_router(community.router, prefix="/community", tags=["community"])
+api_router.include_router(learning_groups.router, prefix="/learning-groups", tags=["learning-groups"])
+api_router.include_router(teacher_lms.router, prefix="/teacher/lms", tags=["teacher-lms"])
 
 # Productivity (News Quiz)
 from app.api.api_v1.endpoints import productivity
@@ -256,6 +303,14 @@ api_router.include_router(admin_nudges.router, prefix="/admin/nudges", tags=["ad
 # Admin Student Activity (High Resolution Tracking)
 from app.api.api_v1.endpoints import admin_student_activity
 api_router.include_router(admin_student_activity.router, prefix="/admin/student-activity", tags=["admin-student-activity"])
+
+# User Sessions (Heartbeat & Usage Tracking)
+from app.api.api_v1.endpoints import user_sessions
+api_router.include_router(user_sessions.router, prefix="/user-sessions", tags=["user-sessions"])
+
+# Admin Teacher Management
+from app.api.api_v1.endpoints import admin_teachers
+api_router.include_router(admin_teachers.router, prefix="/admin/teachers", tags=["admin-teachers"])
 
 
 # Instructor Analytics (Unified)
@@ -314,6 +369,10 @@ api_router.include_router(live_classes.router, prefix="/live-classes", tags=["li
 # Orders
 from app.api.api_v1.endpoints import order
 api_router.include_router(order.router, prefix="/orders", tags=["orders"])
+
+# Payment Gateway
+from app.api.api_v1.endpoints import payment
+api_router.include_router(payment.router, prefix="/payment", tags=["payment"])
 
 # Cart
 from app.api.api_v1.endpoints import cart

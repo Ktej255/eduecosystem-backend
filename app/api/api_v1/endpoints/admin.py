@@ -9,7 +9,7 @@ from sqlalchemy import func, desc, or_
 from app.api import deps
 from app.models import User, HandwritingSubmission, ShadowModeSession, Group, AdminLog
 from app.crud import user as crud_user
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
@@ -28,9 +28,8 @@ def get_admin_stats(
     banned_users = db.query(func.count(User.id)).filter(User.is_banned == True).scalar()
 
     # Recent signups (last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
-    # Note: Assuming created_at exists or using id as proxy
-    new_users_week = total_users  # Placeholder
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    new_users_week = db.query(func.count(User.id)).filter(User.created_at >= week_ago).scalar() or 0
 
     # Content statistics
     total_submissions = db.query(func.count(HandwritingSubmission.id)).scalar()
@@ -40,6 +39,13 @@ def get_admin_stats(
     # Engagement
     avg_coins = db.query(func.avg(User.coins)).scalar() or 0
     avg_streak = db.query(func.avg(User.streak_days)).scalar() or 0
+
+    # Data Volume (MCQs)
+    from app.models.question_bank import BankQuestion
+    total_mcqs = db.query(func.count(BankQuestion.id)).scalar() or 0
+
+    from app.services.code_analyzer import code_analyzer_service
+    code_metrics = code_analyzer_service.analyze_repository()
 
     return {
         "users": {
@@ -57,6 +63,10 @@ def get_admin_stats(
             "avg_coins": round(avg_coins, 2),
             "avg_streak": round(avg_streak, 2),
         },
+        "data": {
+            "total_mcqs": total_mcqs
+        },
+        "code_metrics": code_metrics
     }
 
 
@@ -280,6 +290,42 @@ def get_admin_logs(
         .all()
     )
     return {"logs": jsonable_encoder(logs)}
+
+
+@router.get("/recent-enrollments")
+def get_recent_enrollments(
+    db: Session = Depends(deps.get_db),
+    current_admin: User = Depends(deps.get_admin_user),
+    limit: int = 10,
+) -> Any:
+    """
+    Get recent successful enrollments.
+    """
+    from app.models.course_payment import CoursePayment
+    from app.models.course import Course
+
+    recent = (
+        db.query(CoursePayment)
+        .filter(CoursePayment.status == "succeeded")
+        .order_by(desc(CoursePayment.succeeded_at))
+        .limit(limit)
+        .all()
+    )
+
+    results = []
+    for p in recent:
+        user = db.query(User).filter(User.id == p.user_id).first()
+        course = db.query(Course).filter(Course.id == p.course_id).first()
+        results.append({
+            "id": p.id,
+            "user_name": user.full_name if user else "Unknown",
+            "user_email": user.email if user else "Unknown",
+            "course_title": course.title if course else "Unknown",
+            "amount": p.amount,
+            "timestamp": p.succeeded_at,
+        })
+
+    return results
 
 
 @router.get("/overview")

@@ -57,6 +57,10 @@ class User(Base):
     is_batch1_authorized = Column(Boolean, default=False, index=True)
     is_batch2_authorized = Column(Boolean, default=False, index=True)
 
+    # Subject-based access control (for per-subject purchases)
+    # Values: 'geography', 'polity', 'history', 'economy', 'environment', 'scitech', 'full_upsc'
+    purchased_subjects = Column(JSON, default=list, nullable=False, server_default='[]')
+
     # Subscription Relationship
     subscription = relationship("UserSubscription", back_populates="user")
 

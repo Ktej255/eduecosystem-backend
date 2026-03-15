@@ -47,6 +47,7 @@ from app.models import (
     learning_group,
     learning_path,
     lesson,
+    lms,
     lesson_drip,
     lesson_progress,
     live_class,

@@ -102,9 +102,7 @@ class Settings(BaseSettings):
     MAIL_SSL_TLS: bool = False
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
-    MAIL_SUPPRESS_SEND: bool = int(
-        os.getenv("MAIL_SUPPRESS_SEND", 1)
-    )  # Default to 1 (True) for dev
+    MAIL_SUPPRESS_SEND: bool = os.getenv("MAIL_SUPPRESS_SEND", "1") == "1"  # Default to True for dev
 
     # Redis Configuration
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")

@@ -1,4 +1,5 @@
-from .user import User, UserCreate, UserUpdate
+from .user import User, UserCreate, UserInDB, UserUpdate
+from .user_session import UserSession, UserSessionCreate, UserSessionUpdate, HeartbeatResponse
 from .task import Task, TaskCreate, TaskUpdate
 from .course import (
     Course,

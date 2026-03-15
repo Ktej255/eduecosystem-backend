@@ -11,6 +11,8 @@ class Attendance(Base):
     session_type = Column(String, index=True) # "morning_meditation", "night_class", etc.
     timestamp = Column(DateTime, default=datetime.utcnow)
     is_present = Column(Boolean, default=True)
+    duration_minutes = Column(Integer, default=0)
+    is_late = Column(Boolean, default=False)
     
     # Optional: Tracking join method (live vs recording could be inferred but explicit is nice)
     mode = Column(String, default="live") # "live" or "recording"
