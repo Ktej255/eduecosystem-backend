@@ -444,13 +444,6 @@ async def complete_day(
     )
 
 
-    return {
-        "current_streak": calculate_streak(progress),
-        "total_streak": progress.total_streak,
-        "last_practice_date": progress.last_practice_date
-    }
-
-
 # --- V2 Admin Endpoints ---
 
 @router.post("/admin/books/upload", response_model=GraphoBookResponse)
