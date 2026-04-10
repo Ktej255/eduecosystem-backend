@@ -1,6 +1,6 @@
 import os
 import secrets
-from pydantic import ConfigDict, field_validator
+from pydantic import ConfigDict, field_validator, PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -175,6 +175,53 @@ class Settings(BaseSettings):
     
     # Default AI model to use
     DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-3-flash-preview")
+
+
+
+
+    # SAML Configuration
+    SAML_SP_CERT: str = ""
+    SAML_SP_CERT_PATH: str = ""
+    SAML_SP_PRIVATE_KEY: str = ""
+    SAML_SP_PRIVATE_KEY_PATH: str = ""
+
+    # Caches for file reads
+    _saml_sp_cert_cache: str | None = PrivateAttr(default=None)
+    _saml_sp_private_key_cache: str | None = PrivateAttr(default=None)
+
+    @property
+    def saml_sp_cert(self) -> str:
+        """Get SAML SP Certificate from env var or file path (cached)."""
+        if self.SAML_SP_CERT:
+            return self.SAML_SP_CERT
+        if self._saml_sp_cert_cache is not None:
+            return self._saml_sp_cert_cache
+        if self.SAML_SP_CERT_PATH and os.path.exists(self.SAML_SP_CERT_PATH):
+            try:
+                with open(self.SAML_SP_CERT_PATH, 'r') as f:
+                    self._saml_sp_cert_cache = f.read().strip()
+                    return self._saml_sp_cert_cache
+            except IOError:
+                pass
+        self._saml_sp_cert_cache = ""
+        return self._saml_sp_cert_cache
+
+    @property
+    def saml_sp_private_key(self) -> str:
+        """Get SAML SP Private Key from env var or file path (cached)."""
+        if self.SAML_SP_PRIVATE_KEY:
+            return self.SAML_SP_PRIVATE_KEY
+        if self._saml_sp_private_key_cache is not None:
+            return self._saml_sp_private_key_cache
+        if self.SAML_SP_PRIVATE_KEY_PATH and os.path.exists(self.SAML_SP_PRIVATE_KEY_PATH):
+            try:
+                with open(self.SAML_SP_PRIVATE_KEY_PATH, 'r') as f:
+                    self._saml_sp_private_key_cache = f.read().strip()
+                    return self._saml_sp_private_key_cache
+            except IOError:
+                pass
+        self._saml_sp_private_key_cache = ""
+        return self._saml_sp_private_key_cache
 
     model_config = SettingsConfigDict(
         env_file=".env",

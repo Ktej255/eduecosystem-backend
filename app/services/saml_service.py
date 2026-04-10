@@ -63,8 +63,8 @@ class SAMLService:
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                "x509cert": "",  # SP certificate (optional for encryption)
-                "privateKey": "",  # SP private key (optional for encryption)
+                "x509cert": settings.saml_sp_cert,  # SP certificate (optional for encryption)
+                "privateKey": settings.saml_sp_private_key,  # SP private key (optional for encryption)
             },
             "idp": {
                 "entityId": self.config.idp_entity_id,
