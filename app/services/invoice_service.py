@@ -9,10 +9,12 @@ from fastapi import HTTPException
 from datetime import datetime, timedelta
 import os
 import json
+import asyncio
 
 from app.models.invoice import Invoice
 from app.models.order import Order, OrderItem
 from app.schemas.invoice import InvoiceResponse
+from app.core.email import send_email
 
 
 class InvoiceService:
@@ -243,9 +245,35 @@ class InvoiceService:
         if not invoice.pdf_generated:
             InvoiceService.generate_pdf(db, invoice_id)
 
-        # TODO: Actual email sending implementation
-        # This would integrate with your EmailService or similar
-        # For now, just mark as sent
+        # Prepare template body
+        template_body = {
+            "invoice_number": invoice.invoice_number,
+            "billing_name": invoice.billing_name or "Customer",
+            "total": invoice.total,
+            "currency": invoice.currency or "USD",
+            "due_date": invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "N/A",
+            "message": message,
+            "company_name": InvoiceService.COMPANY_NAME
+        }
+
+        # Get absolute path for attachments if using Local filesystem
+        # fastapimail requires real filepaths
+        attachments = []
+        if invoice.pdf_url:
+            pdf_path = os.path.abspath(invoice.pdf_url)
+            if os.path.exists(pdf_path):
+                attachments.append(pdf_path)
+
+        # Send email synchronously
+        asyncio.run(
+            send_email(
+                email_to=to_email,
+                subject=f"Invoice {invoice.invoice_number} from {InvoiceService.COMPANY_NAME}",
+                template_name="invoice.html",
+                template_body=template_body,
+                attachments=attachments
+            )
+        )
 
         InvoiceService.mark_as_sent(db, invoice_id)
 

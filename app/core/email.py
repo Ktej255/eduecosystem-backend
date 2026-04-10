@@ -1,6 +1,7 @@
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from app.core.config import settings
 from pathlib import Path
+from typing import List, Optional
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -19,13 +20,14 @@ conf = ConnectionConfig(
 
 
 async def send_email(
-    email_to: str, subject: str, template_name: str, template_body: dict
+    email_to: str, subject: str, template_name: str, template_body: dict, attachments: Optional[List[str]] = None
 ):
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
         template_body=template_body,
         subtype=MessageType.html,
+        attachments=attachments or []
     )
 
     fm = FastMail(conf)
