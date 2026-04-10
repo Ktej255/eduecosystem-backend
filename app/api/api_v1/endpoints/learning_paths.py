@@ -283,7 +283,13 @@ def enroll_in_path(
     if not path.is_published:
         raise HTTPException(status_code=400, detail="Learning path is not published")
 
-    # TODO: Check payment if path has a price
+    if path.price and path.price > 0:
+        # TODO: Implement full payment verification system for learning paths
+        # For now, block direct free enrollment to priced paths.
+        raise HTTPException(
+            status_code=402,
+            detail="Payment is required to enroll in this learning path"
+        )
 
     return crud.enroll_in_path(db, path_id, current_user.id)
 
