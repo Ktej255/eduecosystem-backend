@@ -55,7 +55,39 @@ def test_grandfather_clause_logic():
     is_legacy_boundary = boundary_user < cutoff_date
     assert is_legacy_boundary == False
 
+def test_generate_basic_report_success():
+    """Verify that basic report generation works without crashing."""
+    mock_data = {
+        "overall_score": 85,
+        "summary": "Good performance.",
+        "traits": [
+            {"trait": "Confidence", "score": 90, "observation": "High confidence"}
+        ]
+    }
 
+    with patch('app.utils.report_generator.SimpleDocTemplate') as MockDoc:
+        instance = MockDoc.return_value
 
+        pdf_path = report_generator.generate_basic_report(123, "Test User", mock_data)
 
+        assert instance.build.called
+        assert "Grapho_Basic_123_" in pdf_path
 
+def test_generate_basic_report_error_path():
+    """Verify that exceptions during basic report generation are properly raised/handled."""
+    mock_data = {
+        "overall_score": 50,
+        "summary": "Needs improvement.",
+        "traits": []
+    }
+
+    with patch('app.utils.report_generator.SimpleDocTemplate') as MockDoc:
+        instance = MockDoc.return_value
+        # Mock the build method to raise an exception
+        instance.build.side_effect = Exception("Mocked report build failure")
+
+        with pytest.raises(Exception) as exc_info:
+            report_generator.generate_basic_report(456, "Error User", mock_data)
+
+        assert "Mocked report build failure" in str(exc_info.value)
+        assert instance.build.called
