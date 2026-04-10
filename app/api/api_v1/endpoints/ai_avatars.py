@@ -11,6 +11,12 @@ from app.crud.ai_avatar import crud_ai_avatar
 from app.schemas.ai_avatar import AIAvatarCreate, AIAvatarUpdate, AIAvatarResponse
 import logging
 
+import os
+import uuid
+
+UPLOAD_DIR = "uploads/ai_avatars"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -43,12 +49,37 @@ async def create_ai_avatar(
         }
 
         if documents:
-            # TODO: Save documents to storage and extract text
             for doc in documents:
-                content = await doc.read()
+                file_content = await doc.read()
+                file_size = len(file_content)
+
+                # Generate unique filename and save to storage
+                unique_filename = f"{uuid.uuid4()}_{doc.filename}"
+                file_path = os.path.join(UPLOAD_DIR, unique_filename)
+
+                with open(file_path, "wb") as f:
+                    f.write(file_content)
+
+                # Extract text based on file type
+                extracted_text = ""
+                try:
+                    if doc.filename.lower().endswith('.pdf'):
+                        import fitz  # PyMuPDF
+                        pdf_doc = fitz.open(stream=file_content, filetype="pdf")
+                        for page in pdf_doc:
+                            extracted_text += page.get_text() + "\n"
+                        pdf_doc.close()
+                    else:
+                        # Attempt to decode as text for standard text/markdown files
+                        extracted_text = file_content.decode('utf-8', errors='ignore')
+                except Exception as ex:
+                    logger.warning(f"Failed to extract text from {doc.filename}: {ex}")
+
                 knowledge_base["documents"].append({
                     "filename": doc.filename,
-                    "size": len(content)
+                    "saved_path": file_path,
+                    "size": file_size,
+                    "extracted_text": extracted_text.strip()
                 })
 
         avatar_in = AIAvatarCreate(
