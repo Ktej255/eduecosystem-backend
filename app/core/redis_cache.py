@@ -193,5 +193,8 @@ def get_cache() -> CacheManager:
 def init_cache(redis_url: Optional[str] = None) -> CacheManager:
     """Initialize the global cache manager"""
     global cache_manager
+    if redis_url is None:
+        from app.core.config import settings
+        redis_url = settings.REDIS_URL
     cache_manager = CacheManager(redis_url)
     return cache_manager

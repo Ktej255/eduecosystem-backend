@@ -12,12 +12,10 @@ from app.core.config import settings
 # This prevents 500 errors in environments without Redis (like App Runner).
 use_redis = bool(settings.REDIS_HOST and settings.REDIS_HOST != "localhost")
 
-redis_uri = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}" if settings.REDIS_PASSWORD else f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}"
-
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200/hour"],  # Global default
-    storage_uri=redis_uri if use_redis else "memory://",
+    storage_uri=settings.REDIS_URL if use_redis else "memory://",
     strategy="fixed-window",
 )
 
