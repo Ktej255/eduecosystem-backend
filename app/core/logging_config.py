@@ -41,6 +41,9 @@ class StructuredFormatter(logging.Formatter):
             log_data["duration_ms"] = record.duration_ms
 
         # Add any custom fields from extra parameter
+        # Redact sensitive information
+        sensitive_keys = {"password", "token", "secret", "authorization", "api_key", "access_token"}
+
         for key, value in record.__dict__.items():
             if key not in [
                 "name",
@@ -69,7 +72,11 @@ class StructuredFormatter(logging.Formatter):
                 "endpoint",
                 "duration_ms",
             ]:
-                log_data[key] = value
+                # Mask sensitive fields
+                if any(sensitive in key.lower() for sensitive in sensitive_keys):
+                    log_data[key] = "***REDACTED***"
+                else:
+                    log_data[key] = value
 
         return json.dumps(log_data)
 

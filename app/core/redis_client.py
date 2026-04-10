@@ -19,10 +19,10 @@ class RedisClient:
     @classmethod
     def get_instance(cls) -> Redis:
         """Get or create Redis instance"""
+        from app.core.config import settings
         if cls._instance is None:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
             cls._instance = redis.from_url(
-                redis_url,
+                settings.REDIS_URL,
                 decode_responses=True,
                 socket_connect_timeout=5,
                 socket_timeout=5,

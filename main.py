@@ -229,27 +229,37 @@ def health_check():
 @app.get("/health/detailed")
 def detailed_health_check():
     """Detailed health check with database connectivity test."""
+    from sqlalchemy.engine.url import make_url
+
+    try:
+        db_url = make_url(settings.DATABASE_URL)
+        db_host = db_url.host or "local"
+        db_name = db_url.database or "unknown"
+        db_port = db_url.port
+    except Exception:
+        db_host = "unknown"
+        db_name = "unknown"
+        db_port = None
+
     health_status = {
         "status": "healthy",
         "checks": {},
         "env": {
             "ENVIRONMENT": os.getenv("ENVIRONMENT", "unknown"),
-            "DATABASE_URL_HOST": settings.DATABASE_URL.split("@")[1].split("/")[0] if "@" in settings.DATABASE_URL else "local",
-            "DATABASE_NAME": settings.DATABASE_URL.split("/")[-1] if "/" in settings.DATABASE_URL else "unknown"
+            "DATABASE_URL_HOST": db_host,
+            "DATABASE_NAME": db_name
         }
     }
     
     # Network connectivity check (socket)
     try:
-        import socket
-        host = settings.DATABASE_URL.split("@")[1].split(":")[0] if "@" in settings.DATABASE_URL else None
-        port = int(settings.DATABASE_URL.split("@")[1].split(":")[1].split("/")[0]) if "@" in settings.DATABASE_URL else None
-        if host and port:
-            s = socket.create_connection((host, port), timeout=3)
+        if db_host and db_host != "local" and db_port:
+            import socket
+            s = socket.create_connection((db_host, db_port), timeout=3)
             s.close()
             health_status["checks"]["network"] = {
                 "status": "healthy",
-                "message": f"Successfully reached {host}:{port}"
+                "message": f"Successfully reached {db_host}:{db_port}"
             }
         else:
             health_status["checks"]["network"] = {
