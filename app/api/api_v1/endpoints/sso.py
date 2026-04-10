@@ -379,10 +379,22 @@ async def handle_saml_callback(
         details={"method": "saml_acs"}
     )
     
-    # Redirect to frontend with token
-    # In production, use a secure cookie or a redirect with a short-lived code
-    redirect_url = f"{settings.BASE_URL}/auth/callback?token={access_token}"
-    return RedirectResponse(url=redirect_url, status_code=303)
+    # Redirect to frontend without token in URL
+    redirect_url = f"{settings.BASE_URL}/auth/callback"
+    response = RedirectResponse(url=redirect_url, status_code=303)
+
+    import os
+    from datetime import datetime, timezone
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=int(access_token_expires.total_seconds()),
+        expires=datetime.now(timezone.utc) + access_token_expires,
+        samesite="lax",
+        secure=os.getenv("ENVIRONMENT") == "production",
+    )
+    return response
 
 
 @router.get("/callback/oauth")
@@ -465,9 +477,22 @@ async def handle_oauth_callback(
             ip_address=request.client.host
         )
         
-        # Redirect to frontend
-        redirect_url = f"{settings.BASE_URL}/auth/callback?token={access_token}"
-        return RedirectResponse(url=redirect_url, status_code=303)
+        # Redirect to frontend without token in URL
+        redirect_url = f"{settings.BASE_URL}/auth/callback"
+        response = RedirectResponse(url=redirect_url, status_code=303)
+
+        import os
+        from datetime import datetime, timezone
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            max_age=int(access_token_expires.total_seconds()),
+            expires=datetime.now(timezone.utc) + access_token_expires,
+            samesite="lax",
+            secure=os.getenv("ENVIRONMENT") == "production",
+        )
+        return response
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Session creation failed: {str(e)}")
