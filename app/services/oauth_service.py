@@ -5,7 +5,7 @@ Implements OAuth 2.0 and OpenID Connect authentication flows.
 Supports Google Workspace, Azure AD, and any OIDC-compliant provider.
 """
 
-from authlib.jose import jwt
+from jose import jwt
 from typing import Dict, Optional, Tuple
 import logging
 import httpx
@@ -274,21 +274,82 @@ class OAuthService:
             Tuple of (is_valid, claims)
         """
         try:
-            # TODO: Fetch JWKS from provider for verification
-            # For now, just decode without verification (NOT PRODUCTION SAFE)
-            claims = jwt.decode(id_token, key=None, options={"verify_signature": False})
+            settings = self.config.settings or {}
+            jwks_uri = settings.get("jwks_uri")
+            issuer = settings.get("issuer")
 
-            # Verify issuer, audience, expiry
-            # if claims.get("iss") != expected_issuer:
-            #     return False, None
-            # if claims.get("aud") != self.client_id:
-            #     return False, None
-            # if claims.get("exp", 0) < time.time():
-            #     return False, None
+            if not jwks_uri and issuer:
+                # Try to discover jwks_uri from openid configuration
+                try:
+                    discovery_url = f"{issuer.rstrip('/')}/.well-known/openid-configuration"
+                    with httpx.Client() as client:
+                        resp = client.get(discovery_url)
+                        if resp.status_code == 200:
+                            jwks_uri = resp.json().get("jwks_uri")
+                except Exception as e:
+                    logger.warning(f"Could not discover JWKS URI from issuer: {e}")
+
+            if not jwks_uri:
+                logger.error("No JWKS URI configured or discovered for provider")
+                return False, None
+
+            # Fetch JWKS
+            with httpx.Client() as client:
+                resp = client.get(jwks_uri)
+                if resp.status_code != 200:
+                    logger.error(f"Failed to fetch JWKS from {jwks_uri}")
+                    return False, None
+                jwks = resp.json()
+
+            # Parse unverified header to get the key ID
+            unverified_header = jwt.get_unverified_header(id_token)
+            kid = unverified_header.get("kid")
+            if not kid:
+                logger.error("ID token is missing 'kid' in header")
+                return False, None
+
+            # Find the correct key
+            rsa_key = {}
+            for key in jwks.get("keys", []):
+                if key.get("kid") == kid:
+                    rsa_key = {
+                        "kty": key.get("kty"),
+                        "kid": key.get("kid"),
+                        "use": key.get("use"),
+                        "n": key.get("n"),
+                        "e": key.get("e")
+                    }
+                    break
+
+            if not rsa_key:
+                logger.error("Unable to find appropriate key in JWKS")
+                return False, None
+
+            # Decode and verify the token
+            # We explicitly define options to ensure issuer and audience are checked
+            # if they are configured.
+            verify_options = {
+                "verify_signature": True,
+                "verify_aud": True,
+                "verify_exp": True,
+                "verify_iss": bool(issuer)
+            }
+
+            claims = jwt.decode(
+                id_token,
+                rsa_key,
+                algorithms=["RS256"],
+                audience=self.client_id,
+                issuer=issuer,
+                options=verify_options
+            )
 
             logger.info("ID token verified successfully")
             return True, claims
 
+        except jwt.JWTError as e:
+            logger.error(f"ID token verification failed (JWT Error): {e}")
+            return False, None
         except Exception as e:
             logger.error(f"ID token verification failed: {e}")
             return False, None

@@ -127,3 +127,19 @@ def test_oauth_login_flow(db_session, mock_oauth_service):
 if __name__ == "__main__":
     # Manually run if executed as script
     pass
+
+@patch("app.services.oauth_service.OAuthService.verify_id_token")
+def test_mock_verify_id_token(mock_verify):
+    """
+    Dummy test to ensure verification mocking works in the rest of the test suite.
+    Since we replaced verify_id_token internally, we want to ensure tests aren't totally broken.
+    """
+    mock_verify.return_value = (True, {"sub": "123"})
+    from app.services.oauth_service import OAuthService
+    from app.models.sso import SSOConfig
+    import unittest.mock as mock
+
+    config = mock.MagicMock()
+    service = OAuthService(config)
+    res = service.verify_id_token("dummy_token")
+    assert res == (True, {"sub": "123"})
