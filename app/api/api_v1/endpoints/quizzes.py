@@ -3,9 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import datetime
 import random
+import logging
 
 from app.api import deps
 from app.models.user import User
+from app.services.ai_grading_service import AIGradingService
 from app.models.quiz import (
     Quiz,
     Question,
@@ -753,13 +755,17 @@ def generate_feedback_summary(percentage: float, passed: bool) -> str:
 def trigger_ai_grading(db: Session, answer_id: int, model: str, threshold: float):
     """
     Background task to trigger AI grading for essay/long-answer questions.
-    This will be implemented in the AI service integration.
     """
-    # TODO: Implement AI grading service integration
-    # For now, this is a placeholder
-    # TODO: Implement AI grading service integration
-    # For now, this is a placeholder
-    pass
+    try:
+        AIGradingService.grade_quiz_answer(
+            db=db,
+            answer_id=answer_id,
+            model_name=model,
+            threshold=threshold
+        )
+    except Exception as e:
+        # In a background task, we just log the error
+        logging.error(f"Failed to grade answer {answer_id} in background task: {e}")
 
 
 @router.get("/attempts/all", response_model=List[QuizResultsResponse])
