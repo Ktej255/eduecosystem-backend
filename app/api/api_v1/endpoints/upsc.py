@@ -10,7 +10,7 @@ from app import crud, models, schemas
 from app.api import deps
 from app.models.upsc import (
     UPSCBatch, UPSCPlan, UPSCQuestion, UPSCContent, UPSCDrill, 
-    UPSCAttempt, UPSCReport, UPSCStudentProgress
+    UPSCAttempt, UPSCReport, UPSCStudentProgress, UPSCStudentProfile
 )
 from app.services.upsc_worker import generate_ai_plan_task, analyze_answer_task
 from app.schemas.upsc import (
@@ -311,23 +311,19 @@ def get_student_plans(
     """
     Get plans available to the student.
     """
-    # Get student's batch
-    # Assuming student profile exists and links to batch
-    # For now, we'll fetch all plans for the batch the user is enrolled in
-    # This requires a way to link user to batch. 
-    # Let's assume we have a way, or just return all plans for now if user is admin/student
+    # Try to fetch batch_id from the student's profile
+    profile = db.query(UPSCStudentProfile).filter(UPSCStudentProfile.user_id == current_user.id).first()
     
-    # TODO: Fetch from student profile
-    # profile = db.query(UPSCStudentProfile).filter(UPSCStudentProfile.user_id == current_user.id).first()
-    # if not profile: return []
-    # batch_id = profile.batch_id
-    
-    # Fallback: Get first batch for demo
-    batch = db.query(UPSCBatch).first()
-    if not batch:
-        return []
+    if profile and profile.batch_id:
+        batch_id = profile.batch_id
+    else:
+        # Fallback: Get first batch for demo if user has no profile or no batch assigned
+        batch = db.query(UPSCBatch).first()
+        if not batch:
+            return []
+        batch_id = batch.id
         
-    plans = db.query(UPSCPlan).filter(UPSCPlan.batch_id == batch.id).all()
+    plans = db.query(UPSCPlan).filter(UPSCPlan.batch_id == batch_id).all()
     return plans
 
 @router.get("/student/plans/{plan_id}/status", response_model=PlanStatusResponse)
@@ -408,7 +404,6 @@ def get_batch_students(
     """
     Get all students enrolled in a batch with their progress.
     """
-    from app.models.upsc import UPSCStudentProfile
     from app.models.user import User
     
     profiles = db.query(UPSCStudentProfile).filter(
