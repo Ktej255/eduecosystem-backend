@@ -13,6 +13,9 @@ from typing import Optional, List, Dict
 from datetime import datetime, timedelta
 import logging
 import os
+import base64
+import httpx
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -220,20 +223,103 @@ class PayoutService:
             raise
 
     @staticmethod
+    async def _get_paypal_access_token() -> str:
+        """
+        Get PayPal access token.
+
+        Returns:
+            Access token string
+        """
+        client_id = os.getenv("PAYPAL_CLIENT_ID")
+        client_secret = os.getenv("PAYPAL_CLIENT_SECRET")
+        mode = os.getenv("PAYPAL_MODE", "sandbox").lower()
+
+        if not client_id or not client_secret:
+            raise Exception("PayPal credentials not configured")
+
+        base_url = "https://api-m.paypal.com" if mode == "live" else "https://api-m.sandbox.paypal.com"
+        token_url = f"{base_url}/v1/oauth2/token"
+
+        auth_str = f"{client_id}:{client_secret}"
+        auth_bytes = auth_str.encode("utf-8")
+        auth_b64 = base64.b64encode(auth_bytes).decode("utf-8")
+
+        headers = {
+            "Authorization": f"Basic {auth_b64}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        data = {"grant_type": "client_credentials"}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(token_url, headers=headers, data=data)
+
+            if response.status_code != 200:
+                logger.error(f"Failed to get PayPal access token: {response.text}")
+                raise Exception(f"PayPal Authentication Failed: {response.status_code}")
+
+            return response.json().get("access_token")
+
+    @staticmethod
     async def _process_paypal_payout(paypal_email: str, amount: Decimal) -> str:
         """
-        Process PayPal payout (placeholder).
+        Process PayPal payout via Payouts API.
 
         Args:
             paypal_email: PayPal email
             amount: Payout amount
 
         Returns:
-            Transaction ID
+            Transaction ID (Payout Batch ID)
         """
-        # TODO: Implement PayPal Payouts API integration
-        logger.info(f"PayPal payout to {paypal_email}: ${amount}")
-        return f"PAYPAL_{datetime.utcnow().timestamp()}"
+        mode = os.getenv("PAYPAL_MODE", "sandbox").lower()
+        base_url = "https://api-m.paypal.com" if mode == "live" else "https://api-m.sandbox.paypal.com"
+        payouts_url = f"{base_url}/v1/payments/payouts"
+
+        access_token = await PayoutService._get_paypal_access_token()
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
+
+        # Generate a unique sender batch ID
+        sender_batch_id = f"Payout_{uuid.uuid4().hex[:16]}"
+
+        payload = {
+            "sender_batch_header": {
+                "sender_batch_id": sender_batch_id,
+                "email_subject": "You have a payout!",
+                "email_message": "You have received a payout for your earnings."
+            },
+            "items": [
+                {
+                    "recipient_type": "EMAIL",
+                    "amount": {
+                        "value": str(amount),
+                        "currency": "USD"
+                    },
+                    "note": "Thanks for your work!",
+                    "sender_item_id": f"item_{uuid.uuid4().hex[:8]}",
+                    "receiver": paypal_email
+                }
+            ]
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(payouts_url, headers=headers, json=payload)
+
+            if response.status_code not in (200, 201):
+                logger.error(f"PayPal payout failed: {response.text}")
+                raise Exception(f"PayPal Payout Failed: {response.status_code} - {response.text}")
+
+            result = response.json()
+            batch_id = result.get("batch_header", {}).get("payout_batch_id")
+
+            if not batch_id:
+                raise Exception("PayPal API did not return a payout_batch_id")
+
+            logger.info(f"PayPal payout initiated for {paypal_email}: ${amount}, Batch ID: {batch_id}")
+            return batch_id
 
     @staticmethod
     def get_instructor_payout_history(
