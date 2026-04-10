@@ -179,27 +179,76 @@ class CRUDQuizGeneration:
         total_added = 0
         questions_by_pool = {}
 
-        for pool in pools:
-            # Get questions from bank
-            query = (
-                db.query(BankQuestion)
-                .join(question_bank_questions)
-                .filter(
-                    question_bank_questions.c.question_bank_id == pool.question_bank_id
-                )
+        if not pools:
+            return {
+                "quiz_id": quiz_id,
+                "total_questions_added": 0,
+                "questions_by_pool": {},
+                "message": "Successfully added 0 questions to quiz",
+            }
+
+        # Extract all requested bank IDs
+        pool_map = {pool.question_bank_id: pool for pool in pools}
+        bank_ids = list(pool_map.keys())
+
+        # Pre-fetch all IDs and difficulties for all pools in a single query
+        query = (
+            db.query(
+                question_bank_questions.c.question_bank_id,
+                BankQuestion.id,
+                BankQuestion.difficulty,
             )
+            .join(BankQuestion, question_bank_questions.c.question_id == BankQuestion.id)
+            .filter(question_bank_questions.c.question_bank_id.in_(bank_ids))
+        )
+        all_question_data = query.all()
+
+        ids_by_bank = {}
+        for bank_id, q_id, diff in all_question_data:
+            if bank_id not in ids_by_bank:
+                ids_by_bank[bank_id] = []
+            ids_by_bank[bank_id].append((q_id, diff))
+
+        all_selected_ids = []
+        selected_ids_by_pool = {}
+
+        # Randomly select question IDs for each pool in memory
+        for idx, pool in enumerate(pools):
+            available_data = ids_by_bank.get(pool.question_bank_id, [])
 
             if pool.difficulty_filter:
-                query = query.filter(BankQuestion.difficulty == pool.difficulty_filter)
+                available_ids = [
+                    q_id for q_id, diff in available_data if diff == pool.difficulty_filter
+                ]
+            else:
+                available_ids = [q_id for q_id, diff in available_data]
 
-            available_questions = query.all()
+            num_to_select = min(pool.num_questions, len(available_ids))
+            if num_to_select > 0:
+                selected_ids = random.sample(available_ids, num_to_select)
+                selected_ids_by_pool[idx] = selected_ids
+                all_selected_ids.extend(selected_ids)
+            else:
+                selected_ids_by_pool[idx] = []
 
-            # Randomly select questions
-            num_to_select = min(pool.num_questions, len(available_questions))
-            selected_questions = random.sample(available_questions, num_to_select)
+            questions_by_pool[pool.question_bank_id] = num_to_select
 
-            # Add to quiz
-            for idx, bank_q in enumerate(selected_questions):
+        # Single query to fetch the fully instantiated selected BankQuestion models
+        selected_questions_map = {}
+        if all_selected_ids:
+            selected_questions_list = db.query(BankQuestion).filter(BankQuestion.id.in_(all_selected_ids)).all()
+            selected_questions_map = {q.id: q for q in selected_questions_list}
+
+        # Now, instantiate Quiz questions and save pool configs
+        for idx, pool in enumerate(pools):
+            selected_ids = selected_ids_by_pool[idx]
+            num_to_select = questions_by_pool[pool.question_bank_id]
+
+            for idx, q_id in enumerate(selected_ids):
+                bank_q = selected_questions_map.get(q_id)
+                if not bank_q:
+                    continue
+
                 quiz_question = Question(
                     quiz_id=quiz_id,
                     text=bank_q.text,
@@ -209,7 +258,6 @@ class CRUDQuizGeneration:
                     order_index=total_added + idx,
                 )
 
-                # Copy options if exists
                 # Copy options if exists
                 if bank_q.options:
                     try:
@@ -229,7 +277,6 @@ class CRUDQuizGeneration:
                 db.add(quiz_question)
                 bank_q.usage_count += 1
 
-            questions_by_pool[pool.question_bank_id] = num_to_select
             total_added += num_to_select
 
             # Save pool configuration
