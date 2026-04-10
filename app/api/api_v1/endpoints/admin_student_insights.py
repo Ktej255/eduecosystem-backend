@@ -30,33 +30,53 @@ def get_at_risk_students(
     now = datetime.utcnow()
     risk_list = []
     
-    # Get all students
+    # Get all active students
     students = db.query(User).filter(User.role == "student", User.is_active == True).all()
+    student_ids = [student.id for student in students]
+
+    if not student_ids:
+        return []
+
+    # 1. Bulk Academic Risk (MCQ Scores)
+    avg_scores = dict(
+        db.query(DrillSession.student_id, func.avg(DrillSession.overall_score))
+        .filter(DrillSession.student_id.in_(student_ids))
+        .group_by(DrillSession.student_id)
+        .all()
+    )
+
+    # 2. Bulk Wellness Risk (Meditation)
+    last_meditations = dict(
+        db.query(MeditationSession.user_id, func.max(MeditationSession.created_at))
+        .filter(MeditationSession.user_id.in_(student_ids))
+        .group_by(MeditationSession.user_id)
+        .all()
+    )
+
+    # 3. Bulk Churn Risk (Inactivity)
+    last_activities = dict(
+        db.query(ActivityLog.user_id, func.max(ActivityLog.timestamp))
+        .filter(ActivityLog.user_id.in_(student_ids))
+        .group_by(ActivityLog.user_id)
+        .all()
+    )
     
     for student in students:
         risk_factors = []
         
         # 1. Academic Risk (MCQ Scores)
-        avg_score = db.query(func.avg(DrillSession.overall_score)).filter(
-            DrillSession.student_id == student.id
-        ).scalar() or 0
+        avg_score = avg_scores.get(student.id) or 0
         if avg_score < 50 and avg_score > 0:
             risk_factors.append({"factor": "Low Academic Performance", "detail": f"Avg Score: {round(avg_score, 1)}%"})
             
         # 2. Wellness Risk (Meditation)
-        last_meditation = db.query(MeditationSession.created_at).filter(
-            MeditationSession.user_id == student.id
-        ).order_by(desc(MeditationSession.created_at)).first()
-        
-        if not last_meditation or (now - last_meditation[0]) > timedelta(days=3):
+        last_med_date = last_meditations.get(student.id)
+        if not last_med_date or (now - last_med_date) > timedelta(days=3):
             risk_factors.append({"factor": "Mental Health/Focus Drop", "detail": "No meditation in 3+ days"})
             
         # 3. Churn Risk (Inactivity)
-        last_activity = db.query(ActivityLog.timestamp).filter(
-            ActivityLog.user_id == student.id
-        ).order_by(desc(ActivityLog.timestamp)).first()
-        
-        if not last_activity or (now - last_activity[0]) > timedelta(days=5):
+        last_act_date = last_activities.get(student.id)
+        if not last_act_date or (now - last_act_date) > timedelta(days=5):
             risk_factors.append({"factor": "High Churn Risk", "detail": "Inactive for 5+ days"})
 
         if risk_factors:
@@ -65,7 +85,7 @@ def get_at_risk_students(
                 "name": student.full_name or student.email,
                 "risk_score": len(risk_factors),
                 "factors": risk_factors,
-                "last_active": last_activity[0].isoformat() if last_activity else "Never"
+                "last_active": last_act_date.isoformat() if last_act_date else "Never"
             })
             
     # Sort by highest risk
