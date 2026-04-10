@@ -18,14 +18,17 @@ conf = ConnectionConfig(
 )
 
 
+from typing import List, Optional
+
 async def send_email(
-    email_to: str, subject: str, template_name: str, template_body: dict
+    email_to: str, subject: str, template_name: str, template_body: dict, attachments: Optional[List[str]] = None
 ):
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
         template_body=template_body,
         subtype=MessageType.html,
+        attachments=attachments,
     )
 
     fm = FastMail(conf)

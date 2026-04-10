@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice {{ invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .header { margin-bottom: 20px; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Invoice from {{ company_name }}</h2>
+        </div>
+
+        <p>Dear {{ billing_name }},</p>
+
+        <p>Thank you for your business. Please find attached your invoice (<strong>{{ invoice_number }}</strong>).</p>
+
+        <ul>
+            <li><strong>Invoice Number:</strong> {{ invoice_number }}</li>
+            <li><strong>Total Amount:</strong> {{ total }} {{ currency }}</li>
+            <li><strong>Issued Date:</strong> {{ issued_date }}</li>
+            <li><strong>Due Date:</strong> {{ due_date }}</li>
+        </ul>
+
+        {% if message %}
+        <div style="margin-top: 20px; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #ddd;">
+            <p>{{ message }}</p>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>If you have any questions, please contact us.</p>
+            <p>&copy; {{ current_year }} {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

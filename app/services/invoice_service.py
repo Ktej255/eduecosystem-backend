@@ -240,12 +240,47 @@ class InvoiceService:
             raise HTTPException(status_code=400, detail="No recipient email available")
 
         # Generate PDF if not already generated
-        if not invoice.pdf_generated:
-            InvoiceService.generate_pdf(db, invoice_id)
+        if not invoice.pdf_generated or not invoice.pdf_url:
+            pdf_path = InvoiceService.generate_pdf(db, invoice_id)
+        else:
+            pdf_path = invoice.pdf_url
 
-        # TODO: Actual email sending implementation
-        # This would integrate with your EmailService or similar
-        # For now, just mark as sent
+        from app.core.email import send_email
+        import asyncio
+
+        template_body = {
+            "billing_name": invoice.billing_name or "Customer",
+            "invoice_number": invoice.invoice_number,
+            "total": f"{invoice.total:.2f}",
+            "currency": invoice.currency,
+            "issued_date": invoice.issued_date.strftime("%Y-%m-%d") if invoice.issued_date else "",
+            "due_date": invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "",
+            "message": message or "",
+            "company_name": InvoiceService.COMPANY_NAME,
+            "current_year": datetime.utcnow().year,
+        }
+
+        attachments = [pdf_path] if pdf_path and os.path.exists(pdf_path) else []
+
+        # Send email asynchronously using the current event loop or a new one
+        coro = send_email(
+            email_to=to_email,
+            subject=f"Invoice {invoice.invoice_number} from {InvoiceService.COMPANY_NAME}",
+            template_name="invoice.html",
+            template_body=template_body,
+            attachments=attachments
+        )
+
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(coro)
+            else:
+                loop.run_until_complete(coro)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(coro)
 
         InvoiceService.mark_as_sent(db, invoice_id)
 
