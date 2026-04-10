@@ -20,6 +20,7 @@ from app.models.sso import (
 )
 from app.models.user import User
 from app.core.security import get_password_hash
+from app.core.encryption import decrypt_string
 
 logger = logging.getLogger(__name__)
 
@@ -436,7 +437,7 @@ class OAuthService:
 
         return OAuth2Session(
             client_id=config.client_id,
-            client_secret=config.client_secret,
+            client_secret=decrypt_string(config.client_secret),
             scope=" ".join(config.scopes or ["openid", "email", "profile"]),
             redirect_uri="https://app.eduecosystem.com/api/v1/sso/callback/oauth",
         )

@@ -12,6 +12,7 @@ import httpx
 
 from app.models.sso import SSOConfig
 from app.core.config import settings
+from app.core.encryption import decrypt_string
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class OAuthService:
         """
         self.config = sso_config
         self.client_id = sso_config.client_id
-        self.client_secret = sso_config.client_secret
+        self.client_secret = decrypt_string(sso_config.client_secret)
         self.scopes = sso_config.scopes or ["openid", "email", "profile"]
 
         # Endpoints
