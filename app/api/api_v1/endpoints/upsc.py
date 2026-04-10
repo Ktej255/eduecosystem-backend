@@ -2,6 +2,8 @@ from typing import Any, List, Optional
 import uuid
 from uuid import UUID
 from datetime import datetime
+from pathlib import Path
+from app.core.storage import get_storage
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
@@ -23,6 +25,21 @@ from app.schemas.upsc import (
     PlanGenerationRequest, StartDrillRequest, StartDrillResponse,
     StudentDashboardResponse, PlanStatusResponse
 )
+
+
+def generate_unique_filename(original_filename: str) -> str:
+    """Generate a unique filename while preserving extension"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_id = str(uuid.uuid4())[:8]
+    if original_filename:
+        ext = Path(original_filename).suffix.lower()
+        safe_name = "".join(
+            c for c in Path(original_filename).stem if c.isalnum() or c in ("-", "_")
+        )[:50]
+    else:
+        ext = ""
+        safe_name = "file"
+    return f"{safe_name}_{timestamp}_{unique_id}{ext}"
 
 router = APIRouter()
 
@@ -201,20 +218,46 @@ def submit_attempt(
     audio_url = None
 
     if image:
-        # TODO: Upload to S3
-        image_url = f"https://s3-bucket/placeholder/{image.filename}"
+        content = image.file.read()
+        filename = generate_unique_filename(image.filename or "image.jpg")
+        storage = get_storage()
+        success, url, error = storage.upload(content, filename, image.content_type or "image/jpeg")
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to save image: {error}")
+        image_url = url
+
+        # Save to Asset database
+        asset_in = schemas.AssetCreate(
+            filename=filename,
+            original_name=image.filename or "image.jpg",
+            file_type="image",
+            url=image_url,
+            size=len(content),
+            user_id=current_user.id,
+            mime_type=image.content_type or "image/jpeg"
+        )
+        crud.asset.create(db=db, obj_in=asset_in)
     
     if audio:
-        # TODO: Upload to S3
-        # For now, save locally for testing or mock URL
-        import shutil
-        import os
-        upload_dir = "uploads/audio"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = f"{upload_dir}/{uuid.uuid4()}_{audio.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(audio.file, buffer)
-        audio_url = file_path # In real app, this would be S3 URL
+        audio_content = audio.file.read()
+        filename = generate_unique_filename(audio.filename or "audio.mp3")
+        storage = get_storage()
+        success, url, error = storage.upload(audio_content, filename, audio.content_type or "audio/mpeg")
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to save audio: {error}")
+        audio_url = url
+
+        # Save to Asset database
+        asset_in = schemas.AssetCreate(
+            filename=filename,
+            original_name=audio.filename or "audio.mp3",
+            file_type="audio",
+            url=audio_url,
+            size=len(audio_content),
+            user_id=current_user.id,
+            mime_type=audio.content_type or "audio/mpeg"
+        )
+        crud.asset.create(db=db, obj_in=asset_in)
 
     attempt = UPSCAttempt(
         student_id=current_user.id,
@@ -235,7 +278,7 @@ def submit_attempt(
     if audio:
         # We need to import this task, assuming it will be in upsc_worker
         from app.services.upsc_worker import transcribe_audio_task
-        transcribe_audio_task.delay(str(attempt.id), file_path) # Passing path for now
+        transcribe_audio_task.delay(str(attempt.id), audio_url)
     
     return attempt
 
