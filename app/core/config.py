@@ -160,6 +160,40 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")  # Leave empty to disable Sentry
     APP_VERSION: str = os.getenv("APP_VERSION", "2.0.0")
 
+    # SAML Configuration
+    SAML_SP_CERT: str = os.getenv("SAML_SP_CERT", "")
+    SAML_SP_CERT_PATH: str = os.getenv("SAML_SP_CERT_PATH", "")
+    SAML_SP_KEY: str = os.getenv("SAML_SP_KEY", "")
+    SAML_SP_KEY_PATH: str = os.getenv("SAML_SP_KEY_PATH", "")
+
+    @property
+    def saml_sp_cert_content(self) -> str:
+        """Get SAML SP Certificate from env or file"""
+        if self.SAML_SP_CERT:
+            return self.SAML_SP_CERT
+        if self.SAML_SP_CERT_PATH and os.path.exists(self.SAML_SP_CERT_PATH):
+            try:
+                with open(self.SAML_SP_CERT_PATH, "r") as f:
+                    return f.read().strip()
+            except IOError:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to read SAML SP cert file: {self.SAML_SP_CERT_PATH}")
+        return ""
+
+    @property
+    def saml_sp_key_content(self) -> str:
+        """Get SAML SP Private Key from env or file"""
+        if self.SAML_SP_KEY:
+            return self.SAML_SP_KEY
+        if self.SAML_SP_KEY_PATH and os.path.exists(self.SAML_SP_KEY_PATH):
+            try:
+                with open(self.SAML_SP_KEY_PATH, "r") as f:
+                    return f.read().strip()
+            except IOError:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to read SAML SP key file: {self.SAML_SP_KEY_PATH}")
+        return ""
+
     # AI Configuration
     # Free Tier Gemini Key (15 RPM)
     FREE_GEMINI_API_KEY: str = os.getenv("FREE_GEMINI_API_KEY", os.getenv("GEMINI_API_KEY", ""))
