@@ -108,7 +108,6 @@ class Course(Base):
     certificates = relationship(
         "Certificate", back_populates="course", cascade="all, delete-orphan"
     )
-    # analytics = relationship("CourseAnalytics", back_populates="course", uselist=False, cascade="all, delete-orphan")  # TODO: CourseAnalytics model doesn't exist
     learning_groups = relationship("LearningGroup", back_populates="course")
 
     # Marketplace Relationships

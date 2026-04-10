@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 from app import models
 from app.api import deps
-from app.models.analytics import CourseAnalytics
 from app.models.enrollment import Enrollment
 from app.models.course_payment import CoursePayment
 from app.models.course_review import CourseReview
@@ -114,14 +113,6 @@ def get_course_analytics(
         raise HTTPException(status_code=404, detail="Course not found")
     if course.instructor_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
-
-    # Try to get cached analytics
-    analytics = (
-        db.query(CourseAnalytics).filter(CourseAnalytics.course_id == course_id).first()
-    )
-
-    # If not exists or old, calculate fresh (simplified for now, just calculate)
-    # In production, we'd use a background task to update the cache
 
     total_enrollments = (
         db.query(Enrollment).filter(Enrollment.course_id == course_id).count()
