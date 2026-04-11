@@ -15,7 +15,7 @@ from app.models.certificate import Certificate
 from app.models.category import Category, Tag
 from app.models.assignment import Assignment, Submission
 from app.models.lms import (
-    Assignment as LMSAssignment,
+    LMSAssignment,
     StudentSubmission,
     AIEvaluationLog,
 )
@@ -260,3 +260,6 @@ from app.models.universal_progress import UniversalProgress
 
 # Holistic & 36 Skills
 from app.models.holistic import Skill, StudentSkillProgress
+
+# Reports
+from app.models.student_report import StudentReport

@@ -78,12 +78,13 @@ class Settings(BaseSettings):
             "http://localhost:3001",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
+            "https://localhost:3000",
+            "https://localhost:3001",
         ]
         
         origins_str = os.getenv("BACKEND_CORS_ORIGINS", "")
         if origins_str.strip():
-            if origins_str.strip() == "*":
-                return ["*"]  # Wildcard overrides everything
+            # If wildcard is passed, we handle it natively in main.py, but appending origins securely
             env_origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
             # Combine defaults with any additional env origins
             all_origins = list(set(default_origins + env_origins))

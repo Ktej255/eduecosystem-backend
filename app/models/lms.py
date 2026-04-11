@@ -7,7 +7,7 @@ import enum
 
 from app.db.base import Base
 
-class Assignment(Base):
+class LMSAssignment(Base):
     __tablename__ = "lms_assignments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -42,7 +42,7 @@ class StudentSubmission(Base):
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    assignment = relationship("Assignment", back_populates="submissions")
+    assignment = relationship("LMSAssignment", back_populates="submissions")
     student = relationship("User", backref="lms_submissions")
     evaluation_logs = relationship("AIEvaluationLog", back_populates="submission", cascade="all, delete-orphan")
 
@@ -66,7 +66,7 @@ class AIEvaluationLog(Base):
     # Relationships
     submission = relationship("StudentSubmission", back_populates="evaluation_logs")
 
-class Question(Base):
+class LMSQuestion(Base):
     __tablename__ = "lms_questions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -81,9 +81,9 @@ class Question(Base):
 
     # Relationships
     teacher = relationship("User", backref="lms_questions")
-    options = relationship("Option", back_populates="question", cascade="all, delete-orphan")
+    options = relationship("LMSOption", back_populates="question", cascade="all, delete-orphan")
 
-class Option(Base):
+class LMSOption(Base):
     __tablename__ = "lms_options"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -92,4 +92,4 @@ class Option(Base):
     is_correct = Column(Boolean, default=False)
 
     # Relationships
-    question = relationship("Question", back_populates="options")
+    question = relationship("LMSQuestion", back_populates="options")
