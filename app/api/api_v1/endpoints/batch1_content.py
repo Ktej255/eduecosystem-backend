@@ -21,11 +21,11 @@ from app.db.session import SessionLocal, get_db
 from app.models.batch1 import Batch1Segment
 from app.core.config import settings
 
-# Optional S3 import
+# Optional GCP storage import
 try:
-    import boto3
+    from google.cloud import storage
 except ImportError:
-    boto3 = None
+    storage = None
 
 router = APIRouter()
 
@@ -239,23 +239,26 @@ async def save_segment(
             file_ext = os.path.splitext(video.filename)[1]
             file_name = f"c{cycle_id}_d{day_number}_p{part_number}_s{segment_number}_{uuid.uuid4().hex[:8]}{file_ext}"
             
-            # Check if S3 is configured and boto3 is available
-            use_s3 = boto3 and hasattr(settings, 'STORAGE_BACKEND') and settings.STORAGE_BACKEND == 's3' and hasattr(settings, 'AWS_S3_BUCKET') and settings.AWS_S3_BUCKET
+            # Check if GCP is configured and storage is available
+            use_gcp = storage and hasattr(settings, 'STORAGE_BACKEND') and settings.STORAGE_BACKEND == 'gcp' and hasattr(settings, 'GCP_BUCKET_NAME') and settings.GCP_BUCKET_NAME
             
-            if use_s3:
+            if use_gcp:
                 try:
-                    s3 = boto3.client('s3',
-                                      aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                                      region_name=settings.AWS_REGION)
+                    # Initializes using GOOGLE_APPLICATION_CREDENTIALS or default credentials
+                    client = storage.Client()
+                    bucket = client.bucket(settings.GCP_BUCKET_NAME)
+                    blob = bucket.blob(f"videos/{file_name}")
+
                     video.file.seek(0)
-                    s3.upload_fileobj(video.file, settings.AWS_S3_BUCKET, f"videos/{file_name}", ExtraArgs={'ACL': 'public-read'})
-                    segment.video_url = f"https://{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/videos/{file_name}"
-                    print(f"Uploaded video to S3: {segment.video_url}")
+                    blob.upload_from_file(video.file, content_type=video.content_type)
+                    # blob.make_public() # Uncomment if public read is desired
+
+                    segment.video_url = f"https://storage.googleapis.com/{settings.GCP_BUCKET_NAME}/videos/{file_name}"
+                    print(f"Uploaded video to GCP: {segment.video_url}")
                     file_path_for_transcription = segment.video_url
                 except Exception as e:
-                    print(f"S3 Upload Error: {e}")
-                    raise HTTPException(status_code=500, detail=f"S3 Upload Failed: {str(e)}")
+                    print(f"GCP Upload Error: {e}")
+                    raise HTTPException(status_code=500, detail=f"GCP Upload Failed: {str(e)}")
             else:
                 # Local Save
                 file_path = os.path.join(UPLOAD_DIR, file_name)
@@ -319,22 +322,23 @@ async def save_segment(
                     pdf_url = ""
                     local_pdf_path = None
 
-                    # Check if S3 is configured
-                    use_s3 = boto3 and hasattr(settings, 'STORAGE_BACKEND') and settings.STORAGE_BACKEND == 's3' and hasattr(settings, 'AWS_S3_BUCKET') and settings.AWS_S3_BUCKET
+                    # Check if GCP is configured
+                    use_gcp = storage and hasattr(settings, 'STORAGE_BACKEND') and settings.STORAGE_BACKEND == 'gcp' and hasattr(settings, 'GCP_BUCKET_NAME') and settings.GCP_BUCKET_NAME
                     
-                    if use_s3:
+                    if use_gcp:
                         try:
-                            s3 = boto3.client('s3',
-                                              aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                                              aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                                              region_name=settings.AWS_REGION)
+                            client = storage.Client()
+                            bucket = client.bucket(settings.GCP_BUCKET_NAME)
+                            blob = bucket.blob(f"pdfs/{unique_name}")
+
                             pdf.file.seek(0)
-                            s3.upload_fileobj(pdf.file, settings.AWS_S3_BUCKET, f"pdfs/{unique_name}", ExtraArgs={'ACL': 'public-read'})
-                            pdf_url = f"https://{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/pdfs/{unique_name}"
-                            print(f"Uploaded PDF to S3: {pdf_url}")
+                            blob.upload_from_file(pdf.file, content_type=pdf.content_type)
+
+                            pdf_url = f"https://storage.googleapis.com/{settings.GCP_BUCKET_NAME}/pdfs/{unique_name}"
+                            print(f"Uploaded PDF to GCP: {pdf_url}")
                         except Exception as e:
-                            print(f"S3 Upload Failed for PDF: {e}")
-                            raise HTTPException(status_code=500, detail=f"S3 Upload Failed: {str(e)}")
+                            print(f"GCP Upload Failed for PDF: {e}")
+                            raise HTTPException(status_code=500, detail=f"GCP Upload Failed: {str(e)}")
                     else:
                         # Local Save
                         dest_path = os.path.join(PDF_UPLOAD_DIR, unique_name)

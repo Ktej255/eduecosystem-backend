@@ -145,11 +145,9 @@ class Settings(BaseSettings):
     CASHFREE_WEBHOOK_SECRET: str = os.getenv("CASHFREE_WEBHOOK_SECRET", "webhook_placeholder")
 
     # File Storage Configuration
-    STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # Options: local, s3
-    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
-    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
-    AWS_S3_BUCKET: str = os.getenv("AWS_S3_BUCKET", "")
-    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
+    STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # Options: local, gcp
+    GCP_BUCKET_NAME: str = os.getenv("GCP_BUCKET_NAME", "")
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 
     # Virus Scanning Configuration
     ENABLE_VIRUS_SCAN: bool = os.getenv("ENABLE_VIRUS_SCAN", "false").lower() == "true"
