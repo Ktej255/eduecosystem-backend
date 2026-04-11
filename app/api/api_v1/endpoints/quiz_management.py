@@ -471,9 +471,53 @@ def trigger_ai_grading_manually(
     if not answer:
         raise HTTPException(status_code=404, detail="Student answer not found")
 
-    # TODO: Implement actual AI grading logic
-    # For now, return placeholder
-    raise HTTPException(
-        status_code=501,
-        detail="AI grading service not yet implemented. Coming in Phase 4.",
+    from app.services.ai_grading_service import AIGradingService
+    import asyncio
+
+    # Verify the question exists and is of a type that can be graded
+    question = db.query(Question).filter(Question.id == answer.question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    if not answer.text_response:
+        raise HTTPException(status_code=400, detail="Answer does not have a text response to grade.")
+
+    # Get rubrics for this question
+    rubrics = db.query(AssessmentRubric).filter(AssessmentRubric.question_id == question.id).all()
+
+    rubric_dict = {}
+    if rubrics:
+        rubric_dict = {
+            "criteria": [
+                {
+                    "name": r.criteria_name,
+                    "max_points": r.max_points,
+                    "description": r.description,
+                    "levels": json.loads(r.levels) if r.levels else []
+                }
+                for r in rubrics
+            ]
+        }
+
+    # Call the async service
+    grading_result = AIGradingService.grade_essay(
+        db=db,
+        student_answer_id=answer.id,
+        essay_text=answer.text_response,
+        rubric=rubric_dict,
+        max_score=float(question.points),
+        current_user=current_user
     )
+
+    # Automatically award points to student answer if confidence is high and manual review isn't needed
+    if not grading_result.needs_manual_review:
+        answer.points_awarded = grading_result.ai_score
+        answer.is_correct = grading_result.ai_score > 0  # Basic logic, can be refined
+        db.add(answer)
+        db.commit()
+
+    # Parse JSON rubric scores for the response
+    if grading_result.rubric_scores:
+        grading_result.rubric_scores = json.loads(grading_result.rubric_scores)
+
+    return grading_result
