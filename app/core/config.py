@@ -78,12 +78,13 @@ class Settings(BaseSettings):
             "http://localhost:3001",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
+            "https://localhost:3000",
+            "https://localhost:3001",
         ]
         
         origins_str = os.getenv("BACKEND_CORS_ORIGINS", "")
         if origins_str.strip():
-            if origins_str.strip() == "*":
-                return ["*"]  # Wildcard overrides everything
+            # If wildcard is passed, we handle it natively in main.py, but appending origins securely
             env_origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
             # Combine defaults with any additional env origins
             all_origins = list(set(default_origins + env_origins))
@@ -145,11 +146,9 @@ class Settings(BaseSettings):
     CASHFREE_WEBHOOK_SECRET: str = os.getenv("CASHFREE_WEBHOOK_SECRET", "webhook_placeholder")
 
     # File Storage Configuration
-    STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # Options: local, s3
-    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
-    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
-    AWS_S3_BUCKET: str = os.getenv("AWS_S3_BUCKET", "")
-    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
+    STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")  # Options: local, gcp
+    GCP_BUCKET_NAME: str = os.getenv("GCP_BUCKET_NAME", "")
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 
     # Virus Scanning Configuration
     ENABLE_VIRUS_SCAN: bool = os.getenv("ENABLE_VIRUS_SCAN", "false").lower() == "true"

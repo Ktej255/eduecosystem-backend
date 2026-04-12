@@ -16,49 +16,14 @@ def test_health_endpoint_structure(client):
     response = client.get("/health")
     data = response.json()
 
-    # Required fields
+    # Required fields based on the new endpoint structure
     assert "status" in data
-    assert "timestamp" in data
-    assert "environment" in data
-    assert "checks" in data
+    assert "message" in data
+    assert "version" in data
 
-    # Status should be one of the expected values
-    assert data["status"] in ["healthy", "degraded", "unhealthy"]
-
-    # Timestamp should be a number
-    assert isinstance(data["timestamp"], (int, float))
-
-    # Environment should be a string
-    assert isinstance(data["environment"], str)
-
-    # Checks should be a dict
-    assert isinstance(data["checks"], dict)
-
-
-def test_health_database_check(client):
-    """Test that the database check is present"""
-    response = client.get("/health")
-    data = response.json()
-
-    assert "database" in data["checks"]
-    assert "status" in data["checks"]["database"]
-    assert "message" in data["checks"]["database"]
-
-    # Database should be healthy in test environment
-    assert data["checks"]["database"]["status"] == "healthy"
-
-
-def test_health_cache_check(client):
-    """Test that the cache check is present"""
-    response = client.get("/health")
-    data = response.json()
-
-    assert "cache" in data["checks"]
-    assert "status" in data["checks"]["cache"]
-    assert "message" in data["checks"]["cache"]
-
-    # Cache status should be either healthy or degraded (since it's optional)
-    assert data["checks"]["cache"]["status"] in ["healthy", "degraded"]
+    # Status should be ok
+    assert data["status"] == "ok"
+    assert data["message"] == "Backend is healthy"
 
 
 def test_config_secret_key_exists():

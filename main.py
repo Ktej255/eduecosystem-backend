@@ -120,20 +120,14 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS Origins — single source of truth from settings + any extras
 all_cors_origins = list(set(BACKEND_CORS_ORIGINS if BACKEND_CORS_ORIGINS else []))
 
-# Handle Wildcard + Credentials correctly
-# Browsers block 'Access-Control-Allow-Origin: *' when 'Access-Control-Allow-Credentials: true'
+# Handle Wildcard + Credentials correctly securely allowing Frontend communication
 if "*" in all_cors_origins:
-    if len(all_cors_origins) > 1:
-        all_cors_origins.remove("*")
-        logger.info(f"CORS: Removed wildcard '*' because specific origins are present: {all_cors_origins}")
-    else:
-        # If ONLY wildcard is present, we must be careful with credentials
-        logger.warning("CORS: Only '*' origin found. Using allow_origin_regex for credential support.")
+    all_cors_origins.remove("*")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=all_cors_origins if "*" not in all_cors_origins else [],
-    allow_origin_regex=r"https?://.*" if "*" in all_cors_origins else None,
+    allow_origins=all_cors_origins,
+    allow_origin_regex=r"https?://.*" if os.getenv("ENVIRONMENT") != "production" else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

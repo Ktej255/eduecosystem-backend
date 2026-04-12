@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.api import deps
-from app.models.lms import Assignment, StudentSubmission, AIEvaluationLog
+from app.models.lms import LMSAssignment as Assignment, StudentSubmission, AIEvaluationLog
 from app.models.question_bank import QuestionBank, BankQuestion
 from app.models.user import User
 from app.schemas.lms import (
@@ -24,7 +24,7 @@ from app.services.gemini_service import gemini_service
 from app.schemas.user import UserBasic
 
 from app.schemas.lms_schemas import BulkQuestionUpload, QuestionResponse
-from app.models.lms import Assignment, StudentSubmission, AIEvaluationLog, Question, Option
+from app.models.lms import LMSAssignment as Assignment, StudentSubmission, AIEvaluationLog, LMSQuestion as Question, LMSOption as Option
 
 router = APIRouter()
 
