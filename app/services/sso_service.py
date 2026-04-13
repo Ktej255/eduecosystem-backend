@@ -20,6 +20,7 @@ from app.models.sso import (
 )
 from app.models.user import User
 from app.core.security import get_password_hash
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -313,7 +314,7 @@ class SAMLService:
         """
         return {
             "strict": True,
-            "debug": True,  # TODO: Disable in production
+            "debug": settings.DEBUG,
             "sp": {
                 "entityId": config.entity_id or "https://app.eduecosystem.com",
                 "assertionConsumerService": {
