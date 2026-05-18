@@ -197,19 +197,25 @@ def generate_decay_curve_points(
     """
     points = []
     current_stability = stability
+    last_review_day = 0
     
+    # Convert review events to a dict for easier lookup
+    review_dict = {}
+    if review_events:
+        for event_day, new_stability in review_events:
+            review_dict[event_day] = new_stability
+
     for day in range(days + 1):
         # Check if there's a review on this day
-        if review_events:
-            for event_day, new_stability in review_events:
-                if event_day == day:
-                    current_stability = new_stability
-                    # On review day, retention jumps back to 100%
-                    points.append({"day": day, "retention": 1.0, "reviewed": True})
-                    continue
-        
-        # Calculate natural decay
-        retention = calculate_retrievability(current_stability, day)
-        points.append({"day": day, "retention": retention, "reviewed": False})
+        if day in review_dict:
+            current_stability = review_dict[day]
+            last_review_day = day
+            # On review day, retention jumps back to 100%
+            points.append({"day": day, "retention": 1.0, "reviewed": True})
+        else:
+            # Calculate natural decay based on days elapsed since last review (or start)
+            days_elapsed = day - last_review_day
+            retention = calculate_retrievability(current_stability, days_elapsed)
+            points.append({"day": day, "retention": retention, "reviewed": False})
     
     return points
