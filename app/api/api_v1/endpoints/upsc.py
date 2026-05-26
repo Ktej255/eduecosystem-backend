@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 import uuid
+import os
 from uuid import UUID
 from datetime import datetime
 
@@ -8,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.core.storage import get_storage
 from app.models.upsc import (
     UPSCBatch, UPSCPlan, UPSCQuestion, UPSCContent, UPSCDrill, 
     UPSCAttempt, UPSCReport, UPSCStudentProgress
@@ -200,21 +202,42 @@ def submit_attempt(
     image_url = None
     audio_url = None
 
+    storage = get_storage()
+
     if image:
-        # TODO: Upload to S3
-        image_url = f"https://s3-bucket/placeholder/{image.filename}"
+        image.file.seek(0)
+        content = image.file.read()
+        file_ext = os.path.splitext(image.filename)[1] if image.filename else ""
+        unique_name = f"upsc_{uuid.uuid4().hex}{file_ext}"
+
+        success, url, error = storage.upload(
+            content, unique_name, image.content_type or "image/jpeg"
+        )
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to upload image: {error}")
+        image_url = url
     
     if audio:
-        # TODO: Upload to S3
-        # For now, save locally for testing or mock URL
-        import shutil
-        import os
-        upload_dir = "uploads/audio"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = f"{upload_dir}/{uuid.uuid4()}_{audio.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(audio.file, buffer)
-        audio_url = file_path # In real app, this would be S3 URL
+        audio.file.seek(0)
+        content = audio.file.read()
+        file_ext = os.path.splitext(audio.filename)[1] if audio.filename else ""
+        unique_name = f"upsc_{uuid.uuid4().hex}{file_ext}"
+
+        # Determine content type, default to generic audio if not provided
+        content_type = audio.content_type
+        if not content_type:
+            if file_ext.lower() in [".mp3"]: content_type = "audio/mpeg"
+            elif file_ext.lower() in [".wav"]: content_type = "audio/wav"
+            elif file_ext.lower() in [".ogg"]: content_type = "audio/ogg"
+            elif file_ext.lower() in [".m4a"]: content_type = "audio/mp4"
+            else: content_type = "application/octet-stream"
+
+        success, url, error = storage.upload(
+            content, unique_name, content_type
+        )
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to upload audio: {error}")
+        audio_url = url
 
     attempt = UPSCAttempt(
         student_id=current_user.id,
