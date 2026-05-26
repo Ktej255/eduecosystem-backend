@@ -143,15 +143,15 @@ class ExportService:
         Returns:
             Exported data as string (CSV/JSON) or bytes (PDF)
         """
-        from app.models.analytics import CourseAnalytics
+        from app.models.analytics import StudentAnalytics
 
         # Get analytics data
-        query = db.query(CourseAnalytics).filter(CourseAnalytics.user_id == user_id)
+        query = db.query(StudentAnalytics).filter(StudentAnalytics.user_id == user_id)
 
         if start_date:
-            query = query.filter(CourseAnalytics.created_at >= start_date)
+            query = query.filter(StudentAnalytics.created_at >= start_date)
         if end_date:
-            query = query.filter(CourseAnalytics.created_at <= end_date)
+            query = query.filter(StudentAnalytics.created_at <= end_date)
 
         analytics = query.all()
 
@@ -162,9 +162,9 @@ class ExportService:
                 {
                     "course_id": item.course_id,
                     "date": item.created_at.isoformat() if item.created_at else "",
-                    "lessons_completed": item.lessons_completed,
-                    "quizzes_taken": item.quizzes_taken,
-                    "time_spent_minutes": item.time_spent,
+                    "completion_rate": item.completion_rate,
+                    "quizzes_taken": item.quiz_attempts,
+                    "time_spent_minutes": item.total_time_spent,
                     "engagement_score": item.engagement_score,
                 }
             )

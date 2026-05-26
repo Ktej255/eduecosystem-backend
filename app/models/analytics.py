@@ -239,3 +239,27 @@ class AnalyticsEvent(Base):
     # - page_view, video_play, video_complete, quiz_start, quiz_complete
     # - assignment_submit, discussion_post, course_enroll, course_complete
     # - purchase, refund, login, logout
+
+class CourseAnalytics(Base):
+    """Analytics and aggregate statistics for a course"""
+
+    __tablename__ = "course_analytics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    course_id = Column(
+        Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+
+    # Aggregated metrics
+    total_enrollments = Column(Integer, default=0)
+    total_revenue = Column(Float, default=0.0)
+    avg_rating = Column(Float, default=0.0)
+    completion_rate = Column(Float, default=0.0)
+
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    course = relationship("Course", back_populates="analytics")
