@@ -5,8 +5,21 @@ Implements OAuth 2.0 and OpenID Connect authentication flows.
 Supports Google Workspace, Azure AD, and any OIDC-compliant provider.
 """
 
-from authlib.jose import jwt
 from typing import Dict, Optional, Tuple
+from authlib.jose import jwt, JsonWebKey
+import time
+
+# Global caches to avoid redundant requests with simple TTL
+_OIDC_CONFIG_CACHE: Dict[str, Dict] = {}
+_OIDC_CONFIG_CACHE_EXP: Dict[str, float] = {}
+_JWKS_CACHE: Dict[str, Dict] = {}
+_JWKS_CACHE_EXP: Dict[str, float] = {}
+
+# 24 hours TTL for OIDC config, 1 hour TTL for JWKS
+CACHE_TTL_OIDC = 86400
+CACHE_TTL_JWKS = 3600
+
+
 import logging
 import httpx
 
@@ -263,7 +276,7 @@ class OAuthService:
             logger.exception("Error refreshing OAuth token")
             return False, None, str(e)
 
-    def verify_id_token(self, id_token: str) -> Tuple[bool, Optional[Dict]]:
+    async def verify_id_token(self, id_token: str) -> Tuple[bool, Optional[Dict]]:
         """
         Verify and decode ID token (for OIDC).
 
@@ -274,17 +287,88 @@ class OAuthService:
             Tuple of (is_valid, claims)
         """
         try:
-            # TODO: Fetch JWKS from provider for verification
-            # For now, just decode without verification (NOT PRODUCTION SAFE)
-            claims = jwt.decode(id_token, key=None, options={"verify_signature": False})
+            # Step 1: Decode header to get 'kid' and unverified claims to get 'iss'
+            header = jwt.decode_header(id_token)
+            kid = header.get("kid")
 
-            # Verify issuer, audience, expiry
-            # if claims.get("iss") != expected_issuer:
-            #     return False, None
-            # if claims.get("aud") != self.client_id:
-            #     return False, None
-            # if claims.get("exp", 0) < time.time():
-            #     return False, None
+            unverified_claims = jwt.decode(id_token, key=None, options={"verify_signature": False})
+            issuer = unverified_claims.get("iss")
+
+            if not issuer:
+                logger.error("No issuer found in ID token")
+                return False, None
+
+            # Determine JWKS URI
+            jwks_uri = self.config.settings.get("jwks_uri") if self.config.settings else None
+
+            now = time.time()
+            async with httpx.AsyncClient() as client:
+                if not jwks_uri:
+                    # OIDC Discovery
+                    # Strip trailing slash from issuer if present
+                    discovery_url = f"{issuer.rstrip('/')}/.well-known/openid-configuration"
+
+                    if discovery_url in _OIDC_CONFIG_CACHE and _OIDC_CONFIG_CACHE_EXP.get(discovery_url, 0) > now:
+                        oidc_config = _OIDC_CONFIG_CACHE[discovery_url]
+                    else:
+                        response = await client.get(discovery_url)
+                        if response.status_code != 200:
+                            logger.error(f"Failed to fetch OIDC configuration from {discovery_url}")
+                            return False, None
+                        oidc_config = response.json()
+                        _OIDC_CONFIG_CACHE[discovery_url] = oidc_config
+                        _OIDC_CONFIG_CACHE_EXP[discovery_url] = now + CACHE_TTL_OIDC
+
+                    jwks_uri = oidc_config.get("jwks_uri")
+
+                    if not jwks_uri:
+                        logger.error("No jwks_uri found in OIDC configuration")
+                        return False, None
+
+                # Fetch JWKS
+                # Fetch fresh keys if the kid is not found in the cached jwks, or cache expired
+                fetch_jwks = True
+                if jwks_uri in _JWKS_CACHE and _JWKS_CACHE_EXP.get(jwks_uri, 0) > now:
+                    cached_jwks = _JWKS_CACHE[jwks_uri]
+                    # Only avoid fetching if the kid is present in cached keys, or if kid is not in header
+                    if not kid or any(k.get("kid") == kid for k in cached_jwks.get("keys", [])):
+                        jwks_data = cached_jwks
+                        fetch_jwks = False
+
+                if fetch_jwks:
+                    response = await client.get(jwks_uri)
+                    if response.status_code != 200:
+                        logger.error(f"Failed to fetch JWKS from {jwks_uri}")
+                        return False, None
+                    jwks_data = response.json()
+                    _JWKS_CACHE[jwks_uri] = jwks_data
+                    _JWKS_CACHE_EXP[jwks_uri] = now + CACHE_TTL_JWKS
+
+            # Step 2: Verify token with JWKS
+            key = JsonWebKey.import_key_set(jwks_data)
+
+            claims = jwt.decode(id_token, key=key)
+
+            # Step 3: Verify claims (issuer, audience, expiry)
+            # Issuer must match the issuer we discovered or expect
+            if claims.get("iss") != issuer:
+                logger.error("Issuer mismatch in ID token")
+                return False, None
+
+            # Audience should typically include our client_id
+            aud = claims.get("aud")
+            if isinstance(aud, list):
+                if self.client_id not in aud:
+                    logger.error("Client ID not in ID token audience list")
+                    return False, None
+            elif aud != self.client_id:
+                logger.error("Client ID does not match ID token audience")
+                return False, None
+
+            # Expiry
+            if claims.get("exp", 0) < time.time():
+                logger.error("ID token has expired")
+                return False, None
 
             logger.info("ID token verified successfully")
             return True, claims
