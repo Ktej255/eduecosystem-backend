@@ -575,6 +575,32 @@ def get_experience_analytics(
         best_time = "morning"
     elif night_scores:
         best_time = "night"
+
+    # Calculate process effectiveness ranking
+    from collections import defaultdict
+    process_scores = defaultdict(list)
+
+    for exp in experiences:
+        if exp.day_completion and exp.day_completion.process_completions:
+            score = exp.overall_improvement_score or 0
+            # Also consider subjective effectiveness rating if available (1-5 scale mapped to 0-100 roughly, e.g., rating * 20)
+            if exp.post_effectiveness_rating:
+                # Average between objective score and subjective rating
+                score = (score + (exp.post_effectiveness_rating * 20)) / 2
+
+            for process_comp in exp.day_completion.process_completions:
+                process_scores[process_comp.process_id].append(score)
+
+    # Calculate average score per process
+    avg_process_scores = {}
+    for process_id, scores in process_scores.items():
+        if scores:
+            avg_process_scores[process_id] = sum(scores) / len(scores)
+
+    # Sort processes by score descending
+    sorted_processes = sorted(avg_process_scores.items(), key=lambda x: x[1], reverse=True)
+    # Extract just the process IDs, taking top 5
+    most_effective_processes = [pid for pid, score in sorted_processes][:5]
     
     return AnalyticsResponse(
         total_sessions=total_sessions,
@@ -584,7 +610,7 @@ def get_experience_analytics(
         overall_wellbeing_score=round(float(wellbeing_score), 2),
         trend_direction=trend,
         best_time_of_day=best_time,
-        most_effective_processes=[]  # TODO: Implement process effectiveness ranking
+        most_effective_processes=most_effective_processes
     )
 
 
