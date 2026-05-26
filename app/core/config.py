@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 
     # Security - SECRET_KEY must be set in production
+    SSO_ENCRYPTION_KEY: str = os.getenv("SSO_ENCRYPTION_KEY", "")
     SECRET_KEY: str = os.getenv(
         "SECRET_KEY",
         # Generate a random key for development, but require it in production

@@ -17,6 +17,7 @@ from app.models.user import User
 from app.models.sso import Organization, SSOConfig, SSOAuditLog, SSOProviderType
 from app.services.sso_service import SSOService
 from app.core.config import settings
+from app.core.encryption import encrypt_secret
 
 # Import protocol services
 # We handle imports inside functions or here if available
@@ -188,7 +189,7 @@ def create_sso_config(
         "sso_url": config_data.sso_url,
         "x509_cert": config_data.x509_cert,
         "client_id": config_data.client_id,
-        "client_secret": config_data.client_secret,  # TODO: Encrypt in production
+        "client_secret": encrypt_secret(config_data.client_secret),
         "authorization_endpoint": config_data.authorization_endpoint,
         "token_endpoint": config_data.token_endpoint,
         "userinfo_endpoint": config_data.userinfo_endpoint,
