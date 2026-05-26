@@ -260,3 +260,4 @@ from app.models.universal_progress import UniversalProgress
 
 # Holistic & 36 Skills
 from app.models.holistic import Skill, StudentSkillProgress
+from app.models.student_report import StudentReport
