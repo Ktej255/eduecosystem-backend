@@ -5,6 +5,7 @@ import json
 
 from app.api import deps
 from app.models.user import User
+from app.services.ai_grading_service import AIGradingService
 from app.models.quiz import (
     Question,
     QuizFeedback,
@@ -471,9 +472,28 @@ def trigger_ai_grading_manually(
     if not answer:
         raise HTTPException(status_code=404, detail="Student answer not found")
 
-    # TODO: Implement actual AI grading logic
-    # For now, return placeholder
-    raise HTTPException(
-        status_code=501,
-        detail="AI grading service not yet implemented. Coming in Phase 4.",
-    )
+    # Get the quiz from the answer -> attempt -> quiz relationship to find threshold and model
+    attempt = db.query(QuizAttempt).filter(QuizAttempt.id == answer.attempt_id).first()
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Quiz attempt not found")
+
+    quiz = db.query(Quiz).filter(Quiz.id == attempt.quiz_id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    try:
+        grading_result = AIGradingService.grade_quiz_answer(
+            db=db,
+            answer_id=answer_id,
+            model_name=quiz.ai_grading_model or "gemini",
+            threshold=quiz.manual_review_threshold or 0.7,
+            current_user=current_user
+        )
+        if not grading_result:
+            raise HTTPException(status_code=500, detail="Failed to grade answer or answer lacks text response.")
+        return grading_result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI grading service encountered an error: {str(e)}",
+        )
