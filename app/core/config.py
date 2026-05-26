@@ -1,6 +1,6 @@
 import os
 import secrets
-from pydantic import ConfigDict, field_validator
+from pydantic import ConfigDict, field_validator, PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -175,6 +175,51 @@ class Settings(BaseSettings):
     
     # Default AI model to use
     DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-3-flash-preview")
+
+    # SAML Configuration
+    SAML_SP_CERT: str = os.getenv("SAML_SP_CERT", "")
+    SAML_SP_CERT_PATH: str = os.getenv("SAML_SP_CERT_PATH", "")
+    SAML_SP_KEY: str = os.getenv("SAML_SP_KEY", "")
+    SAML_SP_KEY_PATH: str = os.getenv("SAML_SP_KEY_PATH", "")
+
+    _saml_sp_cert_cache: str | None = PrivateAttr(default=None)
+    _saml_sp_key_cache: str | None = PrivateAttr(default=None)
+
+    @property
+    def saml_sp_cert(self) -> str:
+        """Resolve SAML SP Certificate from env or file"""
+        if self._saml_sp_cert_cache is not None:
+            return self._saml_sp_cert_cache
+
+        if self.SAML_SP_CERT:
+            self._saml_sp_cert_cache = self.SAML_SP_CERT
+            return self._saml_sp_cert_cache
+
+        if self.SAML_SP_CERT_PATH and os.path.exists(self.SAML_SP_CERT_PATH):
+            with open(self.SAML_SP_CERT_PATH, "r") as f:
+                self._saml_sp_cert_cache = f.read()
+            return self._saml_sp_cert_cache
+
+        self._saml_sp_cert_cache = ""
+        return self._saml_sp_cert_cache
+
+    @property
+    def saml_sp_key(self) -> str:
+        """Resolve SAML SP Private Key from env or file"""
+        if self._saml_sp_key_cache is not None:
+            return self._saml_sp_key_cache
+
+        if self.SAML_SP_KEY:
+            self._saml_sp_key_cache = self.SAML_SP_KEY
+            return self._saml_sp_key_cache
+
+        if self.SAML_SP_KEY_PATH and os.path.exists(self.SAML_SP_KEY_PATH):
+            with open(self.SAML_SP_KEY_PATH, "r") as f:
+                self._saml_sp_key_cache = f.read()
+            return self._saml_sp_key_cache
+
+        self._saml_sp_key_cache = ""
+        return self._saml_sp_key_cache
 
     model_config = SettingsConfigDict(
         env_file=".env",
