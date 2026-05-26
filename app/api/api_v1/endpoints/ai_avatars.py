@@ -9,11 +9,38 @@ from app.models.user import User
 from app.api.deps import get_current_user
 from app.crud.ai_avatar import crud_ai_avatar
 from app.schemas.ai_avatar import AIAvatarCreate, AIAvatarUpdate, AIAvatarResponse
+from app.core.storage import get_storage
+from app.crud.asset import asset as crud_asset
+from app.schemas.asset import AssetCreate
+import uuid
 import logging
+import fitz  # PyMuPDF
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def extract_text_from_document(content: bytes, filename: str) -> str:
+    """Extract text from supported document types."""
+    extracted_text = ""
+    lower_filename = filename.lower()
+
+    try:
+        if lower_filename.endswith(".pdf"):
+            doc = fitz.open(stream=content, filetype="pdf")
+            for page in doc:
+                extracted_text += page.get_text()
+            doc.close()
+        elif lower_filename.endswith(".txt"):
+            extracted_text = content.decode("utf-8")
+        else:
+            # For other unsupported formats, we skip text extraction or handle minimally
+            logger.info(f"Skipping text extraction for unsupported file format: {filename}")
+    except Exception as e:
+        logger.error(f"Error extracting text from {filename}: {e}")
+
+    return extracted_text
 
 
 @router.post("/", response_model=AIAvatarResponse, status_code=201)
@@ -43,12 +70,45 @@ async def create_ai_avatar(
         }
 
         if documents:
-            # TODO: Save documents to storage and extract text
+            storage = get_storage()
             for doc in documents:
                 content = await doc.read()
+
+                # Generate unique filename for storage
+                file_extension = doc.filename.split(".")[-1] if "." in doc.filename else ""
+                unique_filename = f"ai_avatars/{uuid.uuid4()}.{file_extension}"
+
+                # Upload to storage
+                success, file_url, error = storage.upload(
+                    file_content=content,
+                    filename=unique_filename,
+                    content_type=doc.content_type or "application/octet-stream"
+                )
+
+                if not success:
+                    logger.error(f"Failed to upload document {doc.filename}: {error}")
+                    continue
+
+                # Create Asset record
+                asset_in = AssetCreate(
+                    filename=unique_filename,
+                    original_name=doc.filename,
+                    file_type="document",
+                    url=file_url,
+                    size=len(content),
+                    user_id=current_user.id,
+                    mime_type=doc.content_type
+                )
+                crud_asset.create(db=db, obj_in=asset_in)
+
+                # Extract text
+                extracted_text = extract_text_from_document(content, doc.filename)
+
                 knowledge_base["documents"].append({
                     "filename": doc.filename,
-                    "size": len(content)
+                    "url": file_url,
+                    "size": len(content),
+                    "extracted_text": extracted_text
                 })
 
         avatar_in = AIAvatarCreate(
