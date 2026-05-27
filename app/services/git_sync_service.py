@@ -26,37 +26,21 @@ class GitSyncService:
         Fetches the recent commits using `git log`.
         """
         try:
-            # We use a custom format to easily parse: Hash|Date|Subject|Body|Author
-            # %H = commit hash, %cd = commit date (short), %s = subject, %b = body, %an = author name
-            git_format = "%H|%cd|%s|%b|%an"
-            cmd = [
-                "git",
-                "log",
-                f"-n {limit}",
-                f"--date=short",
-                f"--pretty=format:{git_format}",
-                "--no-merges"
-            ]
-            
-            result = subprocess.run(
-                cmd,
-                cwd=self.repo_path,
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            
             commits = []
             # Git log separates entries with double newlines if body exists, but we can split by lines
             # Actually --pretty=format puts each commit on one logical line unless body has newlines.
             # To handle body newlines safely, let's use a unique delimiter.
             
             delim = "||_SYNC_DELIM_||"
+
+            # Ensure limit is treated as an integer to prevent argument injection
+            safe_limit = str(int(limit))
             cmd_safe = [
                 "git",
                 "log",
-                f"-n {limit}",
-                f"--date=short",
+                "-n",
+                safe_limit,
+                "--date=short",
                 f"--pretty=format:%H|%cd|%s|%an{delim}%b",
                 "--no-merges"
             ]
