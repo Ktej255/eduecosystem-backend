@@ -176,6 +176,40 @@ class Settings(BaseSettings):
     # Default AI model to use
     DEFAULT_AI_MODEL: str = os.getenv("DEFAULT_AI_MODEL", "google/gemini-3-flash-preview")
 
+    # SAML SP Configuration
+    SAML_SP_CERT_PATH: str = os.getenv("SAML_SP_CERT_PATH", "")
+    SAML_SP_PRIVATE_KEY_PATH: str = os.getenv("SAML_SP_PRIVATE_KEY_PATH", "")
+    SAML_SP_CERT: str = os.getenv("SAML_SP_CERT", "")
+    SAML_SP_PRIVATE_KEY: str = os.getenv("SAML_SP_PRIVATE_KEY", "")
+
+    @field_validator("SAML_SP_CERT")
+    @classmethod
+    def load_sp_cert(cls, v: str, info) -> str:
+        path = info.data.get("SAML_SP_CERT_PATH")
+        if path and os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    return f.read().strip()
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error reading SAML_SP_CERT_PATH: {e}")
+        return v
+
+    @field_validator("SAML_SP_PRIVATE_KEY")
+    @classmethod
+    def load_sp_private_key(cls, v: str, info) -> str:
+        path = info.data.get("SAML_SP_PRIVATE_KEY_PATH")
+        if path and os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    return f.read().strip()
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error reading SAML_SP_PRIVATE_KEY_PATH: {e}")
+        return v
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
