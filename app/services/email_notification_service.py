@@ -4,6 +4,7 @@ Email Notification Service
 Handles sending email notifications with template rendering and user preference checking.
 """
 
+import jinja2
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -21,13 +22,14 @@ from app.core.config import settings
 
 def render_template(template_str: str, variables: Dict[str, Any]) -> str:
     """
-    Simple template rendering using string replacement.
-    Replaces {{variable_name}} with actual values.
+    Template rendering using Jinja2.
+    Replaces {{variable_name}} with actual values and supports advanced templating.
     """
-    result = template_str
-    for key, value in variables.items():
-        result = result.replace(f"{{{{{key}}}}}", str(value))
-    return result
+    if not template_str:
+        return template_str
+
+    template = jinja2.Template(template_str)
+    return template.render(**variables)
 
 
 async def send_notification_email(
@@ -94,9 +96,17 @@ async def send_notification_email(
     try:
         # Send email using FastMail
         if not settings.MAIL_SUPPRESS_SEND:
-            # For now, we'll use direct send since we don't have FastMail templates set up yet
-            # TODO: Implement proper template-based sending
-            pass
+            from app.core.email import conf
+            from fastapi_mail import FastMail, MessageSchema, MessageType
+
+            message = MessageSchema(
+                subject=rendered_subject,
+                recipients=[user.email],
+                body=rendered_html or rendered_text,
+                subtype=MessageType.html if rendered_html else MessageType.plain
+            )
+            fm = FastMail(conf)
+            await fm.send_message(message)
 
         # Update log
         email_log.status = EmailStatus.SENT
