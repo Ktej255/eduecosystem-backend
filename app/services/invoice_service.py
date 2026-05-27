@@ -10,6 +10,11 @@ from datetime import datetime, timedelta
 import os
 import json
 
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+
 from app.models.invoice import Invoice
 from app.models.order import Order, OrderItem
 from app.schemas.invoice import InvoiceResponse
@@ -123,9 +128,6 @@ class InvoiceService:
         """
         Generate PDF for invoice.
         Returns path to PDF file.
-
-        Note: This is a placeholder implementation.
-        Full implementation would use ReportLab or similar library.
         """
         invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
         if not invoice:
@@ -134,22 +136,83 @@ class InvoiceService:
         # Get order for additional details
         order = db.query(Order).filter(Order.id == invoice.order_id).first()
 
-        # In a real implementation, you would:
-        # 1. Use ReportLab to generate PDF
-        # 2. Add company logo and branding
-        # 3. Format invoice details nicely
-        # 4. Save to uploads directory
-        # 5. Return file path
-
-        # For now, create placeholder path
-        pdf_filename = f"invoice_{invoice.invoice_number}.pdf"
-        pdf_path = f"uploads/invoices/{pdf_filename}"
-
         # Create directory if it doesn't exist
         os.makedirs("uploads/invoices", exist_ok=True)
 
-        # TODO: Actual PDF generation with ReportLab
-        # This is a placeholder - in production, implement proper PDF generation
+        pdf_filename = f"invoice_{invoice.invoice_number}.pdf"
+        pdf_path = f"uploads/invoices/{pdf_filename}"
+
+        # Actual PDF generation with ReportLab
+        doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Title
+        elements.append(Paragraph("<b>INVOICE</b>", styles['Title']))
+        elements.append(Spacer(1, 20))
+
+        # Header info (Company & Invoice Details)
+        issued_str = invoice.issued_date.strftime('%Y-%m-%d') if invoice.issued_date else ""
+        due_str = invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else ""
+
+        company_addr = InvoiceService.COMPANY_ADDRESS.replace('\n', '<br/>')
+
+        header_data = [
+            [
+                Paragraph(f"<b>{InvoiceService.COMPANY_NAME}</b><br/>{company_addr}<br/>Tax ID: {InvoiceService.COMPANY_TAX_ID}", styles['Normal']),
+                Paragraph(f"<b>Invoice #:</b> {invoice.invoice_number}<br/><b>Date:</b> {issued_str}<br/><b>Due Date:</b> {due_str}", styles['Normal'])
+            ]
+        ]
+        header_table = Table(header_data, colWidths=[300, 200])
+        elements.append(header_table)
+        elements.append(Spacer(1, 20))
+
+        # Billing info
+        billing_name = invoice.billing_name or ""
+        billing_email = invoice.billing_email or ""
+        billing_address = (invoice.billing_address or "").replace('\n', '<br/>')
+
+        elements.append(Paragraph(f"<b>Bill To:</b><br/>{billing_name}<br/>{billing_address}<br/>{billing_email}", styles['Normal']))
+        elements.append(Spacer(1, 20))
+
+        # Items
+        items_data = [["Item", "Quantity", "Unit Price", "Discount", "Total"]]
+        items = json.loads(invoice.items_json) if invoice.items_json else []
+        for item in items:
+            items_data.append([
+                item.get('item_name', ''),
+                str(item.get('quantity', 0)),
+                f"{item.get('unit_price', 0):.2f}",
+                f"{item.get('discount', 0):.2f}",
+                f"{item.get('total', 0):.2f}"
+            ])
+
+        # Add totals
+        items_data.append(["", "", "", "Subtotal:", f"{invoice.subtotal:.2f}"])
+        items_data.append(["", "", "", "Discount:", f"{invoice.discount:.2f}"])
+        items_data.append(["", "", "", "Tax:", f"{invoice.tax:.2f}"])
+        items_data.append(["", "", "", "Total:", f"{invoice.currency} {invoice.total:.2f}"])
+
+        t = Table(items_data, colWidths=[220, 60, 80, 70, 70])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -5), 1, colors.black),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (-2, -4), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        elements.append(t)
+
+        if invoice.notes:
+            elements.append(Spacer(1, 20))
+            notes_str = invoice.notes.replace('\n', '<br/>')
+            elements.append(Paragraph(f"<b>Notes:</b><br/>{notes_str}", styles['Normal']))
+
+        doc.build(elements)
 
         # Update invoice
         invoice.pdf_url = pdf_path
