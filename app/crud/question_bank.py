@@ -179,20 +179,28 @@ class CRUDQuizGeneration:
         total_added = 0
         questions_by_pool = {}
 
+        # OPTIMIZATION: Fetch all questions for all pools in a single query
+        pool_bank_ids = [pool.question_bank_id for pool in pools]
+
+        # Get all bank questions mapped to their bank_ids
+        all_questions_query = (
+            db.query(BankQuestion, question_bank_questions.c.question_bank_id)
+            .join(question_bank_questions)
+            .filter(question_bank_questions.c.question_bank_id.in_(pool_bank_ids))
+        )
+
+        all_pool_questions = all_questions_query.all()
+
+        # Group questions by bank_id
+        questions_grouped = {bank_id: [] for bank_id in pool_bank_ids}
+        for q, b_id in all_pool_questions:
+            questions_grouped[b_id].append(q)
+
         for pool in pools:
-            # Get questions from bank
-            query = (
-                db.query(BankQuestion)
-                .join(question_bank_questions)
-                .filter(
-                    question_bank_questions.c.question_bank_id == pool.question_bank_id
-                )
-            )
+            available_questions = questions_grouped.get(pool.question_bank_id, [])
 
             if pool.difficulty_filter:
-                query = query.filter(BankQuestion.difficulty == pool.difficulty_filter)
-
-            available_questions = query.all()
+                available_questions = [q for q in available_questions if q.difficulty == pool.difficulty_filter]
 
             # Randomly select questions
             num_to_select = min(pool.num_questions, len(available_questions))
